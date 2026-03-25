@@ -1,0 +1,43 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { getServiceClient } from '@/lib/supabase'
+
+/**
+ * GET /api/v1/wallet?business_id=...
+ * Returns the wallet for a given business.
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const businessId = request.nextUrl.searchParams.get('business_id')
+
+    if (!businessId) {
+      return NextResponse.json(
+        { error: 'business_id query parameter is required' },
+        { status: 400 }
+      )
+    }
+
+    const supabase = getServiceClient()
+
+    const { data: wallet, error } = await supabase
+      .from('agent_wallets')
+      .select('*')
+      .eq('business_id', businessId)
+      .maybeSingle()
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    if (!wallet) {
+      return NextResponse.json(
+        { error: 'No wallet found for this business' },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json(wallet)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Internal server error'
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
+}

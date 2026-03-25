@@ -1,0 +1,297 @@
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
+import { Search, SlidersHorizontal, X, Globe, Zap } from 'lucide-react'
+import clsx from 'clsx'
+import ScoreGauge from '@/components/ScoreGauge'
+import TierBadge from '@/components/TierBadge'
+
+interface DiscoverBusiness {
+  id: string
+  name: string
+  slug: string
+  domain: string | null
+  description: string | null
+  audit_score: number
+  audit_tier: 'unaudited' | 'bronze' | 'silver' | 'gold' | 'platinum'
+  capabilities: string[]
+  vertical: string | null
+  mcp_endpoints: string[]
+  services: { id: string; name: string }[]
+}
+
+const verticals = [
+  'All Verticals',
+  'legal',
+  'finance',
+  'healthcare',
+  'marketing',
+  'engineering',
+  'data',
+  'logistics',
+  'real-estate',
+  'other',
+]
+
+const tierOptions = ['Any Tier', 'bronze', 'silver', 'gold', 'platinum']
+
+export default function DiscoverPage() {
+  const [query, setQuery] = useState('')
+  const [vertical, setVertical] = useState('')
+  const [tier, setTier] = useState('')
+  const [minScore, setMinScore] = useState(0)
+  const [showFilters, setShowFilters] = useState(false)
+  const [businesses, setBusinesses] = useState<DiscoverBusiness[]>([])
+  const [loading, setLoading] = useState(true)
+  const [total, setTotal] = useState(0)
+
+  const fetchBusinesses = useCallback(async () => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams()
+      if (query) params.set('q', query)
+      if (vertical) params.set('vertical', vertical)
+      if (tier) params.set('tier', tier)
+      if (minScore > 0) params.set('min_score', String(minScore))
+      params.set('limit', '20')
+
+      const res = await fetch(`/api/v1/discover?${params.toString()}`)
+      const data = await res.json()
+
+      if (data.businesses) {
+        setBusinesses(data.businesses)
+        setTotal(data.pagination?.total ?? data.businesses.length)
+      }
+    } catch {
+      // Failed silently
+    } finally {
+      setLoading(false)
+    }
+  }, [query, vertical, tier, minScore])
+
+  useEffect(() => {
+    const timeout = setTimeout(fetchBusinesses, 300)
+    return () => clearTimeout(timeout)
+  }, [fetchBusinesses])
+
+  return (
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+      {/* Header */}
+      <div className="mb-10">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2">
+          Discover the Network
+        </h1>
+        <p className="text-sm text-zinc-500">
+          Search verified, agent-ready businesses by capability, vertical, or trust tier.
+        </p>
+      </div>
+
+      {/* Search & Filters */}
+      <div className="mb-8 space-y-4">
+        <div className="flex gap-3">
+          {/* Search Input */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+            <input
+              type="text"
+              placeholder="Search businesses, capabilities, domains..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 rounded-lg bg-zinc-900/80 border border-zinc-800 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-colors"
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded text-zinc-500 hover:text-zinc-300"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Filter Toggle */}
+          <button
+            type="button"
+            onClick={() => setShowFilters(!showFilters)}
+            className={clsx(
+              'flex items-center gap-2 px-4 py-3 rounded-lg border text-sm font-medium transition-colors',
+              showFilters
+                ? 'border-emerald-500/50 text-emerald-400 bg-emerald-500/5'
+                : 'border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
+            )}
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            Filters
+          </button>
+        </div>
+
+        {/* Filter Row */}
+        {showFilters && (
+          <div className="flex flex-wrap gap-3 p-4 rounded-lg bg-zinc-900/50 border border-zinc-800/80">
+            {/* Vertical */}
+            <div>
+              <label className="block text-[10px] font-medium text-zinc-500 mb-1.5 uppercase tracking-wider">
+                Vertical
+              </label>
+              <select
+                value={vertical}
+                onChange={(e) => setVertical(e.target.value)}
+                className="px-3 py-2 rounded-md bg-zinc-800 border border-zinc-700 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50"
+              >
+                {verticals.map((v) => (
+                  <option key={v} value={v === 'All Verticals' ? '' : v}>
+                    {v === 'All Verticals'
+                      ? v
+                      : v.charAt(0).toUpperCase() + v.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Tier */}
+            <div>
+              <label className="block text-[10px] font-medium text-zinc-500 mb-1.5 uppercase tracking-wider">
+                Tier
+              </label>
+              <select
+                value={tier}
+                onChange={(e) => setTier(e.target.value)}
+                className="px-3 py-2 rounded-md bg-zinc-800 border border-zinc-700 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50"
+              >
+                {tierOptions.map((t) => (
+                  <option key={t} value={t === 'Any Tier' ? '' : t}>
+                    {t === 'Any Tier'
+                      ? t
+                      : t.charAt(0).toUpperCase() + t.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Min Score */}
+            <div>
+              <label className="block text-[10px] font-medium text-zinc-500 mb-1.5 uppercase tracking-wider">
+                Min Score: {minScore}
+              </label>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={5}
+                value={minScore}
+                onChange={(e) => setMinScore(Number(e.target.value))}
+                className="w-40 accent-emerald-500"
+              />
+            </div>
+
+            {/* Clear */}
+            {(vertical || tier || minScore > 0) && (
+              <div className="flex items-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVertical('')
+                    setTier('')
+                    setMinScore(0)
+                  }}
+                  className="px-3 py-2 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+                >
+                  Clear filters
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Result count */}
+        <div className="text-xs text-zinc-500">
+          {loading ? 'Searching...' : `${total} business${total !== 1 ? 'es' : ''} found`}
+        </div>
+      </div>
+
+      {/* Results Grid */}
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="h-52 rounded-xl bg-zinc-900/30 border border-zinc-800/50 animate-pulse"
+            />
+          ))}
+        </div>
+      ) : businesses.length === 0 ? (
+        <div className="text-center py-20 rounded-xl bg-zinc-900/30 border border-zinc-800/50">
+          <Search className="h-10 w-10 text-zinc-700 mx-auto mb-4" />
+          <p className="text-zinc-400 font-medium mb-1">
+            No businesses match your search.
+          </p>
+          <p className="text-sm text-zinc-600">
+            Try broader filters or a different query.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {businesses.map((biz) => (
+            <Link
+              key={biz.id}
+              href={`/business/${biz.slug}`}
+              className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700/80 transition-colors group"
+            >
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-zinc-100 truncate group-hover:text-white transition-colors">
+                    {biz.name}
+                  </h3>
+                  {biz.domain && (
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <Globe className="h-3 w-3 text-zinc-600" />
+                      <span className="text-xs text-zinc-500 truncate">
+                        {biz.domain}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <ScoreGauge score={biz.audit_score} size="sm" showLabel={false} />
+              </div>
+
+              <div className="flex items-center gap-2 mb-3">
+                <TierBadge tier={biz.audit_tier} size="sm" />
+                {biz.vertical && (
+                  <span className="text-[10px] font-medium text-zinc-500 bg-zinc-800/80 px-2 py-0.5 rounded">
+                    {biz.vertical}
+                  </span>
+                )}
+                {biz.mcp_endpoints && biz.mcp_endpoints.length > 0 && (
+                  <span className="flex items-center gap-1 text-[10px] font-medium text-emerald-500/70 bg-emerald-500/5 px-2 py-0.5 rounded">
+                    <Zap className="h-2.5 w-2.5" />
+                    MCP
+                  </span>
+                )}
+              </div>
+
+              {biz.capabilities && biz.capabilities.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {biz.capabilities.slice(0, 3).map((cap) => (
+                    <span
+                      key={cap}
+                      className="text-[10px] text-zinc-500 bg-zinc-800/60 px-2 py-0.5 rounded"
+                    >
+                      {cap}
+                    </span>
+                  ))}
+                  {biz.capabilities.length > 3 && (
+                    <span className="text-[10px] text-zinc-600 px-1">
+                      +{biz.capabilities.length - 3}
+                    </span>
+                  )}
+                </div>
+              )}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
