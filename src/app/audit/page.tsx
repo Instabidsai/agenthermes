@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import {
   Shield,
@@ -17,6 +18,11 @@ import {
   Loader2,
   ArrowRight,
   ExternalLink,
+  Copy,
+  Check,
+  FileText,
+  Code2,
+  Zap,
 } from 'lucide-react'
 import clsx from 'clsx'
 import ScoreGauge from '@/components/ScoreGauge'
@@ -53,6 +59,7 @@ interface AuditState {
   categories: CategoryResult[]
   nextSteps: string[]
   errorMessage: string
+  businessId?: string
 }
 
 const categoryIcons: Record<string, typeof Shield> = {
@@ -63,14 +70,59 @@ const categoryIcons: Record<string, typeof Shield> = {
   agent_payment_acceptance: Wallet,
 }
 
+const tierDescriptions: Record<string, { label: string; description: string; color: string }> = {
+  unaudited: { label: 'Unscored', description: 'Not yet scanned', color: 'text-zinc-500' },
+  bronze: { label: 'Bronze', description: 'Partially discoverable by AI agents', color: 'text-amber-500' },
+  silver: { label: 'Silver', description: 'Agent-usable with friction', color: 'text-zinc-300' },
+  gold: { label: 'Gold', description: 'Fully agent-native', color: 'text-yellow-500' },
+  platinum: { label: 'Platinum', description: 'Certified, battle-tested, zero-friction', color: 'text-emerald-400' },
+}
+
+// Remediation CTAs based on category
+const remediationActions: Record<string, { label: string; href: (domain: string) => string; icon: typeof Shield }[]> = {
+  machine_readable_profile: [
+    { label: 'Generate llms.txt', href: (d) => `/remediate?domain=${d}&fix=llms-txt`, icon: FileText },
+    { label: 'Generate Agent Card', href: (d) => `/remediate?domain=${d}&fix=agent-card`, icon: Shield },
+  ],
+  mcp_api_endpoints: [
+    { label: 'Generate OpenAPI Spec', href: (d) => `/remediate?domain=${d}&fix=openapi`, icon: Code2 },
+  ],
+  structured_pricing: [
+    { label: 'Talk to AffixedAI', href: () => 'https://affixed.ai', icon: ExternalLink },
+  ],
+  agent_native_onboarding: [
+    { label: 'Generate Onboarding Flow', href: (d) => `/remediate?domain=${d}&fix=onboarding`, icon: Zap },
+  ],
+  agent_payment_acceptance: [
+    { label: 'Set Up Agent Payments', href: (d) => `/remediate?domain=${d}&fix=payments`, icon: Wallet },
+  ],
+}
+
 function getStatus(score: number, maxScore: number): 'pass' | 'warn' | 'fail' {
   const pct = maxScore > 0 ? score / maxScore : 0
-  if (pct >= 0.7) return 'pass'
-  if (pct >= 0.35) return 'warn'
+  if (pct >= 0.75) return 'pass'
+  if (pct >= 0.4) return 'warn'
   return 'fail'
 }
 
-export default function AuditPage() {
+function getScoreColor(score: number): string {
+  if (score >= 90) return 'text-emerald-400'
+  if (score >= 75) return 'text-yellow-500'
+  if (score >= 60) return 'text-zinc-300'
+  if (score >= 40) return 'text-amber-500'
+  return 'text-red-500'
+}
+
+function getTierFromScore(score: number): string {
+  if (score >= 90) return 'Platinum'
+  if (score >= 75) return 'Gold'
+  if (score >= 60) return 'Silver'
+  if (score >= 40) return 'Bronze'
+  return 'Failing'
+}
+
+function AuditPageContent() {
+  const searchParams = useSearchParams()
   const [domainInput, setDomainInput] = useState('')
   const [audit, setAudit] = useState<AuditState>({
     phase: 'idle',
@@ -84,9 +136,20 @@ export default function AuditPage() {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
     new Set()
   )
+  const [copiedEmbed, setCopiedEmbed] = useState(false)
+
+  // Auto-run audit if domain is in query params
+  useEffect(() => {
+    const domainParam = searchParams.get('domain')
+    if (domainParam && audit.phase === 'idle') {
+      setDomainInput(domainParam)
+      runAuditForDomain(domainParam)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
 
   useEffect(() => {
-    document.title = 'Audit | AgentHermes'
+    document.title = 'Your Agent Readiness Score | AgentHermes'
   }, [])
 
   const toggleCategory = (cat: string) => {
@@ -98,8 +161,8 @@ export default function AuditPage() {
     })
   }
 
-  const runAudit = async () => {
-    const domain = domainInput.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '')
+  const runAuditForDomain = async (rawDomain: string) => {
+    const domain = rawDomain.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '')
     if (!domain) return
 
     setAudit({
@@ -134,10 +197,14 @@ export default function AuditPage() {
         categories: scorecard.categories,
         nextSteps: scorecard.next_steps || [],
         errorMessage: '',
+        businessId: scorecard.business_id,
       })
 
-      // Expand all categories by default
-      setExpandedCategories(new Set(scorecard.categories.map((c) => c.category)))
+      // Expand failing categories by default
+      const failingCats = scorecard.categories
+        .filter((c) => getStatus(c.score, c.max_score) !== 'pass')
+        .map((c) => c.category)
+      setExpandedCategories(new Set(failingCats))
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Audit failed. Please try again.'
       setAudit((prev) => ({
@@ -148,25 +215,34 @@ export default function AuditPage() {
     }
   }
 
+  const runAudit = async () => {
+    await runAuditForDomain(domainInput)
+  }
+
   const statusIcon = (status: 'pass' | 'warn' | 'fail') => {
     if (status === 'pass') return <CheckCircle2 className="h-4 w-4 text-emerald-500" />
     if (status === 'warn') return <AlertCircle className="h-4 w-4 text-amber-500" />
     return <XCircle className="h-4 w-4 text-red-500" />
   }
 
+  const embedCode = `<a href="https://agenthermes.ai/business/${audit.domain}"><img src="https://agenthermes.ai/api/badge/${audit.domain}" alt="Agent Readiness Score" /></a>`
+
+  const copyEmbed = () => {
+    navigator.clipboard.writeText(embedCode)
+    setCopiedEmbed(true)
+    setTimeout(() => setCopiedEmbed(false), 2000)
+  }
+
   return (
-    <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+    <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
       {/* Header */}
       <div className="text-center mb-10">
-        <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 mb-5">
-          <Shield className="h-7 w-7 text-emerald-500" />
-        </div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3">
-          Agent-Readiness Audit
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3">
+          Your Agent Readiness Score
         </h1>
-        <p className="text-zinc-400 max-w-md mx-auto">
-          Enter your domain and we will score your business across 5
-          machine-readability categories. Free. Takes 10-30 seconds.
+        <p className="text-zinc-400 max-w-lg mx-auto">
+          Enter your domain to get scored across 5 categories of AI agent readiness.
+          Free. Takes 10-30 seconds.
         </p>
       </div>
 
@@ -194,12 +270,12 @@ export default function AuditPage() {
             {audit.phase === 'running' ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Auditing...
+                Scoring...
               </>
             ) : (
               <>
                 <Shield className="h-4 w-4" />
-                Run Audit
+                Get Score
               </>
             )}
           </button>
@@ -208,13 +284,13 @@ export default function AuditPage() {
 
       {/* Running State */}
       {audit.phase === 'running' && (
-        <div className="p-8 rounded-xl bg-zinc-900/50 border border-zinc-800/80 text-center">
-          <Loader2 className="h-8 w-8 text-emerald-500 animate-spin mx-auto mb-4" />
-          <p className="text-sm font-medium text-zinc-300 mb-1">
-            Auditing {audit.domain}
+        <div className="p-10 rounded-xl bg-zinc-900/50 border border-zinc-800/80 text-center">
+          <Loader2 className="h-10 w-10 text-emerald-500 animate-spin mx-auto mb-5" />
+          <p className="text-base font-medium text-zinc-300 mb-1">
+            Calculating score for {audit.domain}
           </p>
           <p className="text-xs text-zinc-500">
-            Scanning machine-readable profiles, MCP endpoints, onboarding flows, pricing, and payment capabilities...
+            Scanning machine-readable profiles, API endpoints, onboarding flows, pricing, and payment capabilities...
           </p>
           <p className="text-xs text-zinc-600 mt-3">
             This usually takes 10-30 seconds.
@@ -227,7 +303,7 @@ export default function AuditPage() {
         <div className="p-8 rounded-xl bg-red-950/20 border border-red-800/40 text-center">
           <XCircle className="h-8 w-8 text-red-500 mx-auto mb-4" />
           <p className="text-sm font-medium text-red-300 mb-1">
-            Audit Failed
+            Score Calculation Failed
           </p>
           <p className="text-xs text-red-400/80">
             {audit.errorMessage}
@@ -244,171 +320,282 @@ export default function AuditPage() {
 
       {/* Results */}
       {audit.phase === 'complete' && (
-        <div className="space-y-6">
-          {/* Overall Score */}
-          <div className="p-8 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
-            <div className="flex flex-col sm:flex-row items-center gap-8">
-              <ScoreGauge score={audit.totalScore} size="lg" />
-              <div className="text-center sm:text-left">
-                <div className="flex items-center gap-3 mb-2 justify-center sm:justify-start">
-                  <h2 className="text-xl font-bold">{audit.domain}</h2>
-                  <TierBadge tier={audit.tier} size="md" />
-                </div>
-                <p className="text-sm text-zinc-400 mb-3">
-                  Your business scored{' '}
-                  <span className="text-zinc-200 font-semibold">
-                    {audit.totalScore}/100
-                  </span>{' '}
-                  on agent readiness.
-                </p>
-                <p className="text-xs text-zinc-500">
-                  {audit.totalScore >= 90
-                    ? 'Outstanding. Your business is fully agent-ready.'
-                    : audit.totalScore >= 75
-                      ? 'Great foundation. A few improvements will unlock full agent capabilities.'
-                      : audit.totalScore >= 60
-                        ? 'Good progress. Improvements needed for higher-tier agent transactions.'
-                        : audit.totalScore >= 40
-                          ? 'Moderate readiness. Significant improvements needed for agent transactions.'
-                          : 'Low readiness. Your business is not yet discoverable by autonomous agents.'}
-                </p>
+        <div className="space-y-8">
+          {/* HUGE Score Display — Credit Karma style */}
+          <div className="p-10 rounded-2xl bg-zinc-900/50 border border-zinc-800/80">
+            <div className="flex flex-col items-center text-center">
+              {/* Giant score number */}
+              <div className="mb-6">
+                <ScoreGauge score={audit.totalScore} size="lg" />
+              </div>
+
+              {/* Massive numeric score */}
+              <div className={clsx('text-7xl sm:text-8xl font-black tabular-nums tracking-tight mb-2', getScoreColor(audit.totalScore))}>
+                {audit.totalScore}
+              </div>
+              <div className="text-sm text-zinc-600 font-medium mb-4">
+                out of 100
+              </div>
+
+              {/* Tier badge — prominent */}
+              <div className="mb-4">
+                <TierBadge tier={audit.tier} size="lg" />
+              </div>
+
+              {/* Tier description */}
+              <p className={clsx('text-lg font-semibold mb-2', tierDescriptions[audit.tier]?.color || 'text-zinc-400')}>
+                {getTierFromScore(audit.totalScore)}
+              </p>
+              <p className="text-sm text-zinc-500 max-w-md">
+                {tierDescriptions[audit.tier]?.description || 'Your business has been scored.'}
+              </p>
+
+              {/* Domain label */}
+              <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-800/50 border border-zinc-700/50">
+                <Globe className="h-4 w-4 text-zinc-500" />
+                <span className="text-sm font-medium text-zinc-300">{audit.domain}</span>
               </div>
             </div>
           </div>
 
-          {/* Category Breakdown */}
-          <div className="space-y-3">
-            {audit.categories.map((cat) => {
-              const isExpanded = expandedCategories.has(cat.category)
-              const Icon = categoryIcons[cat.category] || Shield
-              const pct = cat.max_score > 0 ? Math.round((cat.score / cat.max_score) * 100) : 0
-              const status = getStatus(cat.score, cat.max_score)
+          {/* Category Breakdown — Score cards */}
+          <div>
+            <h2 className="text-lg font-bold mb-4 text-zinc-200">Score Breakdown</h2>
+            <div className="space-y-3">
+              {audit.categories.map((cat) => {
+                const isExpanded = expandedCategories.has(cat.category)
+                const Icon = categoryIcons[cat.category] || Shield
+                const pct = cat.max_score > 0 ? Math.round((cat.score / cat.max_score) * 100) : 0
+                const status = getStatus(cat.score, cat.max_score)
+                const actions = remediationActions[cat.category] || []
 
-              // Flatten details into readable strings for display
-              const detailStrings: string[] = []
-              if (cat.details && typeof cat.details === 'object') {
-                for (const [key, value] of Object.entries(cat.details)) {
-                  if (key.startsWith('_')) continue
-                  if (typeof value === 'boolean') {
-                    detailStrings.push(`${key.replace(/_/g, ' ')}: ${value ? 'Yes' : 'No'}`)
-                  } else if (typeof value === 'string' || typeof value === 'number') {
-                    detailStrings.push(`${key.replace(/_/g, ' ')}: ${value}`)
-                  } else if (Array.isArray(value) && value.length > 0) {
-                    if (typeof value[0] === 'string') {
-                      detailStrings.push(`${key.replace(/_/g, ' ')}: ${value.join(', ')}`)
-                    } else {
-                      detailStrings.push(`${key.replace(/_/g, ' ')}: ${value.length} found`)
+                // Flatten details into readable strings for display
+                const detailStrings: string[] = []
+                if (cat.details && typeof cat.details === 'object') {
+                  for (const [key, value] of Object.entries(cat.details)) {
+                    if (key.startsWith('_')) continue
+                    if (typeof value === 'boolean') {
+                      detailStrings.push(`${key.replace(/_/g, ' ')}: ${value ? 'Yes' : 'No'}`)
+                    } else if (typeof value === 'string' || typeof value === 'number') {
+                      detailStrings.push(`${key.replace(/_/g, ' ')}: ${value}`)
+                    } else if (Array.isArray(value) && value.length > 0) {
+                      if (typeof value[0] === 'string') {
+                        detailStrings.push(`${key.replace(/_/g, ' ')}: ${value.join(', ')}`)
+                      } else {
+                        detailStrings.push(`${key.replace(/_/g, ' ')}: ${value.length} found`)
+                      }
                     }
                   }
                 }
-              }
 
-              return (
-                <div
-                  key={cat.category}
-                  className="rounded-xl bg-zinc-900/50 border border-zinc-800/80 overflow-hidden"
-                >
-                  {/* Header */}
-                  <button
-                    type="button"
-                    onClick={() => toggleCategory(cat.category)}
-                    className="w-full flex items-center gap-4 p-5 text-left hover:bg-zinc-800/20 transition-colors"
+                return (
+                  <div
+                    key={cat.category}
+                    className="rounded-xl bg-zinc-900/50 border border-zinc-800/80 overflow-hidden"
                   >
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-zinc-800/80 border border-zinc-700/50 flex-shrink-0">
-                      <Icon className="h-4 w-4 text-zinc-300" />
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-semibold text-zinc-200">
-                          {cat.label}
-                        </span>
-                        {statusIcon(status)}
+                    {/* Header */}
+                    <button
+                      type="button"
+                      onClick={() => toggleCategory(cat.category)}
+                      className="w-full flex items-center gap-4 p-5 text-left hover:bg-zinc-800/20 transition-colors"
+                    >
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-800/80 border border-zinc-700/50 flex-shrink-0">
+                        <Icon className="h-5 w-5 text-zinc-300" />
                       </div>
-                      {/* Score bar */}
-                      <div className="flex items-center gap-3">
-                        <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                          <div
-                            className={clsx(
-                              'h-full rounded-full transition-all duration-500',
-                              status === 'pass' && 'bg-emerald-500',
-                              status === 'warn' && 'bg-amber-500',
-                              status === 'fail' && 'bg-red-500'
-                            )}
-                            style={{ width: `${pct}%` }}
-                          />
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <span className="text-sm font-semibold text-zinc-200">
+                            {cat.label}
+                          </span>
+                          {statusIcon(status)}
                         </div>
-                        <span className="text-xs font-mono text-zinc-500 tabular-nums flex-shrink-0">
-                          {cat.score}/{cat.max_score}
-                        </span>
+                        {/* Score bar */}
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 h-2 bg-zinc-800 rounded-full overflow-hidden">
+                            <div
+                              className={clsx(
+                                'h-full rounded-full transition-all duration-500',
+                                status === 'pass' && 'bg-emerald-500',
+                                status === 'warn' && 'bg-amber-500',
+                                status === 'fail' && 'bg-red-500'
+                              )}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                          <span className="text-sm font-bold font-mono tabular-nums flex-shrink-0">
+                            <span className={clsx(
+                              status === 'pass' && 'text-emerald-500',
+                              status === 'warn' && 'text-amber-500',
+                              status === 'fail' && 'text-red-500'
+                            )}>
+                              {cat.score}
+                            </span>
+                            <span className="text-zinc-600">/{cat.max_score}</span>
+                          </span>
+                        </div>
                       </div>
-                    </div>
 
-                    {isExpanded ? (
-                      <ChevronUp className="h-4 w-4 text-zinc-500 flex-shrink-0" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 text-zinc-500 flex-shrink-0" />
+                      {isExpanded ? (
+                        <ChevronUp className="h-4 w-4 text-zinc-500 flex-shrink-0" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 text-zinc-500 flex-shrink-0" />
+                      )}
+                    </button>
+
+                    {/* Details */}
+                    {isExpanded && (
+                      <div className="px-5 pb-5 pt-0">
+                        <div className="border-t border-zinc-800/80 pt-4 space-y-4">
+                          {/* Findings */}
+                          {detailStrings.length > 0 && (
+                            <div>
+                              <h4 className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider mb-2">
+                                Findings
+                              </h4>
+                              <ul className="space-y-1.5">
+                                {detailStrings.map((d, i) => (
+                                  <li
+                                    key={i}
+                                    className="flex items-start gap-2 text-xs text-zinc-400"
+                                  >
+                                    <span className="text-zinc-600 mt-0.5">-</span>
+                                    {d}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {/* Recommendations */}
+                          {cat.recommendations.length > 0 && (
+                            <div>
+                              <h4 className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider mb-2">
+                                Recommendations
+                              </h4>
+                              <ul className="space-y-1.5">
+                                {cat.recommendations.map((r, i) => (
+                                  <li
+                                    key={i}
+                                    className="flex items-start gap-2 text-xs text-zinc-400"
+                                  >
+                                    <ArrowRight className="h-3 w-3 text-emerald-500/60 mt-0.5 flex-shrink-0" />
+                                    {r}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {/* Remediation CTAs — only show for failing/warning categories */}
+                          {status !== 'pass' && actions.length > 0 && (
+                            <div>
+                              <h4 className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider mb-2">
+                                Fix It
+                              </h4>
+                              <div className="flex flex-wrap gap-2">
+                                {actions.map((action) => {
+                                  const ActionIcon = action.icon
+                                  const href = action.href(audit.domain)
+                                  const isExternal = href.startsWith('http')
+
+                                  if (isExternal) {
+                                    return (
+                                      <a
+                                        key={action.label}
+                                        href={href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600/20 border border-emerald-600/30 text-emerald-400 text-xs font-medium hover:bg-emerald-600/30 transition-colors"
+                                      >
+                                        <ActionIcon className="h-3 w-3" />
+                                        {action.label}
+                                      </a>
+                                    )
+                                  }
+
+                                  return (
+                                    <Link
+                                      key={action.label}
+                                      href={href}
+                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600/20 border border-emerald-600/30 text-emerald-400 text-xs font-medium hover:bg-emerald-600/30 transition-colors"
+                                    >
+                                      <ActionIcon className="h-3 w-3" />
+                                      {action.label}
+                                    </Link>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     )}
-                  </button>
-
-                  {/* Details */}
-                  {isExpanded && (
-                    <div className="px-5 pb-5 pt-0">
-                      <div className="border-t border-zinc-800/80 pt-4 space-y-4">
-                        {/* Findings */}
-                        {detailStrings.length > 0 && (
-                          <div>
-                            <h4 className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider mb-2">
-                              Findings
-                            </h4>
-                            <ul className="space-y-1.5">
-                              {detailStrings.map((d, i) => (
-                                <li
-                                  key={i}
-                                  className="flex items-start gap-2 text-xs text-zinc-400"
-                                >
-                                  <span className="text-zinc-600 mt-0.5">-</span>
-                                  {d}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-
-                        {/* Recommendations */}
-                        {cat.recommendations.length > 0 && (
-                          <div>
-                            <h4 className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider mb-2">
-                              Recommendations
-                            </h4>
-                            <ul className="space-y-1.5">
-                              {cat.recommendations.map((r, i) => (
-                                <li
-                                  key={i}
-                                  className="flex items-start gap-2 text-xs text-zinc-400"
-                                >
-                                  <ArrowRight className="h-3 w-3 text-emerald-500/60 mt-0.5 flex-shrink-0" />
-                                  {r}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )
-            })}
+                  </div>
+                )
+              })}
+            </div>
           </div>
 
-          {/* Bottom CTA */}
-          {audit.totalScore < 60 && (
+          {/* Score Badge Preview + Embed Code */}
+          <div className="p-6 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
+            <h3 className="text-sm font-bold text-zinc-200 mb-4">
+              Embed Your Score
+            </h3>
+            <div className="flex flex-col sm:flex-row items-start gap-5">
+              {/* Badge preview */}
+              <div className="flex-shrink-0 p-4 rounded-lg bg-zinc-950 border border-zinc-800">
+                <div className="flex items-center gap-3">
+                  <div className={clsx(
+                    'text-2xl font-black tabular-nums',
+                    getScoreColor(audit.totalScore)
+                  )}>
+                    {audit.totalScore}
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">Agent Readiness</div>
+                    <div className="text-xs font-semibold text-zinc-400">{audit.domain}</div>
+                  </div>
+                  <div className="ml-2 text-[9px] text-emerald-600 font-medium">AgentHermes</div>
+                </div>
+              </div>
+
+              {/* Embed code */}
+              <div className="flex-1 min-w-0 w-full">
+                <div className="relative">
+                  <pre className="p-3 rounded-lg bg-zinc-950 border border-zinc-800 text-[11px] text-zinc-500 font-mono overflow-x-auto whitespace-pre-wrap break-all">
+                    {embedCode}
+                  </pre>
+                  <button
+                    type="button"
+                    onClick={copyEmbed}
+                    className="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-400 text-[10px] font-medium transition-colors"
+                  >
+                    {copiedEmbed ? (
+                      <>
+                        <Check className="h-3 w-3 text-emerald-500" />
+                        Copied
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3 w-3" />
+                        Copy
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom CTAs */}
+          <div className="space-y-4">
+            {/* AffixedAI consulting CTA */}
             <div className="p-6 rounded-xl bg-zinc-900/50 border border-emerald-800/30">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <div className="flex-1">
                   <h3 className="font-semibold text-zinc-200 mb-1">
-                    Need help getting agent-ready?
+                    Want to improve your score?
                   </h3>
                   <p className="text-xs text-zinc-500">
                     AffixedAI specializes in making businesses machine-readable
@@ -426,23 +613,58 @@ export default function AuditPage() {
                 </a>
               </div>
             </div>
-          )}
 
-          {/* Register CTA */}
-          <div className="text-center pt-4">
-            <p className="text-sm text-zinc-500 mb-3">
-              Ready to join the network?
-            </p>
-            <Link
-              href="/register"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-zinc-700 hover:border-zinc-600 text-zinc-300 hover:text-zinc-100 text-sm font-medium transition-colors"
-            >
-              Register Your Business
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+            {/* Register / Claim profile CTA */}
+            <div className="p-6 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-zinc-200 mb-1">
+                    Already agent-ready?
+                  </h3>
+                  <p className="text-xs text-zinc-500">
+                    Claim your profile on AgentHermes to appear in agent queries and start receiving agent traffic.
+                  </p>
+                </div>
+                <Link
+                  href="/register"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-zinc-700 hover:border-zinc-600 text-zinc-300 hover:text-zinc-100 text-sm font-medium transition-colors flex-shrink-0"
+                >
+                  Claim Your Profile
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       )}
+
+      {/* Idle state — show what to expect */}
+      {audit.phase === 'idle' && !searchParams.get('domain') && (
+        <div className="text-center py-16">
+          <div className="inline-flex items-center justify-center h-20 w-20 rounded-2xl bg-zinc-900/50 border border-zinc-800/80 mb-6">
+            <Shield className="h-10 w-10 text-zinc-700" />
+          </div>
+          <p className="text-sm text-zinc-600 max-w-sm mx-auto">
+            Enter a domain above to calculate your Agent Readiness Score.
+            We check 5 categories: machine-readable profiles, API endpoints,
+            onboarding, pricing, and payment acceptance.
+          </p>
+        </div>
+      )}
     </div>
+  )
+}
+
+export default function AuditPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10 sm:py-14 text-center">
+          <Loader2 className="h-8 w-8 text-emerald-500 animate-spin mx-auto" />
+        </div>
+      }
+    >
+      <AuditPageContent />
+    </Suspense>
   )
 }

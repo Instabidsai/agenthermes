@@ -1,70 +1,16 @@
 import Link from 'next/link'
 import {
-  Shield,
-  Search,
-  ArrowRight,
-  CheckCircle2,
   Building2,
-  Bot,
-  Zap,
-  Lock,
-  Globe,
+  Shield,
   TrendingUp,
   Network,
+  ArrowRight,
+  Search,
+  BarChart3,
+  Wrench,
 } from 'lucide-react'
 import { getServiceClient } from '@/lib/supabase'
-
-const tiers = [
-  {
-    name: 'Bronze',
-    range: '40-59',
-    color: 'text-amber-500',
-    borderColor: 'border-amber-800/40',
-    bgColor: 'bg-amber-950/20',
-    features: [
-      'Basic machine-readable profile',
-      'Listed in the network directory',
-      'Visible to agent search queries',
-    ],
-  },
-  {
-    name: 'Silver',
-    range: '60-74',
-    color: 'text-zinc-300',
-    borderColor: 'border-zinc-500/40',
-    bgColor: 'bg-zinc-800/30',
-    features: [
-      'Everything in Bronze',
-      'MCP or API endpoints exposed',
-      'Structured pricing available',
-    ],
-  },
-  {
-    name: 'Gold',
-    range: '75-89',
-    color: 'text-yellow-500',
-    borderColor: 'border-yellow-700/40',
-    bgColor: 'bg-yellow-950/20',
-    features: [
-      'Everything in Silver',
-      'Agent-native onboarding flow',
-      'Verified uptime & response times',
-    ],
-  },
-  {
-    name: 'Platinum',
-    range: '90-100',
-    color: 'text-emerald-400',
-    borderColor: 'border-emerald-700/40',
-    bgColor: 'bg-emerald-950/20',
-    features: [
-      'Everything in Gold',
-      'Agent payment acceptance (Stripe)',
-      'Full A2A protocol support',
-      'Priority placement in agent queries',
-    ],
-  },
-]
+import HeroScanForm from '@/components/HeroScanForm'
 
 function formatNumber(n: number): string {
   return new Intl.NumberFormat('en-US').format(n)
@@ -101,6 +47,49 @@ async function getNetworkStats() {
   return { businessCount, auditCount, totalVolume, connectionCount }
 }
 
+const scoreTiers = [
+  {
+    range: '0-39',
+    label: 'Failing',
+    color: 'text-red-500',
+    bg: 'bg-red-500',
+    barColor: 'bg-red-500',
+    description: 'Invisible to AI agents',
+  },
+  {
+    range: '40-59',
+    label: 'Bronze',
+    color: 'text-amber-500',
+    bg: 'bg-amber-500',
+    barColor: 'bg-amber-500',
+    description: 'Partially discoverable',
+  },
+  {
+    range: '60-74',
+    label: 'Silver',
+    color: 'text-zinc-300',
+    bg: 'bg-zinc-300',
+    barColor: 'bg-zinc-300',
+    description: 'Agent-usable with friction',
+  },
+  {
+    range: '75-89',
+    label: 'Gold',
+    color: 'text-yellow-500',
+    bg: 'bg-yellow-500',
+    barColor: 'bg-yellow-500',
+    description: 'Fully agent-native',
+  },
+  {
+    range: '90-100',
+    label: 'Platinum',
+    color: 'text-emerald-400',
+    bg: 'bg-emerald-400',
+    barColor: 'bg-emerald-400',
+    description: 'Certified, battle-tested, zero-friction',
+  },
+]
+
 export default async function HomePage() {
   let stats: { businessCount: number; auditCount: number; totalVolume: number; connectionCount: number }
 
@@ -111,55 +100,64 @@ export default async function HomePage() {
   }
 
   const statItems = [
-    { label: 'Businesses Registered', value: formatNumber(stats.businessCount), icon: Building2 },
-    { label: 'Audits Completed', value: formatNumber(stats.auditCount), icon: Shield },
+    { label: 'Businesses Scored', value: formatNumber(stats.businessCount), icon: Building2 },
+    { label: 'Scores Calculated', value: formatNumber(stats.auditCount), icon: Shield },
     { label: 'Agent Transactions', value: formatCurrency(stats.totalVolume), icon: TrendingUp },
     { label: 'Active Connections', value: formatNumber(stats.connectionCount), icon: Network },
   ]
 
   return (
     <div className="relative">
-      {/* Hero */}
+      {/* Hero — Score First */}
       <section className="relative overflow-hidden">
         {/* Subtle grid background */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.03)_1px,transparent_1px)] bg-[size:64px_64px]" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#09090b]" />
 
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-24 pb-20 sm:pt-32 sm:pb-28">
-          <div className="max-w-3xl">
+        <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 pt-24 pb-20 sm:pt-32 sm:pb-28">
+          <div className="text-center">
             {/* Tag */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium mb-8">
               <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-subtle-pulse" />
-              Now in Public Beta
+              The FICO of the Agent Economy
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-6">
-              The Verified Commerce Network for{' '}
-              <span className="text-emerald-500">Agent-Ready</span>{' '}
-              Businesses
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-5">
+              What&apos;s Your{' '}
+              <span className="text-emerald-500">Agent Readiness</span>{' '}
+              Score?
             </h1>
 
-            <p className="text-lg sm:text-xl text-zinc-400 leading-relaxed max-w-2xl mb-10">
-              AgentHermes scores, verifies, and connects businesses that AI agents can
-              actually transact with. Machine-readable trust. Real payments.
-              No black boxes.
+            <p className="text-lg sm:text-xl text-zinc-400 leading-relaxed max-w-2xl mx-auto mb-10">
+              Find out if AI agents can find, use, and pay your business.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link
-                href="/audit"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-colors"
-              >
-                <Shield className="h-4 w-4" />
-                Audit Your Business Free
-              </Link>
-              <Link
-                href="/discover"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg border border-zinc-700 hover:border-zinc-600 text-zinc-300 hover:text-zinc-100 font-medium text-sm transition-colors"
-              >
-                <Search className="h-4 w-4" />
-                Explore the Network
-              </Link>
+            {/* Client island — URL input + scan button */}
+            <HeroScanForm />
+          </div>
+
+          {/* Demo gauge placeholder */}
+          <div className="flex justify-center mt-14">
+            <div className="relative">
+              <svg width="200" height="200" viewBox="0 0 200 200" className="-rotate-90">
+                <circle cx="100" cy="100" r="88" fill="none" stroke="#27272a" strokeWidth="8" />
+                <circle
+                  cx="100"
+                  cy="100"
+                  r="88"
+                  fill="none"
+                  stroke="#3f3f46"
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                  strokeDasharray={2 * Math.PI * 88}
+                  strokeDashoffset={2 * Math.PI * 88}
+                  opacity="0.3"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-5xl font-bold text-zinc-600">?</span>
+                <span className="text-xs text-zinc-600 font-medium mt-1">Scan to reveal</span>
+              </div>
             </div>
           </div>
         </div>
@@ -173,7 +171,7 @@ export default async function HomePage() {
               How It Works
             </h2>
             <p className="text-zinc-400 text-lg max-w-xl mx-auto">
-              Three steps to becoming discoverable by autonomous agents.
+              Three steps. Sixty seconds. Know exactly where you stand.
             </p>
           </div>
 
@@ -181,24 +179,24 @@ export default async function HomePage() {
             {[
               {
                 step: '01',
-                icon: Shield,
-                title: 'Get Audited',
+                icon: Search,
+                title: 'Enter Your URL',
                 description:
-                  'We score your business across 5 machine-readability categories. Takes 60 seconds. Free.',
+                  'Drop in your website URL. No signup required. Completely free.',
               },
               {
                 step: '02',
-                icon: Globe,
-                title: 'Join the Network',
+                icon: BarChart3,
+                title: 'Get Scored 0-100',
                 description:
-                  'Your verified profile, services, and pricing become queryable by any AI agent via our MCP tools.',
+                  'We scan 5 categories of agent readiness: machine-readable profiles, API endpoints, onboarding, pricing, and payments.',
               },
               {
                 step: '03',
-                icon: Bot,
-                title: 'Agents Find You',
+                icon: Wrench,
+                title: 'Fix What\'s Failing',
                 description:
-                  'Autonomous agents discover, evaluate, and transact with your business programmatically.',
+                  'Get specific recommendations and one-click fixes for each category. Improve your score, become agent-native.',
               },
             ].map((item) => (
               <div
@@ -224,139 +222,130 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Trust Tiers */}
+      {/* Score Tiers — Credit Score Meter */}
       <section className="py-20 sm:py-28 border-t border-zinc-800/50">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
-              Trust Tiers
+              Agent Readiness Tiers
             </h2>
             <p className="text-zinc-400 text-lg max-w-xl mx-auto">
-              Your audit score determines your tier. Higher tiers unlock more
-              agent capabilities.
+              Like a credit score for the AI economy. Higher scores mean agents can transact with you.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {tiers.map((tier) => (
-              <div
-                key={tier.name}
-                className={`p-6 rounded-xl border ${tier.borderColor} ${tier.bgColor} transition-colors`}
-              >
-                <div className="flex items-baseline justify-between mb-5">
-                  <h3 className={`text-xl font-bold ${tier.color}`}>{tier.name}</h3>
-                  <span className="text-xs font-mono text-zinc-500">
-                    {tier.range}
-                  </span>
-                </div>
-                <ul className="space-y-2.5">
-                  {tier.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2">
-                      <CheckCircle2
-                        className={`h-4 w-4 mt-0.5 flex-shrink-0 ${tier.color} opacity-60`}
-                      />
-                      <span className="text-sm text-zinc-400">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
+          {/* Score meter visualization */}
+          <div className="p-8 rounded-2xl bg-zinc-900/50 border border-zinc-800/80">
+            {/* Gradient bar */}
+            <div className="relative mb-8">
+              <div className="h-4 rounded-full overflow-hidden flex">
+                <div className="w-[40%] bg-gradient-to-r from-red-600 to-red-500" />
+                <div className="w-[20%] bg-gradient-to-r from-amber-600 to-amber-500" />
+                <div className="w-[15%] bg-gradient-to-r from-zinc-400 to-zinc-300" />
+                <div className="w-[15%] bg-gradient-to-r from-yellow-500 to-yellow-400" />
+                <div className="w-[10%] bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-r-full" />
               </div>
-            ))}
+              {/* Tick marks */}
+              <div className="flex justify-between mt-2 px-0.5">
+                <span className="text-[10px] font-mono text-zinc-600">0</span>
+                <span className="text-[10px] font-mono text-zinc-600 ml-[35%]">40</span>
+                <span className="text-[10px] font-mono text-zinc-600">60</span>
+                <span className="text-[10px] font-mono text-zinc-600">75</span>
+                <span className="text-[10px] font-mono text-zinc-600">90</span>
+                <span className="text-[10px] font-mono text-zinc-600">100</span>
+              </div>
+            </div>
+
+            {/* Tier descriptions */}
+            <div className="space-y-3">
+              {scoreTiers.map((tier) => (
+                <div
+                  key={tier.label}
+                  className="flex items-center gap-4 p-3 rounded-lg hover:bg-zinc-800/30 transition-colors"
+                >
+                  <div className={`h-3 w-3 rounded-full ${tier.bg} flex-shrink-0`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline gap-2">
+                      <span className={`text-sm font-bold ${tier.color}`}>
+                        {tier.label}
+                      </span>
+                      <span className="text-xs font-mono text-zinc-600">
+                        {tier.range}
+                      </span>
+                    </div>
+                    <p className="text-xs text-zinc-500 mt-0.5">
+                      {tier.description}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Network Stats */}
+      {/* Why Your Score Matters */}
       <section className="py-20 sm:py-28 border-t border-zinc-800/50">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
-              Network at a Glance
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-6">
+              Why Your Score Matters
             </h2>
+            <div className="space-y-5 text-left">
+              <div className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
+                <h3 className="text-sm font-semibold text-zinc-200 mb-2">
+                  Agents check scores before transacting
+                </h3>
+                <p className="text-sm text-zinc-500 leading-relaxed">
+                  Autonomous AI agents are already making purchasing decisions. They evaluate businesses programmatically
+                  -- checking for machine-readable profiles, API access, structured pricing, and payment capabilities.
+                  Businesses without these signals are invisible.
+                </p>
+              </div>
+              <div className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
+                <h3 className="text-sm font-semibold text-zinc-200 mb-2">
+                  The agent economy is growing exponentially
+                </h3>
+                <p className="text-sm text-zinc-500 leading-relaxed">
+                  By 2027, AI agents will influence over $1 trillion in B2B transactions. Your Agent Readiness Score
+                  determines whether your business captures that revenue or gets bypassed. It is the credit score
+                  of the agent economy.
+                </p>
+              </div>
+              <div className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
+                <h3 className="text-sm font-semibold text-zinc-200 mb-2">
+                  Scores are public and verifiable
+                </h3>
+                <p className="text-sm text-zinc-500 leading-relaxed">
+                  Embed your score badge on your website. Share it with partners. Agents query the AgentHermes network
+                  to verify scores before initiating transactions. A high score builds trust at machine speed.
+                </p>
+              </div>
+            </div>
           </div>
+        </div>
+      </section>
 
+      {/* Network Stats — Compact bottom bar */}
+      <section className="py-10 border-t border-zinc-800/50">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
             {statItems.map((stat) => (
               <div
                 key={stat.label}
-                className="p-5 lg:p-6 rounded-xl bg-zinc-900/50 border border-zinc-800/80"
+                className="flex items-center gap-3 p-3 rounded-lg"
               >
-                <stat.icon className="h-5 w-5 text-zinc-500 mb-3" />
-                <div className="text-2xl lg:text-3xl font-bold tracking-tight mb-1">
-                  {stat.value}
-                </div>
-                <div className="text-xs text-zinc-500 font-medium">
-                  {stat.label}
+                <stat.icon className="h-4 w-4 text-zinc-600 flex-shrink-0" />
+                <div>
+                  <div className="text-lg font-bold tracking-tight">
+                    {stat.value}
+                  </div>
+                  <div className="text-[10px] text-zinc-600 font-medium">
+                    {stat.label}
+                  </div>
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* For Agents */}
-      <section className="py-20 sm:py-28 border-t border-zinc-800/50">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto">
-            <div className="p-8 sm:p-10 rounded-2xl bg-zinc-900/50 border border-zinc-800/80">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                  <Zap className="h-5 w-5 text-emerald-500" />
-                </div>
-                <h2 className="text-2xl font-bold">For Agent Developers</h2>
-              </div>
-
-              <p className="text-zinc-400 leading-relaxed mb-6">
-                Your agents can query AgentHermes via MCP to find verified,
-                audited services. Search by vertical, capability, tier, or price.
-                Get structured results with endpoints, auth requirements, and
-                uptime metrics. No scraping. No guessing.
-              </p>
-
-              <div className="bg-zinc-950/80 rounded-lg border border-zinc-800/80 p-4 font-mono text-sm">
-                <div className="text-zinc-500 mb-1">
-                  {'// Query the AgentHermes MCP'}
-                </div>
-                <div>
-                  <span className="text-emerald-400">discover_businesses</span>
-                  <span className="text-zinc-500">{'({'}</span>
-                </div>
-                <div className="pl-4">
-                  <span className="text-zinc-400">vertical</span>
-                  <span className="text-zinc-600">: </span>
-                  <span className="text-amber-400">{'"legal"'}</span>
-                  <span className="text-zinc-600">,</span>
-                </div>
-                <div className="pl-4">
-                  <span className="text-zinc-400">min_score</span>
-                  <span className="text-zinc-600">: </span>
-                  <span className="text-emerald-300">60</span>
-                  <span className="text-zinc-600">,</span>
-                </div>
-                <div className="pl-4">
-                  <span className="text-zinc-400">capability</span>
-                  <span className="text-zinc-600">: </span>
-                  <span className="text-amber-400">{'"contract-review"'}</span>
-                </div>
-                <div>
-                  <span className="text-zinc-500">{'})'};</span>
-                </div>
-              </div>
-
-              <div className="mt-6 flex flex-wrap gap-3">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-zinc-800/80 text-xs text-zinc-400">
-                  <Lock className="h-3 w-3" />
-                  Verified trust scores
-                </div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-zinc-800/80 text-xs text-zinc-400">
-                  <Globe className="h-3 w-3" />
-                  MCP & REST endpoints
-                </div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-zinc-800/80 text-xs text-zinc-400">
-                  <Zap className="h-3 w-3" />
-                  Programmatic payments
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -365,17 +354,17 @@ export default async function HomePage() {
       <section className="py-24 sm:py-32 border-t border-zinc-800/50">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
-            Is your business agent-ready?
+            Your competitors are getting scored.{' '}
+            <span className="text-zinc-500">Are you?</span>
           </h2>
           <p className="text-zinc-400 text-lg mb-10 max-w-lg mx-auto">
-            Find out in 60 seconds. Our free audit scores your machine
-            readability, API exposure, and payment capabilities.
+            Free. Takes 60 seconds. No signup required.
           </p>
           <Link
             href="/audit"
             className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors"
           >
-            Start Your Free Audit
+            Get Your Score Now
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
