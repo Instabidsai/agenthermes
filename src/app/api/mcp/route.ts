@@ -131,7 +131,7 @@ async function executeDiscover(params: Record<string, unknown>) {
     .select('id, name, slug, domain, description, vertical, capabilities, audit_score, audit_tier, trust_score, mcp_endpoints')
 
   if (params.q && typeof params.q === 'string') {
-    const safeQ = `%${params.q.replace(/[%_,().]/g, '')}%`
+    const safeQ = `%${params.q.replace(/[^a-zA-Z0-9\s-]/g, '')}%`
     query = query.or(
       `name.ilike.${safeQ},description.ilike.${safeQ},domain.ilike.${safeQ}`
     )

@@ -136,15 +136,22 @@ function validateAuditTarget(url: string): void {
   const parsed = new URL(url)
   const hostname = parsed.hostname.toLowerCase()
 
-  const forbidden = ['localhost', '127.0.0.1', '0.0.0.0', '169.254.169.254', '[::1]']
+  const forbidden = ['localhost', '127.0.0.1', '0.0.0.0', '169.254.169.254', '::1', '::']
   const privateRanges = [
     '10.', '172.16.', '172.17.', '172.18.', '172.19.', '172.20.',
     '172.21.', '172.22.', '172.23.', '172.24.', '172.25.', '172.26.',
     '172.27.', '172.28.', '172.29.', '172.30.', '172.31.', '192.168.',
     '169.254.',
   ]
+  // IPv6 private/link-local/loopback prefixes
+  const ipv6Private = ['fc', 'fd', 'fe80', '::ffff:127.', '::ffff:10.', '::ffff:192.168.', '::ffff:169.254.']
 
-  if (forbidden.includes(hostname) || privateRanges.some(r => hostname.startsWith(r))) {
+  if (
+    forbidden.includes(hostname) ||
+    privateRanges.some(r => hostname.startsWith(r)) ||
+    ipv6Private.some(r => hostname.startsWith(r)) ||
+    hostname === '0000:0000:0000:0000:0000:0000:0000:0001'
+  ) {
     throw new Error('Cannot audit private or internal URLs')
   }
 

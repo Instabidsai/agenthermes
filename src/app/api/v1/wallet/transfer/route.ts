@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/supabase'
 import { transferFunds } from '@/lib/stripe'
 import { postLearning } from '@/lib/hive-brain'
+import { requireAuth } from '@/lib/auth'
 
 /**
  * POST /api/v1/wallet/transfer
@@ -19,6 +20,9 @@ import { postLearning } from '@/lib/hive-brain'
  * }
  */
 export async function POST(request: NextRequest) {
+  const authError = requireAuth(request)
+  if (authError) return authError
+
   try {
     const body = await request.json()
     const {

@@ -86,7 +86,7 @@ async function getNetworkStats() {
   const [bizRes, auditRes, txRes, connRes] = await Promise.all([
     db.from('businesses').select('*', { count: 'exact', head: true }),
     db.from('audit_results').select('*', { count: 'exact', head: true }),
-    db.from('transactions').select('amount'),
+    db.from('transactions').select('amount').eq('status', 'completed'),
     db.from('connections').select('*', { count: 'exact', head: true }),
   ])
 

@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
 
     const { data: wallet, error } = await supabase
       .from('agent_wallets')
-      .select('*')
+      .select('id, business_id, balance, auto_reload_threshold, auto_reload_amount, status, created_at')
       .eq('business_id', businessId)
       .maybeSingle()
 

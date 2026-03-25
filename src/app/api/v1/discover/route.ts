@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
 
     // Text search on name, description, domain (sanitized against PostgREST injection)
     if (q) {
-      const safeQ = `%${q.replace(/[%_,().]/g, '')}%`
+      const safeQ = `%${q.replace(/[^a-zA-Z0-9\s-]/g, '')}%`
       query = query.or(
         `name.ilike.${safeQ},description.ilike.${safeQ},domain.ilike.${safeQ}`
       )

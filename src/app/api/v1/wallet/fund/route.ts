@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/supabase'
 import { isStripeConfigured } from '@/lib/stripe'
+import { requireAuth } from '@/lib/auth'
 
 /**
  * POST /api/v1/wallet/fund
@@ -12,6 +13,9 @@ import { isStripeConfigured } from '@/lib/stripe'
  * Body: { business_id: string, amount: number }
  */
 export async function POST(request: NextRequest) {
+  const authError = requireAuth(request)
+  if (authError) return authError
+
   try {
     const body = await request.json()
     const { business_id, amount } = body

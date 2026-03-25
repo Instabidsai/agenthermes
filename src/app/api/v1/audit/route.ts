@@ -2,11 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { runAudit, tierFromScore, normalizeUrl } from '@/lib/audit-engine'
 import { getServiceClient } from '@/lib/supabase'
 import { notifyTierPromotion } from '@/lib/hive-brain'
+import { rateLimit } from '@/lib/auth'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60 // allow up to 60s for a full audit
 
 export async function POST(req: NextRequest) {
+  // Rate limit: 5 audits per minute per IP
+  const rateLimitError = rateLimit(req, 5, 60_000)
+  if (rateLimitError) return rateLimitError
+
   try {
     const body = await req.json().catch(() => null)
 
