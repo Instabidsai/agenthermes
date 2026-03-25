@@ -1,12 +1,14 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
 import clsx from 'clsx'
 
 function getScoreColor(score: number): string {
   if (score >= 80) return '#10b981' // emerald-500
   if (score >= 60) return '#eab308' // yellow-500
   if (score >= 40) return '#f59e0b' // amber-500
-  return '#ef4444' // red-500
+  if (score > 0) return '#ef4444' // red-500
+  return '#71717a' // zinc-500 — grey for unrated
 }
 
 function getScoreLabel(score: number): string {
@@ -26,6 +28,7 @@ export default function ScoreGauge({
   size?: 'sm' | 'md' | 'lg'
   showLabel?: boolean
 }) {
+  const circleRef = useRef<SVGCircleElement>(null)
   const color = getScoreColor(score)
   const label = getScoreLabel(score)
 
@@ -40,6 +43,16 @@ export default function ScoreGauge({
   const circumference = 2 * Math.PI * radius
   const progress = score / 100
   const offset = circumference * (1 - progress)
+
+  useEffect(() => {
+    const circle = circleRef.current
+    if (!circle) return
+    // Start fully hidden, then animate to target offset
+    circle.style.strokeDashoffset = String(circumference)
+    // Force a reflow so the browser registers the initial value
+    circle.getBoundingClientRect()
+    circle.style.strokeDashoffset = String(offset)
+  }, [circumference, offset])
 
   return (
     <div className="relative inline-flex flex-col items-center">
@@ -60,6 +73,7 @@ export default function ScoreGauge({
         />
         {/* Score arc */}
         <circle
+          ref={circleRef}
           cx={width / 2}
           cy={width / 2}
           r={radius}
@@ -68,10 +82,9 @@ export default function ScoreGauge({
           strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={circumference}
-          strokeDashoffset={offset}
+          strokeDashoffset={circumference}
           style={{
-            animation: 'score-fill 1s ease-out forwards',
-            transition: 'stroke-dashoffset 0.8s ease-out',
+            transition: 'stroke-dashoffset 1s ease-out',
           }}
         />
       </svg>

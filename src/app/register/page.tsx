@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Building2,
@@ -11,6 +11,7 @@ import {
   Layers,
   Loader2,
   AlertCircle,
+  CheckCircle2,
 } from 'lucide-react'
 
 const verticalOptions = [
@@ -27,6 +28,12 @@ const verticalOptions = [
   'other',
 ]
 
+function isValidDomain(domain: string): boolean {
+  if (!domain) return true // domain is optional
+  const domainRegex = /^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/
+  return domainRegex.test(domain)
+}
+
 export default function RegisterPage() {
   const router = useRouter()
 
@@ -40,19 +47,50 @@ export default function RegisterPage() {
   })
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const [success, setSuccess] = useState(false)
+
+  useEffect(() => {
+    document.title = 'Register | AgentHermes'
+  }, [])
 
   const update = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }))
     if (error) setError('')
+    // Clear field error on change
+    setFieldErrors((prev) => {
+      const next = { ...prev }
+      delete next[field]
+      return next
+    })
+  }
+
+  const validate = (): boolean => {
+    const errors: Record<string, string> = {}
+
+    if (!form.name.trim()) {
+      errors.name = 'Business name is required.'
+    }
+
+    if (form.domain.trim() && !isValidDomain(form.domain.trim())) {
+      errors.domain = 'Invalid domain format. Example: acmelegal.ai'
+    }
+
+    if (form.owner_email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(form.owner_email.trim())) {
+        errors.owner_email = 'Invalid email format.'
+      }
+    }
+
+    setFieldErrors(errors)
+    return Object.keys(errors).length === 0
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!form.name.trim()) {
-      setError('Business name is required.')
-      return
-    }
+    if (!validate()) return
 
     setSubmitting(true)
     setError('')
@@ -83,7 +121,10 @@ export default function RegisterPage() {
         return
       }
 
-      router.push(`/business/${data.slug}`)
+      setSuccess(true)
+      setTimeout(() => {
+        router.push(`/business/${data.slug}`)
+      }, 1500)
     } catch {
       setError('Network error. Please try again.')
     } finally {
@@ -104,6 +145,16 @@ export default function RegisterPage() {
         </p>
       </div>
 
+      {/* Success Message */}
+      {success && (
+        <div className="mb-6 flex items-center gap-2 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+          <CheckCircle2 className="h-5 w-5 text-emerald-400 flex-shrink-0" />
+          <p className="text-sm text-emerald-400 font-medium">
+            Business registered! Redirecting...
+          </p>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Business Name */}
         <div>
@@ -121,8 +172,13 @@ export default function RegisterPage() {
             placeholder="Acme Legal AI"
             value={form.name}
             onChange={(e) => update('name', e.target.value)}
-            className="w-full px-4 py-3 rounded-lg bg-zinc-900/80 border border-zinc-800 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-colors"
+            className={`w-full px-4 py-3 rounded-lg bg-zinc-900/80 border text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-colors ${
+              fieldErrors.name ? 'border-red-500/50' : 'border-zinc-800'
+            }`}
           />
+          {fieldErrors.name && (
+            <p className="mt-1.5 text-xs text-red-400">{fieldErrors.name}</p>
+          )}
         </div>
 
         {/* Domain */}
@@ -140,8 +196,13 @@ export default function RegisterPage() {
             placeholder="acmelegal.ai"
             value={form.domain}
             onChange={(e) => update('domain', e.target.value)}
-            className="w-full px-4 py-3 rounded-lg bg-zinc-900/80 border border-zinc-800 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-colors"
+            className={`w-full px-4 py-3 rounded-lg bg-zinc-900/80 border text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-colors ${
+              fieldErrors.domain ? 'border-red-500/50' : 'border-zinc-800'
+            }`}
           />
+          {fieldErrors.domain && (
+            <p className="mt-1.5 text-xs text-red-400">{fieldErrors.domain}</p>
+          )}
         </div>
 
         {/* Description */}
@@ -178,8 +239,13 @@ export default function RegisterPage() {
             placeholder="you@company.com"
             value={form.owner_email}
             onChange={(e) => update('owner_email', e.target.value)}
-            className="w-full px-4 py-3 rounded-lg bg-zinc-900/80 border border-zinc-800 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-colors"
+            className={`w-full px-4 py-3 rounded-lg bg-zinc-900/80 border text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-colors ${
+              fieldErrors.owner_email ? 'border-red-500/50' : 'border-zinc-800'
+            }`}
           />
+          {fieldErrors.owner_email && (
+            <p className="mt-1.5 text-xs text-red-400">{fieldErrors.owner_email}</p>
+          )}
         </div>
 
         {/* Vertical */}
@@ -239,7 +305,7 @@ export default function RegisterPage() {
         {/* Submit */}
         <button
           type="submit"
-          disabled={submitting || !form.name.trim()}
+          disabled={submitting || !form.name.trim() || success}
           className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 disabled:text-emerald-400 text-white font-semibold text-sm transition-colors"
         >
           {submitting ? (

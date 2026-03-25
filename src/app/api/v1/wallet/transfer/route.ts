@@ -50,6 +50,18 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+    if (amount > 10000) {
+      return NextResponse.json(
+        { error: 'amount cannot exceed $10,000' },
+        { status: 400 }
+      )
+    }
+    if (Math.round(amount * 100) / 100 !== amount) {
+      return NextResponse.json(
+        { error: 'amount must have at most 2 decimal places' },
+        { status: 400 }
+      )
+    }
     if (!service_description || typeof service_description !== 'string') {
       return NextResponse.json(
         { error: 'service_description is required' },
@@ -66,11 +78,20 @@ export async function POST(request: NextRequest) {
     const supabase = getServiceClient()
 
     // Look up wallets by business_id
-    const { data: fromWallet } = await supabase
+    const { data: fromWalletRaw, error: fromErr } = await supabase
       .from('agent_wallets')
       .select('*')
       .eq('business_id', from_business_id)
       .maybeSingle()
+    const fromWallet = fromWalletRaw as any
+
+    if (fromErr) {
+      console.error('[wallet/transfer] Error fetching source wallet:', fromErr.message)
+      return NextResponse.json(
+        { error: 'Failed to look up source wallet' },
+        { status: 500 }
+      )
+    }
 
     if (!fromWallet) {
       return NextResponse.json(
@@ -79,11 +100,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { data: toWallet } = await supabase
+    const { data: toWalletRaw, error: toErr } = await supabase
       .from('agent_wallets')
       .select('*')
       .eq('business_id', to_business_id)
       .maybeSingle()
+    const toWallet = toWalletRaw as any
+
+    if (toErr) {
+      console.error('[wallet/transfer] Error fetching destination wallet:', toErr.message)
+      return NextResponse.json(
+        { error: 'Failed to look up destination wallet' },
+        { status: 500 }
+      )
+    }
 
     if (!toWallet) {
       return NextResponse.json(
@@ -121,13 +151,15 @@ export async function POST(request: NextRequest) {
     if (err instanceof SyntaxError) {
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
     }
-    const message = err instanceof Error ? err.message : 'Internal server error'
-    // Distinguish between user errors and server errors
-    const status = message.includes('Insufficient balance') ||
-      message.includes('not active') ||
-      message.includes('not found')
-      ? 400
-      : 500
-    return NextResponse.json({ error: message }, { status })
+    const rawMessage = err instanceof Error ? err.message : 'Internal server error'
+    // Distinguish between user errors (safe to expose) and server errors
+    const isUserError = rawMessage.includes('Insufficient balance') ||
+      rawMessage.includes('not active') ||
+      rawMessage.includes('not found')
+    if (isUserError) {
+      return NextResponse.json({ error: rawMessage }, { status: 400 })
+    }
+    console.error('[wallet/transfer] Unexpected error:', rawMessage)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

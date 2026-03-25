@@ -1,3 +1,6 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
   Plus,
@@ -7,76 +10,150 @@ import {
   ArrowDownLeft,
   BarChart3,
   ExternalLink,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react'
 import ScoreGauge from '@/components/ScoreGauge'
 import TierBadge from '@/components/TierBadge'
+import { supabase } from '@/lib/supabase'
 
-// Placeholder data — in production, fetch from API with auth
-const businesses = [
-  {
-    slug: 'acme-legal-ai',
-    name: 'Acme Legal AI',
-    audit_score: 82,
-    audit_tier: 'platinum' as const,
-    services_count: 4,
-    domain: 'acmelegal.ai',
-  },
-  {
-    slug: 'quickbooks-connector',
-    name: 'QuickBooks Connector',
-    audit_score: 61,
-    audit_tier: 'gold' as const,
-    services_count: 2,
-    domain: 'qbconnect.io',
-  },
-  {
-    slug: 'data-enrichment-co',
-    name: 'Data Enrichment Co',
-    audit_score: 38,
-    audit_tier: 'bronze' as const,
-    services_count: 1,
-    domain: 'dataenrich.co',
-  },
-]
+type AuditTier = 'unaudited' | 'bronze' | 'silver' | 'gold' | 'platinum'
 
-const recentTransactions = [
-  {
-    id: '1',
-    type: 'incoming',
-    description: 'Contract review — AgentX',
-    amount: 12.50,
-    status: 'completed',
-    date: '2 hours ago',
-  },
-  {
-    id: '2',
-    type: 'incoming',
-    description: 'Data enrichment — ResearchBot',
-    amount: 3.20,
-    status: 'completed',
-    date: '5 hours ago',
-  },
-  {
-    id: '3',
-    type: 'outgoing',
-    description: 'Wallet top-up',
-    amount: 50.00,
-    status: 'completed',
-    date: '1 day ago',
-  },
-  {
-    id: '4',
-    type: 'incoming',
-    description: 'Legal lookup — ComplianceAgent',
-    amount: 8.75,
-    status: 'pending',
-    date: '1 day ago',
-  },
-]
+interface BusinessRow {
+  id: string
+  slug: string
+  name: string
+  audit_score: number
+  audit_tier: AuditTier
+  domain: string | null
+  services: { count: number }[]
+}
+
+interface WalletRow {
+  id: string
+  balance: number
+  auto_reload_threshold: number
+  status: string
+}
+
+interface TransactionRow {
+  id: string
+  amount: number
+  service_description: string | null
+  status: string
+  created_at: string
+  buyer_wallet_id: string
+  seller_wallet_id: string
+}
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const minutes = Math.floor(diff / 60000)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  return `${days}d ago`
+}
+
+function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+  }).format(amount)
+}
 
 export default function DashboardPage() {
+  const [businesses, setBusinesses] = useState<BusinessRow[]>([])
+  const [wallets, setWallets] = useState<WalletRow[]>([])
+  const [transactions, setTransactions] = useState<TransactionRow[]>([])
+  const [walletIds, setWalletIds] = useState<Set<string>>(new Set())
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    document.title = 'Dashboard | AgentHermes'
+  }, [])
+
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true)
+      setError(null)
+
+      try {
+        // Fetch businesses with service count
+        const { data: bizData, error: bizError } = await supabase
+          .from('businesses')
+          .select('id, slug, name, audit_score, audit_tier, domain, services(count)')
+          .order('audit_score', { ascending: false })
+
+        if (bizError) throw new Error(bizError.message)
+        setBusinesses((bizData as unknown as BusinessRow[]) || [])
+
+        // Fetch all wallets
+        const { data: walletData, error: walletError } = await supabase
+          .from('agent_wallets')
+          .select('id, balance, auto_reload_threshold, status')
+
+        if (walletError) throw new Error(walletError.message)
+        setWallets((walletData as WalletRow[]) || [])
+
+        const wIds = new Set((walletData || []).map((w: WalletRow) => w.id))
+        setWalletIds(wIds)
+
+        // Fetch recent transactions
+        const { data: txData, error: txError } = await supabase
+          .from('transactions')
+          .select('id, amount, service_description, status, created_at, buyer_wallet_id, seller_wallet_id')
+          .order('created_at', { ascending: false })
+          .limit(10)
+
+        if (txError) throw new Error(txError.message)
+        setTransactions((txData as TransactionRow[]) || [])
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Failed to load dashboard data'
+        setError(msg)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [])
+
+  // Aggregate wallet stats
+  const totalBalance = wallets.reduce((sum, w) => sum + (w.balance || 0), 0)
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+        <div className="flex items-center justify-center py-32">
+          <Loader2 className="h-8 w-8 text-emerald-500 animate-spin" />
+          <span className="ml-3 text-zinc-400">Loading dashboard...</span>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+      {/* Demo Mode Banner */}
+      <div className="mb-6 p-3 rounded-lg bg-amber-950/30 border border-amber-800/40 flex items-center gap-2">
+        <AlertCircle className="h-4 w-4 text-amber-500 flex-shrink-0" />
+        <p className="text-xs text-amber-400">
+          Showing all network data. Sign in to see your businesses.
+        </p>
+      </div>
+
+      {/* Error banner */}
+      {error && (
+        <div className="mb-6 p-3 rounded-lg bg-red-950/30 border border-red-800/40 flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
+          <p className="text-xs text-red-400">{error}</p>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
         <div>
@@ -108,30 +185,33 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Business Cards */}
         <div className="lg:col-span-2 space-y-4">
-          {businesses.map((biz) => (
-            <Link
-              key={biz.slug}
-              href={`/business/${biz.slug}`}
-              className="flex items-center gap-5 p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700/80 transition-colors group"
-            >
-              <ScoreGauge score={biz.audit_score} size="sm" showLabel={false} />
+          {businesses.map((biz) => {
+            const servicesCount = biz.services?.[0]?.count ?? 0
+            return (
+              <Link
+                key={biz.slug}
+                href={`/business/${biz.slug}`}
+                className="flex items-center gap-5 p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700/80 transition-colors group"
+              >
+                <ScoreGauge score={biz.audit_score ?? 0} size="sm" showLabel={false} />
 
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2.5 mb-1">
-                  <h3 className="font-semibold text-zinc-100 truncate group-hover:text-white transition-colors">
-                    {biz.name}
-                  </h3>
-                  <TierBadge tier={biz.audit_tier} size="sm" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2.5 mb-1">
+                    <h3 className="font-semibold text-zinc-100 truncate group-hover:text-white transition-colors">
+                      {biz.name}
+                    </h3>
+                    <TierBadge tier={(biz.audit_tier || 'unaudited') as AuditTier} size="sm" />
+                  </div>
+                  <div className="flex items-center gap-4 text-xs text-zinc-500">
+                    <span>{biz.domain || 'No domain'}</span>
+                    <span>{servicesCount} service{servicesCount !== 1 ? 's' : ''}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-4 text-xs text-zinc-500">
-                  <span>{biz.domain}</span>
-                  <span>{biz.services_count} service{biz.services_count !== 1 ? 's' : ''}</span>
-                </div>
-              </div>
 
-              <ExternalLink className="h-4 w-4 text-zinc-600 group-hover:text-zinc-400 transition-colors flex-shrink-0" />
-            </Link>
-          ))}
+                <ExternalLink className="h-4 w-4 text-zinc-600 group-hover:text-zinc-400 transition-colors flex-shrink-0" />
+              </Link>
+            )
+          })}
 
           {businesses.length === 0 && (
             <div className="text-center py-16 rounded-xl bg-zinc-900/30 border border-zinc-800/50">
@@ -160,30 +240,25 @@ export default function DashboardPage() {
                 Wallet Balance
               </h3>
             </div>
-            <div className="text-3xl font-bold tracking-tight mb-1">
-              $247.50
-            </div>
-            <div className="text-xs text-zinc-500">
-              Auto-reload at $50.00
-            </div>
-            <div className="mt-4 pt-4 border-t border-zinc-800/80 grid grid-cols-2 gap-3 text-center">
-              <div>
-                <div className="text-lg font-semibold text-emerald-400">
-                  $1,284
+            {wallets.length > 0 ? (
+              <>
+                <div className="text-3xl font-bold tracking-tight mb-1">
+                  {formatCurrency(totalBalance)}
                 </div>
-                <div className="text-[10px] text-zinc-500 font-medium mt-0.5">
-                  Earned (30d)
+                <div className="text-xs text-zinc-500">
+                  {wallets.length} wallet{wallets.length !== 1 ? 's' : ''} active
                 </div>
-              </div>
-              <div>
-                <div className="text-lg font-semibold text-zinc-300">
-                  $312
+              </>
+            ) : (
+              <>
+                <div className="text-3xl font-bold tracking-tight mb-1 text-zinc-600">
+                  $0.00
                 </div>
-                <div className="text-[10px] text-zinc-500 font-medium mt-0.5">
-                  Spent (30d)
+                <div className="text-xs text-zinc-500">
+                  No wallets created yet
                 </div>
-              </div>
-            </div>
+              </>
+            )}
           </div>
 
           {/* Recent Transactions */}
@@ -191,51 +266,61 @@ export default function DashboardPage() {
             <h3 className="text-sm font-semibold text-zinc-400 mb-4">
               Recent Transactions
             </h3>
-            <div className="space-y-3">
-              {recentTransactions.map((tx) => (
-                <div key={tx.id} className="flex items-center gap-3">
-                  <div
-                    className={`flex h-7 w-7 items-center justify-center rounded-full flex-shrink-0 ${
-                      tx.type === 'incoming'
-                        ? 'bg-emerald-500/10 text-emerald-500'
-                        : 'bg-zinc-800 text-zinc-400'
-                    }`}
-                  >
-                    {tx.type === 'incoming' ? (
-                      <ArrowDownLeft className="h-3.5 w-3.5" />
-                    ) : (
-                      <ArrowUpRight className="h-3.5 w-3.5" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs font-medium text-zinc-300 truncate">
-                      {tx.description}
+            {transactions.length > 0 ? (
+              <div className="space-y-3">
+                {transactions.map((tx) => {
+                  // Determine direction: if any of user's wallets is the seller, it's incoming
+                  const isIncoming = walletIds.has(tx.seller_wallet_id)
+                  return (
+                    <div key={tx.id} className="flex items-center gap-3">
+                      <div
+                        className={`flex h-7 w-7 items-center justify-center rounded-full flex-shrink-0 ${
+                          isIncoming
+                            ? 'bg-emerald-500/10 text-emerald-500'
+                            : 'bg-zinc-800 text-zinc-400'
+                        }`}
+                      >
+                        {isIncoming ? (
+                          <ArrowDownLeft className="h-3.5 w-3.5" />
+                        ) : (
+                          <ArrowUpRight className="h-3.5 w-3.5" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-medium text-zinc-300 truncate">
+                          {tx.service_description || 'Transaction'}
+                        </div>
+                        <div className="text-[10px] text-zinc-600">{timeAgo(tx.created_at)}</div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <div
+                          className={`text-xs font-semibold tabular-nums ${
+                            isIncoming
+                              ? 'text-emerald-400'
+                              : 'text-zinc-400'
+                          }`}
+                        >
+                          {isIncoming ? '+' : '-'}{formatCurrency(tx.amount)}
+                        </div>
+                        <div
+                          className={`text-[10px] ${
+                            tx.status === 'pending'
+                              ? 'text-amber-500'
+                              : 'text-zinc-600'
+                          }`}
+                        >
+                          {tx.status}
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-[10px] text-zinc-600">{tx.date}</div>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <div
-                      className={`text-xs font-semibold tabular-nums ${
-                        tx.type === 'incoming'
-                          ? 'text-emerald-400'
-                          : 'text-zinc-400'
-                      }`}
-                    >
-                      {tx.type === 'incoming' ? '+' : '-'}${tx.amount.toFixed(2)}
-                    </div>
-                    <div
-                      className={`text-[10px] ${
-                        tx.status === 'pending'
-                          ? 'text-amber-500'
-                          : 'text-zinc-600'
-                      }`}
-                    >
-                      {tx.status}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <p className="text-xs text-zinc-600 text-center py-4">
+                No transactions yet.
+              </p>
+            )}
           </div>
         </div>
       </div>

@@ -34,11 +34,29 @@ interface CategoryResult {
 const FETCH_TIMEOUT_MS = 5_000
 
 /** Fetch a URL with a hard timeout. Never throws — always returns a result. */
-async function probeEndpoint(url: string): Promise<EndpointCheckResult> {
+async function probeEndpoint(url: string, globalSignal?: AbortSignal): Promise<EndpointCheckResult> {
   const start = Date.now()
   try {
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
+
+    // If the global signal fires, abort this request too
+    const onGlobalAbort = () => controller.abort()
+    if (globalSignal) {
+      if (globalSignal.aborted) {
+        clearTimeout(timer)
+        return {
+          url,
+          found: false,
+          status: null,
+          contentType: null,
+          body: null,
+          error: 'Audit timeout exceeded',
+          responseTimeMs: Date.now() - start,
+        }
+      }
+      globalSignal.addEventListener('abort', onGlobalAbort, { once: true })
+    }
 
     const res = await fetch(url, {
       method: 'GET',
@@ -51,6 +69,7 @@ async function probeEndpoint(url: string): Promise<EndpointCheckResult> {
     })
 
     clearTimeout(timer)
+    if (globalSignal) globalSignal.removeEventListener('abort', onGlobalAbort)
 
     const contentType = res.headers.get('content-type') ?? null
     let body: unknown = null
@@ -96,7 +115,42 @@ function normalizeUrl(input: string): string {
     url = `https://${url}`
   }
   // Strip trailing slash for consistent concatenation
-  return url.replace(/\/+$/, '')
+  url = url.replace(/\/+$/, '')
+
+  // Validate it parses as a real URL
+  try {
+    new URL(url)
+  } catch {
+    throw new Error(`Invalid URL: "${input}" could not be parsed as a valid URL`)
+  }
+
+  return url
+}
+
+/**
+ * Validate that an audit target URL is not a private/internal address.
+ * Prevents SSRF attacks where an attacker tricks the audit engine into
+ * probing internal infrastructure.
+ */
+function validateAuditTarget(url: string): void {
+  const parsed = new URL(url)
+  const hostname = parsed.hostname.toLowerCase()
+
+  const forbidden = ['localhost', '127.0.0.1', '0.0.0.0', '169.254.169.254', '[::1]']
+  const privateRanges = [
+    '10.', '172.16.', '172.17.', '172.18.', '172.19.', '172.20.',
+    '172.21.', '172.22.', '172.23.', '172.24.', '172.25.', '172.26.',
+    '172.27.', '172.28.', '172.29.', '172.30.', '172.31.', '192.168.',
+    '169.254.',
+  ]
+
+  if (forbidden.includes(hostname) || privateRanges.some(r => hostname.startsWith(r))) {
+    throw new Error('Cannot audit private or internal URLs')
+  }
+
+  if (!['http:', 'https:'].includes(parsed.protocol)) {
+    throw new Error('Only HTTP and HTTPS URLs can be audited')
+  }
 }
 
 function tierFromScore(score: number): Business['audit_tier'] {
@@ -130,7 +184,8 @@ function hasField(body: unknown, ...fields: string[]): boolean {
 // ---------------------------------------------------------------------------
 
 async function auditMachineReadableProfile(
-  base: string
+  base: string,
+  globalSignal?: AbortSignal
 ): Promise<CategoryResult> {
   const MAX = 20
   let score = 0
@@ -144,7 +199,7 @@ async function auditMachineReadableProfile(
     '/agent.json',
   ]
   const agentCardResults = await Promise.all(
-    agentCardPaths.map((p) => probeEndpoint(`${base}${p}`))
+    agentCardPaths.map((p) => probeEndpoint(`${base}${p}`, globalSignal))
   )
   const agentCard = agentCardResults.find((r) => r.found)
 
@@ -173,7 +228,7 @@ async function auditMachineReadableProfile(
   // 2. llms.txt (up to 6 pts)
   const llmsPaths = ['/llms.txt', '/.well-known/llms.txt']
   const llmsResults = await Promise.all(
-    llmsPaths.map((p) => probeEndpoint(`${base}${p}`))
+    llmsPaths.map((p) => probeEndpoint(`${base}${p}`, globalSignal))
   )
   const llmsTxt = llmsResults.find((r) => r.found)
 
@@ -196,8 +251,8 @@ async function auditMachineReadableProfile(
   }
 
   // 3. Structured metadata — robots.txt, sitemap, schema.org (up to 4 pts)
-  const robotsResult = await probeEndpoint(`${base}/robots.txt`)
-  const sitemapResult = await probeEndpoint(`${base}/sitemap.xml`)
+  const robotsResult = await probeEndpoint(`${base}/robots.txt`, globalSignal)
+  const sitemapResult = await probeEndpoint(`${base}/sitemap.xml`, globalSignal)
   if (robotsResult.found) {
     score += 2
     details.robots_txt = true
@@ -223,7 +278,8 @@ async function auditMachineReadableProfile(
 }
 
 async function auditMcpApiEndpoints(
-  base: string
+  base: string,
+  globalSignal?: AbortSignal
 ): Promise<CategoryResult> {
   const MAX = 20
   let score = 0
@@ -238,7 +294,7 @@ async function auditMcpApiEndpoints(
     '/mcp.json',
   ]
   const mcpResults = await Promise.all(
-    mcpPaths.map((p) => probeEndpoint(`${base}${p}`))
+    mcpPaths.map((p) => probeEndpoint(`${base}${p}`, globalSignal))
   )
   const mcpHits = mcpResults.filter((r) => r.found)
 
@@ -276,7 +332,7 @@ async function auditMcpApiEndpoints(
     '/.well-known/openapi.json',
   ]
   const docResults = await Promise.all(
-    docPaths.map((p) => probeEndpoint(`${base}${p}`))
+    docPaths.map((p) => probeEndpoint(`${base}${p}`, globalSignal))
   )
   const docHits = docResults.filter((r) => r.found)
 
@@ -315,7 +371,7 @@ async function auditMcpApiEndpoints(
     '/status',
   ]
   const apiResults = await Promise.all(
-    apiPaths.map((p) => probeEndpoint(`${base}${p}`))
+    apiPaths.map((p) => probeEndpoint(`${base}${p}`, globalSignal))
   )
   const apiHits = apiResults.filter((r) => r.found)
 
@@ -354,7 +410,8 @@ async function auditMcpApiEndpoints(
 }
 
 async function auditAgentNativeOnboarding(
-  base: string
+  base: string,
+  globalSignal?: AbortSignal
 ): Promise<CategoryResult> {
   const MAX = 20
   let score = 0
@@ -375,7 +432,7 @@ async function auditAgentNativeOnboarding(
   ]
   // We use GET to probe (not POST) — we just want to see if these routes exist
   const signupResults = await Promise.all(
-    signupPaths.map((p) => probeEndpoint(`${base}${p}`))
+    signupPaths.map((p) => probeEndpoint(`${base}${p}`, globalSignal))
   )
   // A route that returns 405 (Method Not Allowed) also counts — it means a POST endpoint exists
   const signupHits = signupResults.filter(
@@ -416,7 +473,7 @@ async function auditAgentNativeOnboarding(
     '/auth/token',
   ]
   const oauthResults = await Promise.all(
-    oauthPaths.map((p) => probeEndpoint(`${base}${p}`))
+    oauthPaths.map((p) => probeEndpoint(`${base}${p}`, globalSignal))
   )
   const oauthHits = oauthResults.filter(
     (r) => r.found || r.status === 405 || r.status === 401
@@ -445,7 +502,7 @@ async function auditAgentNativeOnboarding(
     '/docs/getting-started',
   ]
   const devResults = await Promise.all(
-    devPaths.map((p) => probeEndpoint(`${base}${p}`))
+    devPaths.map((p) => probeEndpoint(`${base}${p}`, globalSignal))
   )
   const devHits = devResults.filter((r) => r.found)
 
@@ -479,7 +536,8 @@ async function auditAgentNativeOnboarding(
 }
 
 async function auditStructuredPricing(
-  base: string
+  base: string,
+  globalSignal?: AbortSignal
 ): Promise<CategoryResult> {
   const MAX = 20
   let score = 0
@@ -494,7 +552,7 @@ async function auditStructuredPricing(
     '/.well-known/pricing.json',
   ]
   const pricingResults = await Promise.all(
-    pricingPaths.map((p) => probeEndpoint(`${base}${p}`))
+    pricingPaths.map((p) => probeEndpoint(`${base}${p}`, globalSignal))
   )
   const pricingHit = pricingResults.find(
     (r) => r.found && isJsonContentType(r.contentType)
@@ -521,7 +579,7 @@ async function auditStructuredPricing(
     // Check if a human-readable pricing page exists
     const humanPricingPaths = ['/pricing', '/plans', '/prices']
     const humanResults = await Promise.all(
-      humanPricingPaths.map((p) => probeEndpoint(`${base}${p}`))
+      humanPricingPaths.map((p) => probeEndpoint(`${base}${p}`, globalSignal))
     )
     const humanPricing = humanResults.find((r) => r.found)
 
@@ -541,7 +599,7 @@ async function auditStructuredPricing(
   }
 
   // 2. Pricing in agent card (up to 5 pts)
-  const agentCardResult = await probeEndpoint(`${base}/.well-known/agent.json`)
+  const agentCardResult = await probeEndpoint(`${base}/.well-known/agent.json`, globalSignal)
   if (agentCardResult.found && typeof agentCardResult.body === 'object') {
     const card = agentCardResult.body as Record<string, unknown>
     if (hasField(card, 'pricing', 'price', 'cost', 'rate', 'plans')) {
@@ -588,7 +646,8 @@ async function auditStructuredPricing(
 }
 
 async function auditAgentPaymentAcceptance(
-  base: string
+  base: string,
+  globalSignal?: AbortSignal
 ): Promise<CategoryResult> {
   const MAX = 20
   let score = 0
@@ -606,7 +665,7 @@ async function auditAgentPaymentAcceptance(
     '/api/subscribe',
   ]
   const stripeResults = await Promise.all(
-    stripePaths.map((p) => probeEndpoint(`${base}${p}`))
+    stripePaths.map((p) => probeEndpoint(`${base}${p}`, globalSignal))
   )
   const stripeHits = stripeResults.filter(
     (r) => r.found || r.status === 405 || r.status === 401 || r.status === 403
@@ -621,7 +680,7 @@ async function auditAgentPaymentAcceptance(
   }
 
   // Check the homepage / pricing page for Stripe JS references
-  const homepageResult = await probeEndpoint(base)
+  const homepageResult = await probeEndpoint(base, globalSignal)
   if (homepageResult.found && typeof homepageResult.body === 'string') {
     const html = homepageResult.body
     const hasStripe = /stripe|js\.stripe\.com/i.test(html)
@@ -658,7 +717,7 @@ async function auditAgentPaymentAcceptance(
     '/api/billing/usage',
   ]
   const progResults = await Promise.all(
-    programmaticPaths.map((p) => probeEndpoint(`${base}${p}`))
+    programmaticPaths.map((p) => probeEndpoint(`${base}${p}`, globalSignal))
   )
   const progHits = progResults.filter(
     (r) => r.found || r.status === 405 || r.status === 401
@@ -685,7 +744,7 @@ async function auditAgentPaymentAcceptance(
     '/api/metering',
   ]
   const usageResults = await Promise.all(
-    usagePaths.map((p) => probeEndpoint(`${base}${p}`))
+    usagePaths.map((p) => probeEndpoint(`${base}${p}`, globalSignal))
   )
   const usageHits = usageResults.filter(
     (r) => r.found || r.status === 401 || r.status === 403
@@ -721,13 +780,21 @@ async function auditAgentPaymentAcceptance(
 export async function runAudit(rawUrl: string): Promise<AuditScorecard> {
   const base = normalizeUrl(rawUrl)
 
+  // SSRF protection: reject private/internal targets
+  validateAuditTarget(base)
+
+  // Global timeout: abort all probes after 50s to stay under Vercel's 60s limit
+  const globalController = new AbortController()
+  const globalTimer = setTimeout(() => globalController.abort(), 50_000)
+
+  try {
   // Run all 5 category audits in parallel
   const [profile, endpoints, onboarding, pricing, payment] = await Promise.all([
-    auditMachineReadableProfile(base),
-    auditMcpApiEndpoints(base),
-    auditAgentNativeOnboarding(base),
-    auditStructuredPricing(base),
-    auditAgentPaymentAcceptance(base),
+    auditMachineReadableProfile(base, globalController.signal),
+    auditMcpApiEndpoints(base, globalController.signal),
+    auditAgentNativeOnboarding(base, globalController.signal),
+    auditStructuredPricing(base, globalController.signal),
+    auditAgentPaymentAcceptance(base, globalController.signal),
   ])
 
   const categories = [profile, endpoints, onboarding, pricing, payment]
@@ -760,6 +827,9 @@ export async function runAudit(rawUrl: string): Promise<AuditScorecard> {
     categories,
     audited_at: new Date().toISOString(),
     next_steps: nextSteps,
+  }
+  } finally {
+    clearTimeout(globalTimer)
   }
 }
 

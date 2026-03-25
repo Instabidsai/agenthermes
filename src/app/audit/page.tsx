@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import {
   Shield,
@@ -27,32 +27,33 @@ type AuditTier = 'unaudited' | 'bronze' | 'silver' | 'gold' | 'platinum'
 interface CategoryResult {
   category: string
   label: string
-  icon: typeof Shield
   score: number
   max_score: number
-  status: 'pass' | 'warn' | 'fail'
-  details: string[]
+  details: Record<string, unknown>
   recommendations: string[]
 }
 
+interface AuditScorecard {
+  business_name: string
+  domain: string
+  total_score: number
+  tier: AuditTier
+  categories: CategoryResult[]
+  audited_at: string
+  next_steps: string[]
+  business_id?: string
+  error?: string
+}
+
 interface AuditState {
-  phase: 'idle' | 'running' | 'complete'
-  currentCheck: string
+  phase: 'idle' | 'running' | 'complete' | 'error'
   domain: string
   totalScore: number
   tier: AuditTier
   categories: CategoryResult[]
+  nextSteps: string[]
+  errorMessage: string
 }
-
-const auditChecks = [
-  'Resolving domain...',
-  'Checking machine-readable profiles...',
-  'Scanning for MCP/API endpoints...',
-  'Evaluating agent onboarding flows...',
-  'Analyzing pricing structures...',
-  'Verifying payment capabilities...',
-  'Calculating trust score...',
-]
 
 const categoryIcons: Record<string, typeof Shield> = {
   machine_readable_profile: Globe,
@@ -62,126 +63,31 @@ const categoryIcons: Record<string, typeof Shield> = {
   agent_payment_acceptance: Wallet,
 }
 
-// Simulated audit — in production this would call a real API
-function simulateAudit(domain: string): CategoryResult[] {
-  const hash = domain.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
-  const seed = (hash % 50) + 25
-
-  return [
-    {
-      category: 'machine_readable_profile',
-      label: 'Machine-Readable Profile',
-      icon: Globe,
-      score: Math.min(20, Math.round(seed * 0.28)),
-      max_score: 20,
-      status: seed > 50 ? 'pass' : seed > 30 ? 'warn' : 'fail',
-      details:
-        seed > 50
-          ? ['A2A agent card found at /.well-known/agent.json', 'Schema.org structured data present', 'OpenAPI spec detected']
-          : seed > 30
-            ? ['Basic meta tags found', 'No A2A agent card detected', 'Partial structured data']
-            : ['No machine-readable profile detected', 'Missing /.well-known/agent.json', 'No structured data'],
-      recommendations:
-        seed > 50
-          ? ['Consider adding capabilities field to agent card']
-          : ['Add an A2A agent card at /.well-known/agent.json', 'Add Schema.org structured data', 'Publish an OpenAPI specification'],
-    },
-    {
-      category: 'mcp_api_endpoints',
-      label: 'MCP & API Endpoints',
-      icon: Server,
-      score: Math.min(25, Math.round(seed * 0.32)),
-      max_score: 25,
-      status: seed > 55 ? 'pass' : seed > 35 ? 'warn' : 'fail',
-      details:
-        seed > 55
-          ? ['MCP server endpoint detected', 'REST API with OpenAPI docs', '3 tool definitions found']
-          : seed > 35
-            ? ['REST API detected but no MCP endpoint', 'API documentation incomplete']
-            : ['No API endpoints detected', 'No MCP server found'],
-      recommendations:
-        seed > 55
-          ? ['Add rate limit headers to API responses']
-          : ['Expose an MCP server for agent consumption', 'Add OpenAPI documentation to your API', 'Define tool schemas for agent use'],
-    },
-    {
-      category: 'agent_native_onboarding',
-      label: 'Agent-Native Onboarding',
-      icon: UserCheck,
-      score: Math.min(20, Math.round(seed * 0.22)),
-      max_score: 20,
-      status: seed > 60 ? 'pass' : seed > 40 ? 'warn' : 'fail',
-      details:
-        seed > 60
-          ? ['API key provisioning available', 'Programmatic signup flow detected', 'Agent auth endpoints present']
-          : seed > 40
-            ? ['Manual signup only', 'No programmatic onboarding', 'API key available after manual setup']
-            : ['No agent-friendly onboarding', 'Human-only registration', 'No API access'],
-      recommendations:
-        seed > 60
-          ? ['Add OAuth2 support for richer agent auth']
-          : ['Create an API endpoint for programmatic signup', 'Enable API key generation via API', 'Remove CAPTCHA from agent-facing flows'],
-    },
-    {
-      category: 'structured_pricing',
-      label: 'Structured Pricing',
-      icon: CreditCard,
-      score: Math.min(15, Math.round(seed * 0.18)),
-      max_score: 15,
-      status: seed > 50 ? 'pass' : seed > 30 ? 'warn' : 'fail',
-      details:
-        seed > 50
-          ? ['Machine-readable pricing found', 'Per-call pricing model detected', 'Price endpoint returns JSON']
-          : seed > 30
-            ? ['Pricing page exists but not machine-readable', 'No structured pricing data']
-            : ['No pricing information found', 'Agent cannot determine costs'],
-      recommendations:
-        seed > 50
-          ? ['Add volume discount tiers to pricing data']
-          : ['Publish pricing in machine-readable format', 'Add a /pricing.json endpoint', 'Include pricing in your A2A agent card'],
-    },
-    {
-      category: 'agent_payment_acceptance',
-      label: 'Agent Payment Acceptance',
-      icon: Wallet,
-      score: Math.min(20, Math.round(seed * 0.15)),
-      max_score: 20,
-      status: seed > 65 ? 'pass' : seed > 45 ? 'warn' : 'fail',
-      details:
-        seed > 65
-          ? ['Stripe Connect detected', 'Programmatic payment flow available', 'Refund API present']
-          : seed > 45
-            ? ['Payment page exists', 'No programmatic payment API', 'Manual invoice only']
-            : ['No payment capabilities detected', 'Agent cannot transact'],
-      recommendations:
-        seed > 65
-          ? ['Add webhook confirmation for payment status']
-          : ['Connect Stripe for programmatic payments', 'Create a payment API endpoint', 'Enable agent wallet support via AgentHermes'],
-    },
-  ]
-}
-
-function getTier(score: number): AuditTier {
-  if (score >= 80) return 'platinum'
-  if (score >= 60) return 'gold'
-  if (score >= 40) return 'silver'
-  if (score >= 20) return 'bronze'
-  return 'unaudited'
+function getStatus(score: number, maxScore: number): 'pass' | 'warn' | 'fail' {
+  const pct = maxScore > 0 ? score / maxScore : 0
+  if (pct >= 0.7) return 'pass'
+  if (pct >= 0.35) return 'warn'
+  return 'fail'
 }
 
 export default function AuditPage() {
   const [domainInput, setDomainInput] = useState('')
   const [audit, setAudit] = useState<AuditState>({
     phase: 'idle',
-    currentCheck: '',
     domain: '',
     totalScore: 0,
     tier: 'unaudited',
     categories: [],
+    nextSteps: [],
+    errorMessage: '',
   })
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
     new Set()
   )
+
+  useEffect(() => {
+    document.title = 'Audit | AgentHermes'
+  }, [])
 
   const toggleCategory = (cat: string) => {
     setExpandedCategories((prev) => {
@@ -198,35 +104,48 @@ export default function AuditPage() {
 
     setAudit({
       phase: 'running',
-      currentCheck: auditChecks[0],
       domain,
       totalScore: 0,
       tier: 'unaudited',
       categories: [],
+      nextSteps: [],
+      errorMessage: '',
     })
 
-    // Simulate progressive checks
-    for (let i = 0; i < auditChecks.length; i++) {
-      setAudit((prev) => ({ ...prev, currentCheck: auditChecks[i] }))
-      await new Promise((r) => setTimeout(r, 400 + Math.random() * 300))
+    try {
+      const res = await fetch('/api/v1/audit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: domain }),
+      })
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => null)
+        throw new Error(errBody?.error || `Audit failed with status ${res.status}`)
+      }
+
+      const scorecard: AuditScorecard = await res.json()
+
+      setAudit({
+        phase: 'complete',
+        domain: scorecard.domain || domain,
+        totalScore: scorecard.total_score,
+        tier: scorecard.tier as AuditTier,
+        categories: scorecard.categories,
+        nextSteps: scorecard.next_steps || [],
+        errorMessage: '',
+      })
+
+      // Expand all categories by default
+      setExpandedCategories(new Set(scorecard.categories.map((c) => c.category)))
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Audit failed. Please try again.'
+      setAudit((prev) => ({
+        ...prev,
+        phase: 'error',
+        errorMessage: message,
+      }))
     }
-
-    // Calculate results
-    const categories = simulateAudit(domain)
-    const totalScore = categories.reduce((sum, c) => sum + c.score, 0)
-    const tier = getTier(totalScore)
-
-    setAudit({
-      phase: 'complete',
-      currentCheck: '',
-      domain,
-      totalScore,
-      tier,
-      categories,
-    })
-
-    // Expand all categories by default
-    setExpandedCategories(new Set(categories.map((c) => c.category)))
   }
 
   const statusIcon = (status: 'pass' | 'warn' | 'fail') => {
@@ -247,7 +166,7 @@ export default function AuditPage() {
         </h1>
         <p className="text-zinc-400 max-w-md mx-auto">
           Enter your domain and we will score your business across 5
-          machine-readability categories. Free. 60 seconds.
+          machine-readability categories. Free. Takes 10-30 seconds.
         </p>
       </div>
 
@@ -294,23 +213,32 @@ export default function AuditPage() {
           <p className="text-sm font-medium text-zinc-300 mb-1">
             Auditing {audit.domain}
           </p>
-          <p className="text-xs text-zinc-500">{audit.currentCheck}</p>
+          <p className="text-xs text-zinc-500">
+            Scanning machine-readable profiles, MCP endpoints, onboarding flows, pricing, and payment capabilities...
+          </p>
+          <p className="text-xs text-zinc-600 mt-3">
+            This usually takes 10-30 seconds.
+          </p>
+        </div>
+      )}
 
-          {/* Progress dots */}
-          <div className="flex justify-center gap-1.5 mt-6">
-            {auditChecks.map((check, i) => {
-              const currentIdx = auditChecks.indexOf(audit.currentCheck)
-              return (
-                <div
-                  key={check}
-                  className={clsx(
-                    'h-1.5 w-1.5 rounded-full transition-colors',
-                    i <= currentIdx ? 'bg-emerald-500' : 'bg-zinc-700'
-                  )}
-                />
-              )
-            })}
-          </div>
+      {/* Error State */}
+      {audit.phase === 'error' && (
+        <div className="p-8 rounded-xl bg-red-950/20 border border-red-800/40 text-center">
+          <XCircle className="h-8 w-8 text-red-500 mx-auto mb-4" />
+          <p className="text-sm font-medium text-red-300 mb-1">
+            Audit Failed
+          </p>
+          <p className="text-xs text-red-400/80">
+            {audit.errorMessage}
+          </p>
+          <button
+            type="button"
+            onClick={runAudit}
+            className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-red-800/50 hover:border-red-700/50 text-red-300 hover:text-red-200 text-sm font-medium transition-colors"
+          >
+            Try Again
+          </button>
         </div>
       )}
 
@@ -334,13 +262,15 @@ export default function AuditPage() {
                   on agent readiness.
                 </p>
                 <p className="text-xs text-zinc-500">
-                  {audit.totalScore >= 80
+                  {audit.totalScore >= 90
                     ? 'Outstanding. Your business is fully agent-ready.'
-                    : audit.totalScore >= 60
-                      ? 'Good foundation. A few improvements will unlock full agent capabilities.'
-                      : audit.totalScore >= 40
-                        ? 'Moderate readiness. Significant improvements needed for agent transactions.'
-                        : 'Low readiness. Your business is not yet discoverable by autonomous agents.'}
+                    : audit.totalScore >= 75
+                      ? 'Great foundation. A few improvements will unlock full agent capabilities.'
+                      : audit.totalScore >= 60
+                        ? 'Good progress. Improvements needed for higher-tier agent transactions.'
+                        : audit.totalScore >= 40
+                          ? 'Moderate readiness. Significant improvements needed for agent transactions.'
+                          : 'Low readiness. Your business is not yet discoverable by autonomous agents.'}
                 </p>
               </div>
             </div>
@@ -351,7 +281,27 @@ export default function AuditPage() {
             {audit.categories.map((cat) => {
               const isExpanded = expandedCategories.has(cat.category)
               const Icon = categoryIcons[cat.category] || Shield
-              const pct = Math.round((cat.score / cat.max_score) * 100)
+              const pct = cat.max_score > 0 ? Math.round((cat.score / cat.max_score) * 100) : 0
+              const status = getStatus(cat.score, cat.max_score)
+
+              // Flatten details into readable strings for display
+              const detailStrings: string[] = []
+              if (cat.details && typeof cat.details === 'object') {
+                for (const [key, value] of Object.entries(cat.details)) {
+                  if (key.startsWith('_')) continue
+                  if (typeof value === 'boolean') {
+                    detailStrings.push(`${key.replace(/_/g, ' ')}: ${value ? 'Yes' : 'No'}`)
+                  } else if (typeof value === 'string' || typeof value === 'number') {
+                    detailStrings.push(`${key.replace(/_/g, ' ')}: ${value}`)
+                  } else if (Array.isArray(value) && value.length > 0) {
+                    if (typeof value[0] === 'string') {
+                      detailStrings.push(`${key.replace(/_/g, ' ')}: ${value.join(', ')}`)
+                    } else {
+                      detailStrings.push(`${key.replace(/_/g, ' ')}: ${value.length} found`)
+                    }
+                  }
+                }
+              }
 
               return (
                 <div
@@ -373,7 +323,7 @@ export default function AuditPage() {
                         <span className="text-sm font-semibold text-zinc-200">
                           {cat.label}
                         </span>
-                        {statusIcon(cat.status)}
+                        {statusIcon(status)}
                       </div>
                       {/* Score bar */}
                       <div className="flex items-center gap-3">
@@ -381,9 +331,9 @@ export default function AuditPage() {
                           <div
                             className={clsx(
                               'h-full rounded-full transition-all duration-500',
-                              cat.status === 'pass' && 'bg-emerald-500',
-                              cat.status === 'warn' && 'bg-amber-500',
-                              cat.status === 'fail' && 'bg-red-500'
+                              status === 'pass' && 'bg-emerald-500',
+                              status === 'warn' && 'bg-amber-500',
+                              status === 'fail' && 'bg-red-500'
                             )}
                             style={{ width: `${pct}%` }}
                           />
@@ -406,22 +356,24 @@ export default function AuditPage() {
                     <div className="px-5 pb-5 pt-0">
                       <div className="border-t border-zinc-800/80 pt-4 space-y-4">
                         {/* Findings */}
-                        <div>
-                          <h4 className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider mb-2">
-                            Findings
-                          </h4>
-                          <ul className="space-y-1.5">
-                            {cat.details.map((d, i) => (
-                              <li
-                                key={i}
-                                className="flex items-start gap-2 text-xs text-zinc-400"
-                              >
-                                <span className="text-zinc-600 mt-0.5">-</span>
-                                {d}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
+                        {detailStrings.length > 0 && (
+                          <div>
+                            <h4 className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider mb-2">
+                              Findings
+                            </h4>
+                            <ul className="space-y-1.5">
+                              {detailStrings.map((d, i) => (
+                                <li
+                                  key={i}
+                                  className="flex items-start gap-2 text-xs text-zinc-400"
+                                >
+                                  <span className="text-zinc-600 mt-0.5">-</span>
+                                  {d}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
 
                         {/* Recommendations */}
                         {cat.recommendations.length > 0 && (

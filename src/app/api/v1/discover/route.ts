@@ -19,12 +19,13 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from('businesses')
-      .select('*, services(*), audit_results(*)', { count: 'exact' })
+      .select('id, name, slug, domain, description, logo_url, audit_score, audit_tier, trust_score, vertical, capabilities, mcp_endpoints, pricing_visible, agent_onboarding, created_at, updated_at, services(*), audit_results(*)', { count: 'exact' })
 
-    // Text search on name, description, domain
+    // Text search on name, description, domain (sanitized against PostgREST injection)
     if (q) {
+      const safeQ = `%${q.replace(/[%_,().]/g, '')}%`
       query = query.or(
-        `name.ilike.%${q}%,description.ilike.%${q}%,domain.ilike.%${q}%`
+        `name.ilike.${safeQ},description.ilike.${safeQ},domain.ilike.${safeQ}`
       )
     }
 
@@ -41,7 +42,10 @@ export async function GET(request: NextRequest) {
     }
 
     if (tier) {
-      query = query.eq('audit_tier', tier)
+      const tierMinScores: Record<string, number> = { bronze: 40, silver: 60, gold: 75, platinum: 90 }
+      if (tierMinScores[tier]) {
+        query = query.gte('audit_score', tierMinScores[tier])
+      }
     }
 
     if (mcp_compatible === 'true') {
@@ -63,7 +67,8 @@ export async function GET(request: NextRequest) {
     const { data, error, count } = await query
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      console.error('[discover] Query error:', error.message)
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 
     // Post-filter: max_price (filter businesses that have at least one service under max_price)
@@ -87,7 +92,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Internal server error'
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('[discover] Unexpected error:', err instanceof Error ? err.message : err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

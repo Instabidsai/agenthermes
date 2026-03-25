@@ -1,46 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { getServiceClient } from '@/lib/supabase'
+import { getStripe } from '@/lib/stripe'
 
 // Stripe webhook handler
-// Verifies signature when STRIPE_WEBHOOK_SECRET is set, otherwise accepts raw body.
-
-function getStripe(): Stripe | null {
-  const key = process.env.STRIPE_SECRET_KEY
-  if (!key) return null
-  return new Stripe(key, { apiVersion: '2026-02-25.clover' })
-}
+// Verifies signature using STRIPE_WEBHOOK_SECRET. Rejects all requests when secret is not configured.
 
 export async function POST(request: NextRequest) {
-  const stripe = getStripe()
-
-  if (!stripe) {
+  let stripe: Stripe
+  try {
+    stripe = getStripe()
+  } catch {
     return NextResponse.json(
       { error: 'Stripe is not configured' },
       { status: 503 }
     )
   }
 
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+  if (!webhookSecret) {
+    return NextResponse.json(
+      { error: 'Webhook not configured' },
+      { status: 503 }
+    )
+  }
+
   const body = await request.text()
   const signature = request.headers.get('stripe-signature')
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
 
   let event: Stripe.Event
 
   try {
-    if (webhookSecret && signature) {
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
-    } else {
-      // No webhook secret configured — parse raw (development mode)
-      console.warn(
-        '[stripe-webhook] STRIPE_WEBHOOK_SECRET not set — skipping signature verification'
-      )
-      event = JSON.parse(body) as Stripe.Event
+    if (!signature) {
+      throw new Error('Missing stripe-signature header')
     }
+    event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Webhook signature verification failed'
-    console.error('[stripe-webhook] Signature error:', message)
-    return NextResponse.json({ error: message }, { status: 400 })
+    console.error('[stripe-webhook] Signature error:', err instanceof Error ? err.message : err)
+    return NextResponse.json({ error: 'Webhook signature verification failed' }, { status: 400 })
   }
 
   const supabase = getServiceClient()
@@ -70,36 +67,46 @@ export async function POST(request: NextRequest) {
         }
 
         // Upsert the wallet row
-        const { data: existingWallet } = await supabase
+        const { data: existingWalletRaw } = await supabase
           .from('agent_wallets')
           .select('id')
           .eq('business_id', businessId)
           .maybeSingle()
+        const existingWallet = existingWalletRaw as any
 
         if (existingWallet) {
-          await supabase
-            .from('agent_wallets')
+          const { error: updateErr } = await (supabase
+            .from('agent_wallets') as any)
             .update({
               stripe_connect_id: account.id,
               status: walletStatus,
             })
             .eq('id', existingWallet.id)
+          if (updateErr) {
+            console.error('[stripe-webhook] Failed to update wallet:', updateErr.message)
+          }
         } else {
-          await supabase.from('agent_wallets').insert({
+          const { error: insertErr } = await supabase.from('agent_wallets').insert({
             business_id: businessId,
             stripe_connect_id: account.id,
             balance: 0,
             auto_reload_threshold: 10,
             auto_reload_amount: 100,
             status: walletStatus,
-          })
+          } as any)
+          if (insertErr) {
+            console.error('[stripe-webhook] Failed to insert wallet:', insertErr.message)
+          }
         }
 
         // Also update the business row
-        await supabase
-          .from('businesses')
+        const { error: bizUpdateErr } = await (supabase
+          .from('businesses') as any)
           .update({ stripe_connect_id: account.id })
           .eq('id', businessId)
+        if (bizUpdateErr) {
+          console.error('[stripe-webhook] Failed to update business:', bizUpdateErr.message)
+        }
 
         console.log(
           `[stripe-webhook] account.updated: business=${businessId} status=${walletStatus}`
@@ -115,13 +122,16 @@ export async function POST(request: NextRequest) {
         const transactionId = transfer.metadata?.transaction_id
 
         if (transactionId) {
-          await supabase
-            .from('transactions')
+          const { error: txnUpdateErr } = await (supabase
+            .from('transactions') as any)
             .update({
               status: 'completed',
               stripe_transfer_id: transfer.id,
             })
             .eq('id', transactionId)
+          if (txnUpdateErr) {
+            console.error(`[stripe-webhook] Failed to update transaction ${transactionId}:`, txnUpdateErr.message)
+          }
 
           console.log(
             `[stripe-webhook] transfer.created: txn=${transactionId} transfer=${transfer.id}`
@@ -140,8 +150,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ received: true })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Webhook processing error'
-    console.error(`[stripe-webhook] Error processing ${event.type}:`, message)
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error(`[stripe-webhook] Error processing ${event.type}:`, err instanceof Error ? err.message : err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -10,7 +10,7 @@ export default function Footer() {
           <div className="md:col-span-2">
             <div className="flex items-center gap-2.5 mb-4">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                <Shield className="h-4.5 w-4.5 text-emerald-500" />
+                <Shield className="h-[18px] w-[18px] text-emerald-500" />
               </div>
               <span className="text-lg font-semibold tracking-tight">
                 Agent<span className="text-emerald-500">Hermes</span>
@@ -49,18 +49,18 @@ export default function Footer() {
             <h4 className="text-sm font-semibold text-zinc-300 mb-3">For Agents</h4>
             <ul className="space-y-2">
               <li>
-                <span className="text-sm text-zinc-500">
-                  MCP Integration
+                <span className="text-sm text-zinc-600">
+                  MCP Integration <span className="text-zinc-700">(Coming Soon)</span>
                 </span>
               </li>
               <li>
-                <span className="text-sm text-zinc-500">
-                  A2A Protocol
+                <span className="text-sm text-zinc-600">
+                  A2A Protocol <span className="text-zinc-700">(Coming Soon)</span>
                 </span>
               </li>
               <li>
-                <span className="text-sm text-zinc-500">
-                  API Docs
+                <span className="text-sm text-zinc-600">
+                  API Docs <span className="text-zinc-700">(Coming Soon)</span>
                 </span>
               </li>
             </ul>

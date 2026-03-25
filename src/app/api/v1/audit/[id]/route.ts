@@ -29,11 +29,12 @@ export async function GET(
     const db = getServiceClient()
 
     // Fetch the business
-    const { data: business, error: bizError } = await db
+    const { data: businessRaw, error: bizError } = await db
       .from('businesses')
       .select('*')
       .eq('id', id)
       .single()
+    const business = businessRaw as Record<string, any> | null
 
     if (bizError || !business) {
       return NextResponse.json(
@@ -72,8 +73,8 @@ export async function GET(
     }
 
     // Group by latest audit timestamp (all rows from the same audit share the same audited_at)
-    const latestTimestamp = auditResults[0].audited_at
-    const latestResults = auditResults.filter(
+    const latestTimestamp = (auditResults[0] as any).audited_at
+    const latestResults = (auditResults as any[]).filter(
       (r: Record<string, unknown>) => r.audited_at === latestTimestamp
     )
 
@@ -110,12 +111,11 @@ export async function GET(
       tier: business.audit_tier,
       categories,
       audited_at: latestTimestamp,
-      next_audit_at: latestResults[0]?.next_audit_at ?? null,
+      next_audit_at: (latestResults[0] as any)?.next_audit_at ?? null,
       next_steps: nextSteps,
     })
   } catch (err: unknown) {
-    console.error('Audit status route error:', err)
-    const message = err instanceof Error ? err.message : 'Internal server error'
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('Audit status route error:', err instanceof Error ? err.message : err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

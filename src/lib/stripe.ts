@@ -5,7 +5,7 @@ import { getServiceClient } from '@/lib/supabase'
 
 let stripeClient: Stripe | null = null
 
-function getStripe(): Stripe {
+export function getStripe(): Stripe {
   if (stripeClient) return stripeClient
 
   const key = process.env.STRIPE_SECRET_KEY
@@ -61,8 +61,8 @@ export async function createConnectAccount(business: {
 
   // Persist the connect ID
   const supabase = getServiceClient()
-  await supabase
-    .from('businesses')
+  await (supabase
+    .from('businesses') as any)
     .update({ stripe_connect_id: account.id })
     .eq('id', business.id)
 
@@ -112,20 +112,22 @@ export async function transferFunds(
   const supabase = getServiceClient()
 
   // Fetch wallets
-  const { data: fromWallet, error: fwErr } = await supabase
+  const { data: fromWalletRaw, error: fwErr } = await supabase
     .from('agent_wallets')
     .select('*')
     .eq('id', fromWalletId)
     .single()
+  const fromWallet = fromWalletRaw as any
 
   if (fwErr || !fromWallet) throw new Error('Source wallet not found')
   if (fromWallet.status !== 'active') throw new Error('Source wallet is not active')
 
-  const { data: toWallet, error: twErr } = await supabase
+  const { data: toWalletRaw, error: twErr } = await supabase
     .from('agent_wallets')
     .select('*')
     .eq('id', toWalletId)
     .single()
+  const toWallet = toWalletRaw as any
 
   if (twErr || !toWallet) throw new Error('Destination wallet not found')
   if (toWallet.status !== 'active') throw new Error('Destination wallet is not active')
@@ -137,7 +139,7 @@ export async function transferFunds(
   }
 
   // Create pending transaction
-  const { data: txn, error: txnErr } = await supabase
+  const { data: txnRaw, error: txnErr } = await supabase
     .from('transactions')
     .insert({
       buyer_wallet_id: fromWalletId,
@@ -148,9 +150,10 @@ export async function transferFunds(
       agent_id: extra?.agent_id ?? null,
       task_context: extra?.task_context ?? null,
       status: 'pending',
-    })
+    } as any)
     .select()
     .single()
+  const txn = txnRaw as any
 
   if (txnErr || !txn) throw new Error('Failed to create transaction record')
 
@@ -178,28 +181,36 @@ export async function transferFunds(
       stripeTransferId = transfer.id
     } catch (stripeErr) {
       // Mark transaction failed
-      await supabase
-        .from('transactions')
+      await (supabase
+        .from('transactions') as any)
         .update({ status: 'failed' })
         .eq('id', txn.id)
       throw stripeErr
     }
   }
 
-  // Update balances (ledger)
-  await supabase
-    .from('agent_wallets')
-    .update({ balance: fromWallet.balance - amount })
-    .eq('id', fromWalletId)
+  // Update balances atomically (prevents race conditions)
+  const { error: transferErr } = await supabase
+    .rpc('atomic_transfer' as any, {
+      p_from_id: fromWalletId,
+      p_to_id: toWalletId,
+      p_amount: amount,
+    } as any)
 
-  await supabase
-    .from('agent_wallets')
-    .update({ balance: toWallet.balance + amount })
-    .eq('id', toWalletId)
+  if (transferErr) {
+    // Mark transaction failed if atomic transfer fails
+    await (supabase
+      .from('transactions') as any)
+      .update({ status: 'failed' })
+      .eq('id', txn.id)
+    throw new Error(transferErr.message.includes('Insufficient balance')
+      ? 'Insufficient balance'
+      : `Transfer failed: ${transferErr.message}`)
+  }
 
   // Mark completed
-  await supabase
-    .from('transactions')
+  await (supabase
+    .from('transactions') as any)
     .update({
       status: 'completed',
       stripe_transfer_id: stripeTransferId,
@@ -217,13 +228,14 @@ export async function getBalance(accountId: string) {
   if (!isStripeConfigured()) {
     // Fallback: return ledger balance from Supabase
     const supabase = getServiceClient()
-    const { data } = await supabase
+    const { data: balanceData } = await supabase
       .from('agent_wallets')
       .select('balance')
       .eq('stripe_connect_id', accountId)
       .single()
+    const balanceRow = balanceData as any
     return {
-      available: [{ amount: Math.round((data?.balance ?? 0) * 100), currency: 'usd' }],
+      available: [{ amount: Math.round((balanceRow?.balance ?? 0) * 100), currency: 'usd' }],
       pending: [{ amount: 0, currency: 'usd' }],
       source: 'ledger',
     }

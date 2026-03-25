@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/supabase'
+import { getBusinessBySlug } from '@/lib/business'
 
 export async function GET(
   _request: NextRequest,
@@ -7,25 +8,18 @@ export async function GET(
 ) {
   try {
     const { slug } = await params
-    const supabase = getServiceClient()
 
-    // Look up business by slug
-    const { data: business, error: bizError } = await supabase
-      .from('businesses')
-      .select('id')
-      .eq('slug', slug)
-      .single()
+    const { business, error: bizError } = await getBusinessBySlug(slug)
 
-    if (bizError || !business) {
-      if (bizError?.code === 'PGRST116') {
-        return NextResponse.json({ error: 'Business not found' }, { status: 404 })
-      }
-      return NextResponse.json(
-        { error: bizError?.message || 'Business not found' },
-        { status: bizError ? 500 : 404 }
-      )
+    if (bizError) {
+      console.error('[services] Business lookup error:', bizError.message)
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    }
+    if (!business) {
+      return NextResponse.json({ error: 'Business not found' }, { status: 404 })
     }
 
+    const supabase = getServiceClient()
     const { data: services, error: svcError } = await supabase
       .from('services')
       .select('*')
@@ -33,13 +27,14 @@ export async function GET(
       .order('created_at', { ascending: false })
 
     if (svcError) {
-      return NextResponse.json({ error: svcError.message }, { status: 500 })
+      console.error('[services] Query error:', svcError.message)
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 
     return NextResponse.json({ services: services || [] })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Internal server error'
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('[services] Unexpected error:', err instanceof Error ? err.message : err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
@@ -50,23 +45,15 @@ export async function POST(
   try {
     const { slug } = await params
     const body = await request.json()
-    const supabase = getServiceClient()
 
-    // Look up business by slug
-    const { data: business, error: bizError } = await supabase
-      .from('businesses')
-      .select('id')
-      .eq('slug', slug)
-      .single()
+    const { business, error: bizError } = await getBusinessBySlug(slug)
 
-    if (bizError || !business) {
-      if (bizError?.code === 'PGRST116') {
-        return NextResponse.json({ error: 'Business not found' }, { status: 404 })
-      }
-      return NextResponse.json(
-        { error: bizError?.message || 'Business not found' },
-        { status: bizError ? 500 : 404 }
-      )
+    if (bizError) {
+      console.error('[services] Business lookup error:', bizError.message)
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    }
+    if (!business) {
+      return NextResponse.json({ error: 'Business not found' }, { status: 404 })
     }
 
     const { name, description, pricing_model, price_per_call, mcp_endpoint, auth_type } = body
@@ -94,6 +81,7 @@ export async function POST(
       )
     }
 
+    const supabase = getServiceClient()
     const { data: service, error: insertError } = await supabase
       .from('services')
       .insert({
@@ -110,12 +98,13 @@ export async function POST(
         avg_response_ms: 0,
         uptime_pct: 100,
         status: 'active',
-      })
+      } as any)
       .select()
       .single()
 
     if (insertError) {
-      return NextResponse.json({ error: insertError.message }, { status: 500 })
+      console.error('[services] Insert error:', insertError.message)
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 
     return NextResponse.json(service, { status: 201 })
@@ -123,7 +112,7 @@ export async function POST(
     if (err instanceof SyntaxError) {
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
     }
-    const message = err instanceof Error ? err.message : 'Internal server error'
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('[services] Unexpected error:', err instanceof Error ? err.message : err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -23,6 +23,34 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    if (name.length > 200) {
+      return NextResponse.json(
+        { error: 'name must be 200 characters or less' },
+        { status: 400 }
+      )
+    }
+
+    if (domain && !/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/i.test(domain)) {
+      return NextResponse.json(
+        { error: 'Invalid domain format' },
+        { status: 400 }
+      )
+    }
+
+    if (owner_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(owner_email)) {
+      return NextResponse.json(
+        { error: 'Invalid email format' },
+        { status: 400 }
+      )
+    }
+
+    if (capabilities && !Array.isArray(capabilities)) {
+      return NextResponse.json(
+        { error: 'capabilities must be an array' },
+        { status: 400 }
+      )
+    }
+
     const slug = slugify(name)
     if (!slug) {
       return NextResponse.json(
@@ -63,12 +91,13 @@ export async function POST(request: NextRequest) {
         trust_score: 0,
         pricing_visible: false,
         agent_onboarding: false,
-      })
+      } as any)
       .select()
       .single()
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      console.error('[business] Insert error:', error.message)
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 
     return NextResponse.json(data, { status: 201 })
@@ -76,7 +105,7 @@ export async function POST(request: NextRequest) {
     if (err instanceof SyntaxError) {
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
     }
-    const message = err instanceof Error ? err.message : 'Internal server error'
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('[business] Unexpected error:', err instanceof Error ? err.message : err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

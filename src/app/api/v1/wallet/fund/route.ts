@@ -30,17 +30,33 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    if (amount > 10000) {
+      return NextResponse.json(
+        { error: 'amount cannot exceed $10,000' },
+        { status: 400 }
+      )
+    }
+
+    if (Math.round(amount * 100) / 100 !== amount) {
+      return NextResponse.json(
+        { error: 'amount must have at most 2 decimal places' },
+        { status: 400 }
+      )
+    }
+
     const supabase = getServiceClient()
 
     // Get or create wallet
-    let { data: wallet, error: walletErr } = await supabase
+    const { data: walletRaw, error: walletErr } = await supabase
       .from('agent_wallets')
       .select('*')
       .eq('business_id', business_id)
       .maybeSingle()
+    let wallet = walletRaw as any
 
     if (walletErr) {
-      return NextResponse.json({ error: walletErr.message }, { status: 500 })
+      console.error('[wallet/fund] Wallet fetch error:', walletErr.message)
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 
     if (!wallet) {
@@ -53,17 +69,18 @@ export async function POST(request: NextRequest) {
           auto_reload_threshold: 10,
           auto_reload_amount: 100,
           status: 'active',
-        })
+        } as any)
         .select()
         .single()
 
       if (createErr || !newWallet) {
+        console.error('[wallet/fund] Wallet create error:', createErr?.message)
         return NextResponse.json(
-          { error: createErr?.message || 'Failed to create wallet' },
+          { error: 'Internal server error' },
           { status: 500 }
         )
       }
-      wallet = newWallet
+      wallet = newWallet as any
     }
 
     if (isStripeConfigured() && wallet.stripe_connect_id) {
@@ -74,23 +91,29 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Ledger-only mode: directly credit the wallet
-    const newBalance = (wallet.balance ?? 0) + amount
+    // Ledger-only mode: atomically credit the wallet (prevents race conditions)
+    const { data: newBalance, error: rpcErr } = await supabase
+      .rpc('atomic_fund' as any, {
+        p_wallet_id: wallet.id,
+        p_amount: amount,
+      } as any)
 
-    const { data: updated, error: updateErr } = await supabase
-      .from('agent_wallets')
-      .update({ balance: newBalance })
-      .eq('id', wallet.id)
-      .select()
-      .single()
-
-    if (updateErr) {
-      return NextResponse.json({ error: updateErr.message }, { status: 500 })
+    if (rpcErr) {
+      console.error('[wallet/fund] Atomic fund error:', rpcErr.message)
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
+
+    // Fetch the updated wallet for the response
+    const { data: updated } = await supabase
+      .from('agent_wallets')
+      .select('*')
+      .eq('id', wallet.id)
+      .single()
 
     return NextResponse.json({
       wallet: updated,
       funded_amount: amount,
+      new_balance: newBalance,
       mode: isStripeConfigured() ? 'stripe_placeholder' : 'ledger',
       message: `Successfully added $${amount.toFixed(2)} to wallet`,
     })
@@ -98,7 +121,7 @@ export async function POST(request: NextRequest) {
     if (err instanceof SyntaxError) {
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
     }
-    const message = err instanceof Error ? err.message : 'Internal server error'
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('[wallet/fund] Unexpected error:', err instanceof Error ? err.message : err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

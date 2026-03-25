@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/supabase'
+import { getBusinessBySlug } from '@/lib/business'
 import type { BusinessManifest } from '@/types/database'
 
 export async function GET(
@@ -8,47 +9,44 @@ export async function GET(
 ) {
   try {
     const { slug } = await params
-    const supabase = getServiceClient()
 
-    // Fetch business
-    const { data: business, error: bizError } = await supabase
-      .from('businesses')
-      .select('*')
-      .eq('slug', slug)
-      .single()
+    const { business, error: bizError } = await getBusinessBySlug(slug)
 
-    if (bizError || !business) {
-      if (bizError?.code === 'PGRST116') {
-        return NextResponse.json({ error: 'Business not found' }, { status: 404 })
-      }
-      return NextResponse.json(
-        { error: bizError?.message || 'Business not found' },
-        { status: bizError ? 500 : 404 }
-      )
+    if (bizError) {
+      console.error('[manifest] Business lookup error:', bizError.message)
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    }
+    if (!business) {
+      return NextResponse.json({ error: 'Business not found' }, { status: 404 })
     }
 
+    const supabase = getServiceClient()
+
     // Fetch active services
-    const { data: services } = await supabase
+    const { data: servicesRaw } = await supabase
       .from('services')
       .select('*')
       .eq('business_id', business.id)
       .eq('status', 'active')
+    const services = (servicesRaw || []) as any[]
 
     // Fetch latest audit results
-    const { data: auditResults } = await supabase
+    const { data: auditResultsRaw } = await supabase
       .from('audit_results')
       .select('*')
       .eq('business_id', business.id)
       .order('audited_at', { ascending: false })
       .limit(1)
+    const auditResults = (auditResultsRaw || []) as any[]
 
     // Check wallet status
-    const { data: wallet } = await supabase
+    const { data: walletRaw } = await supabase
       .from('agent_wallets')
       .select('status')
       .eq('business_id', business.id)
       .limit(1)
       .maybeSingle()
+    const wallet = walletRaw as any
 
     const manifest: BusinessManifest = {
       schema_version: '1.0',
@@ -67,7 +65,7 @@ export async function GET(
       },
       a2a_agent_card: business.a2a_agent_card,
       mcp_endpoints: business.mcp_endpoints || [],
-      services: (services || []).map((s) => ({
+      services: services.map((s: any) => ({
         name: s.name,
         description: s.description,
         pricing_model: s.pricing_model,
@@ -87,7 +85,7 @@ export async function GET(
       headers: { 'Content-Type': 'application/json' },
     })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Internal server error'
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('[manifest] Unexpected error:', err instanceof Error ? err.message : err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

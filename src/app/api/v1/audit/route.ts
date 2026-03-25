@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { runAudit, tierFromScore, normalizeUrl } from '@/lib/audit-engine'
 import { getServiceClient } from '@/lib/supabase'
+import { notifyTierPromotion } from '@/lib/hive-brain'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60 // allow up to 60s for a full audit
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest) {
       .replace(/^www\./, '')
 
     // Upsert the business — create if not exists, update scores if exists
-    const { data: business, error: bizError } = await db
+    const { data: businessRaw, error: bizError } = await db
       .from('businesses')
       .upsert(
         {
@@ -55,11 +56,12 @@ export async function POST(req: NextRequest) {
               (c) => c.category === 'mcp_api_endpoints'
             )?.details.mcp_endpoints_found as string[]) ?? [],
           updated_at: new Date().toISOString(),
-        },
+        } as any,
         { onConflict: 'domain' }
       )
       .select('id')
       .single()
+    const business = businessRaw as any
 
     if (bizError) {
       console.error('Business upsert error:', bizError)
@@ -88,17 +90,28 @@ export async function POST(req: NextRequest) {
     }))
 
     // Delete previous audit results for this business, then insert new ones
-    await db
+    const { error: deleteError } = await db
       .from('audit_results')
       .delete()
       .eq('business_id', businessId)
 
+    if (deleteError) {
+      console.error('Audit results delete error:', deleteError)
+    }
+
     const { error: auditError } = await db
       .from('audit_results')
-      .insert(auditRows)
+      .insert(auditRows as any)
 
     if (auditError) {
       console.error('Audit results insert error:', auditError)
+    }
+
+    // Notify Hive Brain for Gold+ tier promotions
+    if (scorecard.tier === 'gold' || scorecard.tier === 'platinum') {
+      notifyTierPromotion(scorecard.business_name, scorecard.tier, scorecard.total_score).catch(
+        (err) => console.error('Tier promotion notification failed:', err)
+      )
     }
 
     return NextResponse.json({
@@ -106,8 +119,11 @@ export async function POST(req: NextRequest) {
       business_id: businessId,
     })
   } catch (err: unknown) {
-    console.error('Audit route error:', err)
-    const message = err instanceof Error ? err.message : 'Internal server error'
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('Audit route error:', err instanceof Error ? err.message : err)
+    // Allow SSRF validation errors to surface as 400 (user input error)
+    if (err instanceof Error && (err.message.includes('private or internal') || err.message.includes('Only HTTP'))) {
+      return NextResponse.json({ error: err.message }, { status: 400 })
+    }
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

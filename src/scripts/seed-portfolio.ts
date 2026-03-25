@@ -10,6 +10,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'fs'
 import { resolve } from 'path'
+import { tierFromScore } from '../lib/audit-engine'
 
 // ---------- Load .env.local manually (no dotenv dependency) ----------
 
@@ -48,14 +49,6 @@ if (!SUPABASE_URL || !SERVICE_KEY) {
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY)
 
 // ---------- Data ----------
-
-function tierForScore(score: number): string {
-  if (score >= 90) return 'platinum'
-  if (score >= 75) return 'gold'
-  if (score >= 50) return 'silver'
-  if (score >= 25) return 'bronze'
-  return 'unaudited'
-}
 
 interface SeedBusiness {
   name: string
@@ -371,7 +364,7 @@ async function seed() {
       continue
     }
 
-    const tier = tierForScore(biz.audit_score)
+    const tier = tierFromScore(biz.audit_score)
 
     const { data: inserted, error: bizErr } = await supabase
       .from('businesses')

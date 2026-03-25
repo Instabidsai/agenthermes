@@ -12,11 +12,12 @@ import {
   TrendingUp,
   Network,
 } from 'lucide-react'
+import { getServiceClient } from '@/lib/supabase'
 
 const tiers = [
   {
     name: 'Bronze',
-    range: '20-39',
+    range: '40-59',
     color: 'text-amber-500',
     borderColor: 'border-amber-800/40',
     bgColor: 'bg-amber-950/20',
@@ -28,7 +29,7 @@ const tiers = [
   },
   {
     name: 'Silver',
-    range: '40-59',
+    range: '60-74',
     color: 'text-zinc-300',
     borderColor: 'border-zinc-500/40',
     bgColor: 'bg-zinc-800/30',
@@ -40,7 +41,7 @@ const tiers = [
   },
   {
     name: 'Gold',
-    range: '60-79',
+    range: '75-89',
     color: 'text-yellow-500',
     borderColor: 'border-yellow-700/40',
     bgColor: 'bg-yellow-950/20',
@@ -52,7 +53,7 @@ const tiers = [
   },
   {
     name: 'Platinum',
-    range: '80-100',
+    range: '90-100',
     color: 'text-emerald-400',
     borderColor: 'border-emerald-700/40',
     bgColor: 'bg-emerald-950/20',
@@ -65,14 +66,57 @@ const tiers = [
   },
 ]
 
-const stats = [
-  { label: 'Businesses Registered', value: '2,847', icon: Building2 },
-  { label: 'Audits Completed', value: '12,391', icon: Shield },
-  { label: 'Agent Transactions', value: '$1.2M', icon: TrendingUp },
-  { label: 'Active Connections', value: '8,429', icon: Network },
-]
+function formatNumber(n: number): string {
+  return new Intl.NumberFormat('en-US').format(n)
+}
 
-export default function HomePage() {
+function formatCurrency(n: number): string {
+  if (n >= 1_000_000) {
+    return `$${(n / 1_000_000).toFixed(1)}M`
+  }
+  if (n >= 1_000) {
+    return `$${(n / 1_000).toFixed(1)}K`
+  }
+  return `$${n.toFixed(0)}`
+}
+
+async function getNetworkStats() {
+  const db = getServiceClient()
+
+  const [bizRes, auditRes, txRes, connRes] = await Promise.all([
+    db.from('businesses').select('*', { count: 'exact', head: true }),
+    db.from('audit_results').select('*', { count: 'exact', head: true }),
+    db.from('transactions').select('amount'),
+    db.from('connections').select('*', { count: 'exact', head: true }),
+  ])
+
+  const businessCount = bizRes.count ?? 0
+  const auditCount = auditRes.count ?? 0
+  const totalVolume = (txRes.data || []).reduce(
+    (sum: number, row: { amount: number }) => sum + (row.amount || 0),
+    0
+  )
+  const connectionCount = connRes.count ?? 0
+
+  return { businessCount, auditCount, totalVolume, connectionCount }
+}
+
+export default async function HomePage() {
+  let stats: { businessCount: number; auditCount: number; totalVolume: number; connectionCount: number }
+
+  try {
+    stats = await getNetworkStats()
+  } catch {
+    stats = { businessCount: 0, auditCount: 0, totalVolume: 0, connectionCount: 0 }
+  }
+
+  const statItems = [
+    { label: 'Businesses Registered', value: formatNumber(stats.businessCount), icon: Building2 },
+    { label: 'Audits Completed', value: formatNumber(stats.auditCount), icon: Shield },
+    { label: 'Agent Transactions', value: formatCurrency(stats.totalVolume), icon: TrendingUp },
+    { label: 'Active Connections', value: formatNumber(stats.connectionCount), icon: Network },
+  ]
+
   return (
     <div className="relative">
       {/* Hero */}
@@ -231,7 +275,7 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-            {stats.map((stat) => (
+            {statItems.map((stat) => (
               <div
                 key={stat.label}
                 className="p-5 lg:p-6 rounded-xl bg-zinc-900/50 border border-zinc-800/80"

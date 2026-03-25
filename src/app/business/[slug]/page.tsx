@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
 import { getServiceClient } from '@/lib/supabase'
 import type { Business, Service, AuditResult } from '@/types/database'
 import { clsx } from 'clsx'
@@ -26,11 +27,12 @@ async function getBusiness(slug: string): Promise<{
 } | null> {
   const supabase = getServiceClient()
 
-  const { data: business, error } = await supabase
+  const { data: businessRaw, error } = await supabase
     .from('businesses')
     .select('*, services(*), audit_results(*)')
     .eq('slug', slug)
     .single()
+  const business = businessRaw as any
 
   if (error || !business) return null
 
@@ -39,25 +41,27 @@ async function getBusiness(slug: string): Promise<{
     .select('*', { count: 'exact', head: true })
     .or(`business_a_id.eq.${business.id},business_b_id.eq.${business.id}`)
 
-  const { data: walletData } = await supabase
+  const { data: walletDataRaw } = await supabase
     .from('agent_wallets')
     .select('id')
     .eq('business_id', business.id)
+  const walletData = (walletDataRaw || []) as any[]
 
   let transactionVolume = 0
   let transactionCount = 0
 
-  if (walletData && walletData.length > 0) {
-    const walletIds = walletData.map((w) => w.id)
-    const { data: txns } = await supabase
+  if (walletData.length > 0) {
+    const walletIds = walletData.map((w: any) => w.id)
+    const { data: txnsRaw } = await supabase
       .from('transactions')
       .select('amount')
       .in('seller_wallet_id', walletIds)
       .eq('status', 'completed')
+    const txns = (txnsRaw || []) as any[]
 
-    if (txns) {
+    if (txns.length > 0) {
       transactionCount = txns.length
-      transactionVolume = txns.reduce((sum, t) => sum + (t.amount || 0), 0)
+      transactionVolume = txns.reduce((sum: number, t: any) => sum + (t.amount || 0), 0)
     }
   }
 
@@ -66,6 +70,25 @@ async function getBusiness(slug: string): Promise<{
     connectionsCount: connectionsCount ?? 0,
     transactionVolume,
     transactionCount,
+  }
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const { slug } = await params
+  const supabase = getServiceClient()
+  const { data: nameData } = await supabase
+    .from('businesses')
+    .select('name')
+    .eq('slug', slug)
+    .single()
+  const nameRow = nameData as any
+
+  return {
+    title: nameRow ? `${nameRow.name} | AgentHermes` : 'Business | AgentHermes',
   }
 }
 

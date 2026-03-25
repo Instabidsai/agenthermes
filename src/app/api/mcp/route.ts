@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/supabase'
 import { isStripeConfigured, transferFunds } from '@/lib/stripe'
+import { runAudit } from '@/lib/audit-engine'
 
 // =====================================================================
 // MCP Server — JSON-RPC 2.0 compatible
@@ -9,6 +10,12 @@ import { isStripeConfigured, transferFunds } from '@/lib/stripe'
 // the AgentHermes network: discover businesses, check wallets,
 // initiate payments, etc.
 // =====================================================================
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
 
 const SERVER_INFO = {
   name: 'agenthermes',
@@ -124,8 +131,9 @@ async function executeDiscover(params: Record<string, unknown>) {
     .select('id, name, slug, domain, description, vertical, capabilities, audit_score, audit_tier, trust_score, mcp_endpoints')
 
   if (params.q && typeof params.q === 'string') {
+    const safeQ = `%${params.q.replace(/[%_,().]/g, '')}%`
     query = query.or(
-      `name.ilike.%${params.q}%,description.ilike.%${params.q}%,domain.ilike.%${params.q}%`
+      `name.ilike.${safeQ},description.ilike.${safeQ},domain.ilike.${safeQ}`
     )
   }
   if (params.vertical && typeof params.vertical === 'string') {
@@ -135,7 +143,10 @@ async function executeDiscover(params: Record<string, unknown>) {
     query = query.contains('capabilities', [params.capability])
   }
   if (params.tier && typeof params.tier === 'string') {
-    query = query.eq('audit_tier', params.tier)
+    const tierMinScores: Record<string, number> = { bronze: 40, silver: 60, gold: 75, platinum: 90 }
+    if (tierMinScores[params.tier]) {
+      query = query.gte('audit_score', tierMinScores[params.tier])
+    }
   }
 
   query = query.order('audit_score', { ascending: false }).limit(limit)
@@ -144,7 +155,7 @@ async function executeDiscover(params: Record<string, unknown>) {
 
   if (error) throw new Error(error.message)
 
-  let results = data || []
+  let results = (data || []) as Array<Record<string, unknown>>
 
   // Post-filter: max_price
   if (params.max_price && typeof params.max_price === 'number') {
@@ -157,17 +168,18 @@ async function executeDiscover(params: Record<string, unknown>) {
         .select('business_id, price_per_call')
         .in('business_id', bizIds)
 
+      const svcList = (services || []) as Array<Record<string, unknown>>
       const affordableBizIds = new Set<string>()
-      for (const svc of services || []) {
-        if (svc.price_per_call <= maxPrice) {
-          affordableBizIds.add(svc.business_id)
+      for (const svc of svcList) {
+        if ((svc.price_per_call as number) <= maxPrice) {
+          affordableBizIds.add(svc.business_id as string)
         }
       }
       // Keep businesses with no services (unknown pricing) or affordable ones
       results = results.filter(
         (b) =>
-          affordableBizIds.has(b.id) ||
-          !(services || []).some((s) => s.business_id === b.id)
+          affordableBizIds.has(b.id as string) ||
+          !svcList.some((s) => s.business_id === b.id)
       )
     }
   }
@@ -178,18 +190,19 @@ async function executeDiscover(params: Record<string, unknown>) {
 async function executeGetProfile(params: Record<string, unknown>) {
   const slug = params.slug as string
   if (!slug) throw new Error('slug is required')
+  if (!/^[a-z0-9-]{1,100}$/.test(slug)) throw new Error('Invalid slug format')
 
   const supabase = getServiceClient()
 
   const { data, error } = await supabase
     .from('businesses')
-    .select('*, services(*), audit_results(*)')
+    .select('id, name, slug, domain, description, logo_url, audit_score, audit_tier, trust_score, vertical, capabilities, mcp_endpoints, pricing_visible, agent_onboarding, a2a_agent_card, created_at, updated_at, services(*), audit_results(*)')
     .eq('slug', slug)
     .single()
 
   if (error) {
     if (error.code === 'PGRST116') throw new Error(`Business "${slug}" not found`)
-    throw new Error(error.message)
+    throw new Error('Failed to fetch business profile')
   }
 
   return data
@@ -198,31 +211,36 @@ async function executeGetProfile(params: Record<string, unknown>) {
 async function executeGetManifest(params: Record<string, unknown>) {
   const slug = params.slug as string
   if (!slug) throw new Error('slug is required')
+  if (!/^[a-z0-9-]{1,100}$/.test(slug)) throw new Error('Invalid slug format')
 
   const supabase = getServiceClient()
 
-  const { data: business, error } = await supabase
+  const { data: bizRaw, error } = await supabase
     .from('businesses')
-    .select('*')
+    .select('id, name, slug, domain, description, vertical, capabilities, audit_score, audit_tier, a2a_agent_card, mcp_endpoints, stripe_connect_id')
     .eq('slug', slug)
     .single()
 
   if (error) {
     if (error.code === 'PGRST116') throw new Error(`Business "${slug}" not found`)
-    throw new Error(error.message)
+    throw new Error('Failed to fetch business manifest')
   }
+
+  const business = bizRaw as Record<string, unknown>
 
   const { data: services } = await supabase
     .from('services')
     .select('*')
-    .eq('business_id', business.id)
+    .eq('business_id', business.id as string)
     .eq('status', 'active')
 
-  const { data: wallet } = await supabase
+  const { data: walletRaw } = await supabase
     .from('agent_wallets')
     .select('status')
-    .eq('business_id', business.id)
+    .eq('business_id', business.id as string)
     .maybeSingle()
+
+  const wallet = walletRaw as Record<string, unknown> | null
 
   return {
     schema_version: '1.0',
@@ -261,25 +279,12 @@ async function executeRunAudit(params: Record<string, unknown>) {
   const url = params.url as string
   if (!url) throw new Error('url is required')
 
-  // Placeholder audit — in production this would run the full 5-category audit engine.
-  // For now, return a synthetic scorecard.
+  const scorecard = await runAudit(url)
+
   return {
     url,
     business_id: params.business_id || null,
-    status: 'placeholder',
-    message:
-      'Full audit engine not yet wired to MCP endpoint. Use the /api/v1/audit route directly for real audits.',
-    scorecard: {
-      total_score: 0,
-      tier: 'unaudited',
-      categories: [
-        { category: 'machine_readable_profile', score: 0, max_score: 25 },
-        { category: 'mcp_api_endpoints', score: 0, max_score: 25 },
-        { category: 'agent_native_onboarding', score: 0, max_score: 20 },
-        { category: 'structured_pricing', score: 0, max_score: 15 },
-        { category: 'agent_payment_acceptance', score: 0, max_score: 15 },
-      ],
-    },
+    ...scorecard,
   }
 }
 
@@ -289,13 +294,15 @@ async function executeCheckBalance(params: Record<string, unknown>) {
 
   const supabase = getServiceClient()
 
-  const { data: wallet, error } = await supabase
+  const { data: walletData, error } = await supabase
     .from('agent_wallets')
     .select('*')
     .eq('business_id', businessId)
     .maybeSingle()
 
   if (error) throw new Error(error.message)
+
+  const wallet = walletData as Record<string, unknown> | null
 
   if (!wallet) {
     return {
@@ -336,23 +343,25 @@ async function executeInitiatePayment(params: Record<string, unknown>) {
 
   const supabase = getServiceClient()
 
-  const { data: fromWallet } = await supabase
+  const { data: fromWalletRaw } = await supabase
     .from('agent_wallets')
     .select('*')
     .eq('business_id', fromBizId)
     .maybeSingle()
 
+  const fromWallet = fromWalletRaw as Record<string, unknown> | null
   if (!fromWallet) throw new Error('Source business has no wallet')
 
-  const { data: toWallet } = await supabase
+  const { data: toWalletRaw } = await supabase
     .from('agent_wallets')
     .select('*')
     .eq('business_id', toBizId)
     .maybeSingle()
 
+  const toWallet = toWalletRaw as Record<string, unknown> | null
   if (!toWallet) throw new Error('Destination business has no wallet')
 
-  const transaction = await transferFunds(fromWallet.id, toWallet.id, amount, description, {
+  const transaction = await transferFunds(fromWallet.id as string, toWallet.id as string, amount, description, {
     agent_id: params.agent_id as string | undefined,
     task_context: params.task_context as string | undefined,
   })
@@ -415,22 +424,36 @@ function jsonRpcSuccess(
 
 // --- Main handler -------------------------------------------------------
 
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: corsHeaders })
+}
+
 export async function POST(request: NextRequest) {
-  let body: JsonRpcRequest
+  let rawBody: unknown
 
   try {
-    body = await request.json()
+    rawBody = await request.json()
   } catch {
     return NextResponse.json(
       jsonRpcError(null, -32700, 'Parse error — invalid JSON'),
-      { status: 400 }
+      { status: 400, headers: corsHeaders }
     )
   }
+
+  // Handle batch requests (array body)
+  if (Array.isArray(rawBody)) {
+    return NextResponse.json(
+      jsonRpcError(null, -32600, 'Batch requests are not supported'),
+      { status: 400, headers: corsHeaders }
+    )
+  }
+
+  const body = rawBody as JsonRpcRequest
 
   if (!body.jsonrpc || body.jsonrpc !== '2.0' || !body.method) {
     return NextResponse.json(
       jsonRpcError(body?.id ?? null, -32600, 'Invalid request — must be JSON-RPC 2.0'),
-      { status: 400 }
+      { status: 400, headers: corsHeaders }
     )
   }
 
@@ -450,7 +473,28 @@ export async function POST(request: NextRequest) {
             capabilities: {
               tools: {},
             },
-          })
+          }),
+          { headers: corsHeaders }
+        )
+      }
+
+      // ---------------------------------------------------------------
+      // notifications/initialized — client acknowledgement, no-op
+      // ---------------------------------------------------------------
+      case 'notifications/initialized': {
+        return NextResponse.json(
+          jsonRpcSuccess(requestId, {}),
+          { headers: corsHeaders }
+        )
+      }
+
+      // ---------------------------------------------------------------
+      // ping — return pong
+      // ---------------------------------------------------------------
+      case 'ping': {
+        return NextResponse.json(
+          jsonRpcSuccess(requestId, { status: 'pong' }),
+          { headers: corsHeaders }
         )
       }
 
@@ -461,7 +505,8 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           jsonRpcSuccess(requestId, {
             tools: TOOLS,
-          })
+          }),
+          { headers: corsHeaders }
         )
       }
 
@@ -477,7 +522,8 @@ export async function POST(request: NextRequest) {
           return NextResponse.json(
             jsonRpcError(requestId, -32602, `Unknown tool: "${toolName}"`, {
               available_tools: TOOLS.map((t) => t.name),
-            })
+            }),
+            { headers: corsHeaders }
           )
         }
 
@@ -491,7 +537,8 @@ export async function POST(request: NextRequest) {
                   text: JSON.stringify(result, null, 2),
                 },
               ],
-            })
+            }),
+            { headers: corsHeaders }
           )
         } catch (toolErr) {
           const message =
@@ -500,7 +547,8 @@ export async function POST(request: NextRequest) {
             jsonRpcSuccess(requestId, {
               content: [{ type: 'text', text: message }],
               isError: true,
-            })
+            }),
+            { headers: corsHeaders }
           )
         }
       }
@@ -508,25 +556,28 @@ export async function POST(request: NextRequest) {
       default:
         return NextResponse.json(
           jsonRpcError(requestId, -32601, `Method not found: "${method}"`),
-          { status: 404 }
+          { status: 404, headers: corsHeaders }
         )
     }
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Internal error'
+    console.error('[mcp] Internal error:', err instanceof Error ? err.message : err)
     return NextResponse.json(
-      jsonRpcError(requestId, -32603, message),
-      { status: 500 }
+      jsonRpcError(requestId, -32603, 'Internal server error'),
+      { status: 500, headers: corsHeaders }
     )
   }
 }
 
 // GET handler for discovery — agents can GET /api/mcp to see the server info
 export async function GET() {
-  return NextResponse.json({
-    ...SERVER_INFO,
-    protocol: 'JSON-RPC 2.0 (MCP)',
-    endpoint: '/api/mcp',
-    method: 'POST',
-    tools: TOOLS.map((t) => ({ name: t.name, description: t.description })),
-  })
+  return NextResponse.json(
+    {
+      ...SERVER_INFO,
+      protocol: 'JSON-RPC 2.0 (MCP)',
+      endpoint: '/api/mcp',
+      method: 'POST',
+      tools: TOOLS.map((t) => ({ name: t.name, description: t.description })),
+    },
+    { headers: corsHeaders }
+  )
 }
