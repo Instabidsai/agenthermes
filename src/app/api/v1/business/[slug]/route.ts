@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/supabase'
+import { requireAuth } from '@/lib/auth'
 
 export async function GET(
   _request: NextRequest,
@@ -70,6 +71,104 @@ export async function GET(
     })
   } catch (err) {
     console.error('[business/slug] Unexpected error:', err instanceof Error ? err.message : err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ slug: string }> }
+) {
+  const authError = requireAuth(request)
+  if (authError) return authError
+
+  try {
+    const { slug } = await params
+
+    if (!/^[a-z0-9-]{1,100}$/.test(slug)) {
+      return NextResponse.json({ error: 'Invalid slug format' }, { status: 400 })
+    }
+
+    const body = await request.json()
+    const { name, description, domain, vertical, capabilities, logo_url } = body
+
+    // Build update object with only provided fields
+    const updates: Record<string, unknown> = {}
+
+    if (name !== undefined) {
+      if (typeof name !== 'string' || name.trim().length === 0) {
+        return NextResponse.json({ error: 'name must be a non-empty string' }, { status: 400 })
+      }
+      if (name.length > 200) {
+        return NextResponse.json({ error: 'name must be 200 characters or less' }, { status: 400 })
+      }
+      updates.name = name.trim()
+    }
+
+    if (description !== undefined) {
+      if (description !== null && typeof description !== 'string') {
+        return NextResponse.json({ error: 'description must be a string or null' }, { status: 400 })
+      }
+      updates.description = description
+    }
+
+    if (domain !== undefined) {
+      if (domain !== null && (typeof domain !== 'string' || !/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/i.test(domain))) {
+        return NextResponse.json({ error: 'Invalid domain format' }, { status: 400 })
+      }
+      updates.domain = domain
+    }
+
+    if (vertical !== undefined) {
+      if (vertical !== null && typeof vertical !== 'string') {
+        return NextResponse.json({ error: 'vertical must be a string or null' }, { status: 400 })
+      }
+      updates.vertical = vertical
+    }
+
+    if (capabilities !== undefined) {
+      if (!Array.isArray(capabilities)) {
+        return NextResponse.json({ error: 'capabilities must be an array' }, { status: 400 })
+      }
+      updates.capabilities = capabilities
+    }
+
+    if (logo_url !== undefined) {
+      if (logo_url !== null && typeof logo_url !== 'string') {
+        return NextResponse.json({ error: 'logo_url must be a string or null' }, { status: 400 })
+      }
+      updates.logo_url = logo_url
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 })
+    }
+
+    updates.updated_at = new Date().toISOString()
+
+    const supabase = getServiceClient()
+
+    const { data: updated, error: updateError } = await (supabase
+      .from('businesses') as any)
+      .update(updates)
+      .eq('slug', slug)
+      .select()
+      .single()
+
+    if (updateError) {
+      if (updateError.code === 'PGRST116') {
+        return NextResponse.json({ error: 'Business not found' }, { status: 404 })
+      }
+      console.error('[business/slug] Update error:', updateError.message)
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    }
+
+    return NextResponse.json(updated)
+  } catch (err) {
+    if (err instanceof SyntaxError) {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+    }
+    console.error('[business/slug] PATCH unexpected error:', err instanceof Error ? err.message : err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

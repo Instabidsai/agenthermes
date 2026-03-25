@@ -3,6 +3,9 @@ import { getServiceClient } from '@/lib/supabase'
 import { isStripeConfigured, transferFunds } from '@/lib/stripe'
 import { runAudit } from '@/lib/audit-engine'
 
+// Payment tools that require authentication
+const AUTH_REQUIRED_TOOLS = new Set(['initiate_payment', 'check_wallet_balance'])
+
 // =====================================================================
 // MCP Server — JSON-RPC 2.0 compatible
 // =====================================================================
@@ -118,6 +121,218 @@ const TOOLS: ToolDef[] = [
     },
   },
 ]
+
+// --- Resource definitions -------------------------------------------------
+
+interface ResourceDef {
+  uri: string
+  name: string
+  description: string
+  mimeType: string
+}
+
+const RESOURCES: ResourceDef[] = [
+  {
+    uri: 'agenthermes://businesses',
+    name: 'All Businesses',
+    description: 'All businesses registered in the AgentHermes network',
+    mimeType: 'application/json',
+  },
+  {
+    uri: 'agenthermes://business/{slug}',
+    name: 'Business Profile',
+    description: 'Individual business profile by slug',
+    mimeType: 'application/json',
+  },
+  {
+    uri: 'agenthermes://audits/{domain}',
+    name: 'Audit Results',
+    description: 'Agent Readiness Score audit results for a domain',
+    mimeType: 'application/json',
+  },
+  {
+    uri: 'agenthermes://services',
+    name: 'All Services',
+    description: 'All active services across businesses in the network',
+    mimeType: 'application/json',
+  },
+]
+
+async function readResource(uri: string): Promise<{ uri: string; mimeType: string; text: string }> {
+  const supabase = getServiceClient()
+
+  // agenthermes://businesses
+  if (uri === 'agenthermes://businesses') {
+    const { data, error } = await supabase
+      .from('businesses')
+      .select('id, name, slug, domain, description, vertical, capabilities, audit_score, audit_tier, trust_score')
+      .order('audit_score', { ascending: false })
+      .limit(50)
+
+    if (error) throw new Error(error.message)
+    return { uri, mimeType: 'application/json', text: JSON.stringify(data || [], null, 2) }
+  }
+
+  // agenthermes://business/{slug}
+  const businessMatch = uri.match(/^agenthermes:\/\/business\/([a-z0-9-]+)$/)
+  if (businessMatch) {
+    const slug = businessMatch[1]
+    const { data, error } = await supabase
+      .from('businesses')
+      .select('id, name, slug, domain, description, logo_url, audit_score, audit_tier, trust_score, vertical, capabilities, mcp_endpoints, pricing_visible, agent_onboarding, created_at, updated_at, services(*)')
+      .eq('slug', slug)
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') throw new Error(`Business "${slug}" not found`)
+      throw new Error('Failed to fetch business')
+    }
+    return { uri, mimeType: 'application/json', text: JSON.stringify(data, null, 2) }
+  }
+
+  // agenthermes://audits/{domain}
+  const auditMatch = uri.match(/^agenthermes:\/\/audits\/(.+)$/)
+  if (auditMatch) {
+    const domain = auditMatch[1]
+    const { data, error } = await supabase
+      .from('audit_results')
+      .select('*')
+      .eq('domain', domain)
+      .order('created_at', { ascending: false })
+      .limit(10)
+
+    if (error) throw new Error(error.message)
+    return { uri, mimeType: 'application/json', text: JSON.stringify(data || [], null, 2) }
+  }
+
+  // agenthermes://services
+  if (uri === 'agenthermes://services') {
+    const { data, error } = await supabase
+      .from('services')
+      .select('id, business_id, name, description, pricing_model, price_per_call, mcp_endpoint, auth_type, uptime_pct, avg_response_ms, status')
+      .eq('status', 'active')
+      .order('name')
+      .limit(100)
+
+    if (error) throw new Error(error.message)
+    return { uri, mimeType: 'application/json', text: JSON.stringify(data || [], null, 2) }
+  }
+
+  throw new Error(`Unknown resource URI: "${uri}"`)
+}
+
+// --- Prompt definitions ---------------------------------------------------
+
+interface PromptArgument {
+  name: string
+  description: string
+  required: boolean
+}
+
+interface PromptDef {
+  name: string
+  description: string
+  arguments: PromptArgument[]
+}
+
+const PROMPTS: PromptDef[] = [
+  {
+    name: 'audit-url',
+    description: 'Run an Agent Readiness Score audit on a business URL',
+    arguments: [
+      { name: 'url', description: 'The URL to audit', required: true },
+    ],
+  },
+  {
+    name: 'find-service',
+    description: 'Find a business service by capability or description',
+    arguments: [
+      { name: 'query', description: 'What kind of service you need', required: true },
+      { name: 'max_price', description: 'Maximum price per call in USD', required: false },
+    ],
+  },
+  {
+    name: 'check-readiness',
+    description: 'Check if a specific business is agent-ready',
+    arguments: [
+      { name: 'domain', description: 'Business domain to check', required: true },
+    ],
+  },
+]
+
+function getPromptMessages(
+  name: string,
+  args: Record<string, string>
+): Array<{ role: string; content: { type: string; text: string } }> {
+  switch (name) {
+    case 'audit-url': {
+      if (!args.url) throw new Error('Missing required argument: url')
+      return [
+        {
+          role: 'user',
+          content: {
+            type: 'text',
+            text: `Audit the agent readiness of ${args.url} and provide the score breakdown. Include checks for API availability, documentation quality, authentication support, uptime, and response times.`,
+          },
+        },
+      ]
+    }
+
+    case 'find-service': {
+      if (!args.query) throw new Error('Missing required argument: query')
+      let text = `Find businesses on AgentHermes that offer ${args.query} services.`
+      if (args.max_price) {
+        text += ` Only show options under $${args.max_price} per call.`
+      }
+      text += ' Include pricing, uptime stats, and agent readiness tier for each result.'
+      return [
+        {
+          role: 'user',
+          content: { type: 'text', text },
+        },
+      ]
+    }
+
+    case 'check-readiness': {
+      if (!args.domain) throw new Error('Missing required argument: domain')
+      return [
+        {
+          role: 'user',
+          content: {
+            type: 'text',
+            text: `Check the Agent Readiness Score for ${args.domain} and explain what they need to improve. Break down the score by category and provide specific, actionable recommendations.`,
+          },
+        },
+      ]
+    }
+
+    default:
+      throw new Error(`Unknown prompt: "${name}"`)
+  }
+}
+
+// --- Auth helper for MCP tool calls --------------------------------------
+
+function checkToolAuth(request: NextRequest): string | null {
+  const apiKey = process.env.AGENTHERMES_API_KEY
+
+  // If no API key is configured, allow all requests (dev mode)
+  if (!apiKey) {
+    return null
+  }
+
+  const authHeader = request.headers.get('authorization')
+  if (!authHeader) {
+    return 'Authorization header required. Send a Bearer token to use payment tools.'
+  }
+
+  const token = authHeader.replace(/^Bearer\s+/i, '')
+  if (token !== apiKey) {
+    return 'Invalid API key. Access denied for payment tools.'
+  }
+
+  return null // Auth passed
+}
 
 // --- Tool implementations -----------------------------------------------
 
@@ -472,6 +687,8 @@ export async function POST(request: NextRequest) {
             serverInfo: SERVER_INFO,
             capabilities: {
               tools: {},
+              resources: { listChanged: false },
+              prompts: { listChanged: false },
             },
           }),
           { headers: corsHeaders }
@@ -527,6 +744,20 @@ export async function POST(request: NextRequest) {
           )
         }
 
+        // Auth check for payment-related tools
+        if (AUTH_REQUIRED_TOOLS.has(toolName)) {
+          const authError = checkToolAuth(request)
+          if (authError) {
+            return NextResponse.json(
+              jsonRpcSuccess(requestId, {
+                content: [{ type: 'text', text: authError }],
+                isError: true,
+              }),
+              { headers: corsHeaders }
+            )
+          }
+        }
+
         try {
           const result = await handler(toolArgs)
           return NextResponse.json(
@@ -548,6 +779,93 @@ export async function POST(request: NextRequest) {
               content: [{ type: 'text', text: message }],
               isError: true,
             }),
+            { headers: corsHeaders }
+          )
+        }
+      }
+
+      // ---------------------------------------------------------------
+      // resources/list — return available resources
+      // ---------------------------------------------------------------
+      case 'resources/list': {
+        return NextResponse.json(
+          jsonRpcSuccess(requestId, {
+            resources: RESOURCES,
+          }),
+          { headers: corsHeaders }
+        )
+      }
+
+      // ---------------------------------------------------------------
+      // resources/read — read a resource by URI
+      // ---------------------------------------------------------------
+      case 'resources/read': {
+        const uri = params?.uri as string
+        if (!uri) {
+          return NextResponse.json(
+            jsonRpcError(requestId, -32602, 'Missing required parameter: uri'),
+            { headers: corsHeaders }
+          )
+        }
+
+        try {
+          const resource = await readResource(uri)
+          return NextResponse.json(
+            jsonRpcSuccess(requestId, {
+              contents: [resource],
+            }),
+            { headers: corsHeaders }
+          )
+        } catch (resErr) {
+          const message =
+            resErr instanceof Error ? resErr.message : 'Resource read failed'
+          return NextResponse.json(
+            jsonRpcError(requestId, -32602, message),
+            { headers: corsHeaders }
+          )
+        }
+      }
+
+      // ---------------------------------------------------------------
+      // prompts/list — return available prompt templates
+      // ---------------------------------------------------------------
+      case 'prompts/list': {
+        return NextResponse.json(
+          jsonRpcSuccess(requestId, {
+            prompts: PROMPTS,
+          }),
+          { headers: corsHeaders }
+        )
+      }
+
+      // ---------------------------------------------------------------
+      // prompts/get — return a prompt with arguments filled in
+      // ---------------------------------------------------------------
+      case 'prompts/get': {
+        const promptName = params?.name as string
+        if (!promptName) {
+          return NextResponse.json(
+            jsonRpcError(requestId, -32602, 'Missing required parameter: name'),
+            { headers: corsHeaders }
+          )
+        }
+
+        const promptArgs = (params?.arguments as Record<string, string>) || {}
+
+        try {
+          const messages = getPromptMessages(promptName, promptArgs)
+          return NextResponse.json(
+            jsonRpcSuccess(requestId, {
+              description: PROMPTS.find((p) => p.name === promptName)?.description ?? '',
+              messages,
+            }),
+            { headers: corsHeaders }
+          )
+        } catch (promptErr) {
+          const message =
+            promptErr instanceof Error ? promptErr.message : 'Prompt retrieval failed'
+          return NextResponse.json(
+            jsonRpcError(requestId, -32602, message),
             { headers: corsHeaders }
           )
         }

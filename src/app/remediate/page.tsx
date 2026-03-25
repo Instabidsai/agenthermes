@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Wrench,
   Globe,
@@ -15,6 +15,12 @@ import {
   ExternalLink,
   Copy,
   Check,
+  Plus,
+  Trash2,
+  Code2,
+  Upload,
+  Server,
+  Braces,
 } from 'lucide-react'
 import clsx from 'clsx'
 import ScoreGauge from '@/components/ScoreGauge'
@@ -41,11 +47,30 @@ interface AuditData {
 }
 
 type GeneratedFile = {
-  type: 'llms-txt' | 'agent-card'
+  type: string
   content: string
   filename: string
   placement: string
 }
+
+// --- MCP Proxy Types ---
+interface EndpointParam {
+  name: string
+  type: string
+  required: boolean
+}
+
+interface EndpointRow {
+  id: string
+  method: string
+  path: string
+  description: string
+  params: EndpointParam[]
+  bodyFields: { name: string; type: string }[]
+}
+
+// --- Schema.org Types ---
+type SchemaOrgType = 'SoftwareApplication' | 'Organization' | 'LocalBusiness' | 'Product'
 
 const categoryLabels: Record<string, string> = {
   machine_readable_profile: 'Machine-Readable Profile',
@@ -121,7 +146,86 @@ const categoryFixes: Record<string, { label: string; generator: 'llms-txt' | 'ag
   ],
 }
 
+// --- Helpers ---
+
+function makeId(): string {
+  return Math.random().toString(36).slice(2, 10)
+}
+
+function downloadBlob(content: string, filename: string) {
+  const blob = new Blob([content], { type: 'text/plain' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+// --- File Preview Component ---
+
+function FilePreview({
+  file,
+  copiedId,
+  onCopy,
+  onDownload,
+}: {
+  file: GeneratedFile
+  copiedId: string | null
+  onCopy: (file: GeneratedFile) => void
+  onDownload: (file: GeneratedFile) => void
+}) {
+  return (
+    <div className="rounded-xl bg-zinc-900/50 border border-emerald-800/30 overflow-hidden">
+      <div className="flex items-center gap-3 p-4 border-b border-zinc-800/80">
+        <FileText className="h-4 w-4 text-emerald-500" />
+        <span className="text-sm font-semibold text-zinc-200">
+          {file.filename}
+        </span>
+        <span className="text-xs text-zinc-500 ml-1">
+          {file.placement}
+        </span>
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onCopy(file)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-zinc-700 hover:border-zinc-600 text-zinc-300 hover:text-zinc-100 text-xs font-medium transition-colors"
+          >
+            {copiedId === file.type ? (
+              <>
+                <Check className="h-3 w-3 text-emerald-500" />
+                Copied
+              </>
+            ) : (
+              <>
+                <Copy className="h-3 w-3" />
+                Copy
+              </>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => onDownload(file)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-colors"
+          >
+            <Download className="h-3 w-3" />
+            Download
+          </button>
+        </div>
+      </div>
+      <pre className="p-4 text-xs text-zinc-400 font-mono overflow-x-auto max-h-64 overflow-y-auto">
+        {file.content}
+      </pre>
+    </div>
+  )
+}
+
+// ==========================================================================
+// Main Page
+// ==========================================================================
+
 export default function RemediatePage() {
+  // --- Audit State ---
   const [domainInput, setDomainInput] = useState('')
   const [phase, setPhase] = useState<'idle' | 'loading' | 'results' | 'error'>('idle')
   const [audit, setAudit] = useState<AuditData | null>(null)
@@ -130,9 +234,37 @@ export default function RemediatePage() {
   const [generating, setGenerating] = useState<string | null>(null)
   const [copiedFile, setCopiedFile] = useState<string | null>(null)
 
+  // --- Schema.org State ---
+  const [schemaDomain, setSchemaDomain] = useState('')
+  const [schemaName, setSchemaName] = useState('')
+  const [schemaDesc, setSchemaDesc] = useState('')
+  const [schemaType, setSchemaType] = useState<SchemaOrgType>('Organization')
+  const [schemaResult, setSchemaResult] = useState<GeneratedFile | null>(null)
+  const [schemaLoading, setSchemaLoading] = useState(false)
+
+  // --- MCP Proxy State ---
+  const [mcpName, setMcpName] = useState('')
+  const [mcpApiBase, setMcpApiBase] = useState('')
+  const [mcpAuthType, setMcpAuthType] = useState('api_key')
+  const [mcpAuthHeader, setMcpAuthHeader] = useState('X-API-Key')
+  const [mcpDomain, setMcpDomain] = useState('')
+  const [mcpEndpoints, setMcpEndpoints] = useState<EndpointRow[]>([
+    { id: makeId(), method: 'GET', path: '/users', description: 'List all users', params: [], bodyFields: [] },
+  ])
+  const [mcpResult, setMcpResult] = useState<GeneratedFile | null>(null)
+  const [mcpLoading, setMcpLoading] = useState(false)
+
+  // --- OpenAPI-to-MCP State ---
+  const [openApiJson, setOpenApiJson] = useState('')
+  const [openApiResult, setOpenApiResult] = useState<GeneratedFile | null>(null)
+  const [openApiLoading, setOpenApiLoading] = useState(false)
+  const [openApiError, setOpenApiError] = useState('')
+
   useEffect(() => {
     document.title = 'Remediate | AgentHermes'
   }, [])
+
+  // ==== Audit Logic ====
 
   const fetchScore = async () => {
     const domain = domainInput
@@ -213,7 +345,6 @@ export default function RemediatePage() {
         placement = `Place at https://${audit.domain}/.well-known/agent-card.json`
       }
 
-      // Replace existing or add new
       setGeneratedFiles((prev) => {
         const filtered = prev.filter((f) => f.type !== type)
         return [...filtered, { type, content, filename, placement }]
@@ -226,21 +357,15 @@ export default function RemediatePage() {
   }
 
   const downloadFile = (file: GeneratedFile) => {
-    const blob = new Blob([file.content], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = file.filename
-    a.click()
-    URL.revokeObjectURL(url)
+    downloadBlob(file.content, file.filename)
   }
 
-  const copyToClipboard = (file: GeneratedFile) => {
+  const copyToClipboard = useCallback((file: GeneratedFile) => {
     navigator.clipboard.writeText(file.content).then(() => {
       setCopiedFile(file.type)
       setTimeout(() => setCopiedFile(null), 2000)
     })
-  }
+  }, [])
 
   const getStatus = (score: number, maxScore: number): 'pass' | 'warn' | 'fail' => {
     const pct = maxScore > 0 ? score / maxScore : 0
@@ -258,6 +383,244 @@ export default function RemediatePage() {
   const failingCategories = audit?.categories.filter(
     (c) => getStatus(c.score, c.max_score) !== 'pass'
   ) || []
+
+  // ==== Schema.org Logic ====
+
+  const generateSchema = async () => {
+    if (!schemaDomain.trim() || !schemaName.trim() || !schemaDesc.trim()) return
+    setSchemaLoading(true)
+    setSchemaResult(null)
+
+    try {
+      const res = await fetch('/api/v1/remediate/schema-org', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          domain: schemaDomain.trim(),
+          name: schemaName.trim(),
+          description: schemaDesc.trim(),
+          type: schemaType,
+        }),
+      })
+
+      if (!res.ok) throw new Error(`Generation failed (${res.status})`)
+
+      const json = await res.json()
+      const content = JSON.stringify(json, null, 2)
+      const cleanDomain = schemaDomain.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '')
+
+      setSchemaResult({
+        type: 'schema-org',
+        content,
+        filename: 'schema-org.jsonld',
+        placement: `Add as <script type="application/ld+json"> in <head> of https://${cleanDomain}`,
+      })
+    } catch (err) {
+      console.error('Schema.org generation failed:', err)
+    } finally {
+      setSchemaLoading(false)
+    }
+  }
+
+  // ==== MCP Proxy Logic ====
+
+  const addEndpoint = () => {
+    setMcpEndpoints((prev) => [
+      ...prev,
+      { id: makeId(), method: 'GET', path: '/', description: '', params: [], bodyFields: [] },
+    ])
+  }
+
+  const removeEndpoint = (id: string) => {
+    setMcpEndpoints((prev) => prev.filter((ep) => ep.id !== id))
+  }
+
+  const updateEndpoint = (id: string, field: keyof EndpointRow, value: string) => {
+    setMcpEndpoints((prev) =>
+      prev.map((ep) => (ep.id === id ? { ...ep, [field]: value } : ep))
+    )
+  }
+
+  const addParam = (epId: string) => {
+    setMcpEndpoints((prev) =>
+      prev.map((ep) =>
+        ep.id === epId
+          ? { ...ep, params: [...ep.params, { name: '', type: 'string', required: false }] }
+          : ep
+      )
+    )
+  }
+
+  const removeParam = (epId: string, idx: number) => {
+    setMcpEndpoints((prev) =>
+      prev.map((ep) =>
+        ep.id === epId ? { ...ep, params: ep.params.filter((_, i) => i !== idx) } : ep
+      )
+    )
+  }
+
+  const updateParam = (epId: string, idx: number, field: keyof EndpointParam, value: string | boolean) => {
+    setMcpEndpoints((prev) =>
+      prev.map((ep) =>
+        ep.id === epId
+          ? {
+              ...ep,
+              params: ep.params.map((p, i) =>
+                i === idx ? { ...p, [field]: value } : p
+              ),
+            }
+          : ep
+      )
+    )
+  }
+
+  const addBodyField = (epId: string) => {
+    setMcpEndpoints((prev) =>
+      prev.map((ep) =>
+        ep.id === epId
+          ? { ...ep, bodyFields: [...ep.bodyFields, { name: '', type: 'string' }] }
+          : ep
+      )
+    )
+  }
+
+  const removeBodyField = (epId: string, idx: number) => {
+    setMcpEndpoints((prev) =>
+      prev.map((ep) =>
+        ep.id === epId ? { ...ep, bodyFields: ep.bodyFields.filter((_, i) => i !== idx) } : ep
+      )
+    )
+  }
+
+  const updateBodyField = (epId: string, idx: number, field: 'name' | 'type', value: string) => {
+    setMcpEndpoints((prev) =>
+      prev.map((ep) =>
+        ep.id === epId
+          ? {
+              ...ep,
+              bodyFields: ep.bodyFields.map((bf, i) =>
+                i === idx ? { ...bf, [field]: value } : bf
+              ),
+            }
+          : ep
+      )
+    )
+  }
+
+  const generateMcpProxy = async () => {
+    if (!mcpName.trim() || !mcpApiBase.trim() || mcpEndpoints.length === 0) return
+    setMcpLoading(true)
+    setMcpResult(null)
+
+    const endpoints = mcpEndpoints
+      .filter((ep) => ep.path.trim() && ep.description.trim())
+      .map((ep) => {
+        const result: Record<string, unknown> = {
+          method: ep.method,
+          path: ep.path.trim(),
+          description: ep.description.trim(),
+        }
+        if (ep.params.length > 0) {
+          result.params = ep.params
+            .filter((p) => p.name.trim())
+            .map((p) => ({ name: p.name.trim(), type: p.type, required: p.required }))
+        }
+        if (ep.bodyFields.length > 0) {
+          const body: Record<string, string> = {}
+          for (const bf of ep.bodyFields) {
+            if (bf.name.trim()) body[bf.name.trim()] = bf.type
+          }
+          if (Object.keys(body).length > 0) result.body = body
+        }
+        return result
+      })
+
+    if (endpoints.length === 0) return
+
+    try {
+      const res = await fetch('/api/v1/remediate/mcp-proxy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          domain: mcpDomain.trim() || 'example.com',
+          name: mcpName.trim(),
+          api_base: mcpApiBase.trim(),
+          endpoints,
+          auth_type: mcpAuthType,
+          auth_header: mcpAuthHeader.trim(),
+        }),
+      })
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => null)
+        throw new Error(err?.error || `Generation failed (${res.status})`)
+      }
+
+      const content = await res.text()
+      const slug = mcpName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')
+
+      setMcpResult({
+        type: 'mcp-proxy',
+        content,
+        filename: `mcp-server-${slug}.ts`,
+        placement: 'Save as src/app/api/mcp/route.ts in your Next.js app',
+      })
+    } catch (err) {
+      console.error('MCP proxy generation failed:', err)
+    } finally {
+      setMcpLoading(false)
+    }
+  }
+
+  // ==== OpenAPI-to-MCP Logic ====
+
+  const generateFromOpenApi = async () => {
+    setOpenApiError('')
+    if (!openApiJson.trim()) return
+
+    let parsed: Record<string, unknown>
+    try {
+      parsed = JSON.parse(openApiJson)
+    } catch {
+      setOpenApiError('Invalid JSON. Paste a valid OpenAPI spec.')
+      return
+    }
+
+    setOpenApiLoading(true)
+    setOpenApiResult(null)
+
+    try {
+      const res = await fetch('/api/v1/remediate/openapi-to-mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ spec: parsed }),
+      })
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => null)
+        throw new Error(err?.error || `Conversion failed (${res.status})`)
+      }
+
+      const content = await res.text()
+      const specTitle = (parsed as Record<string, Record<string, string>>).info?.title || 'api'
+      const slug = specTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+
+      setOpenApiResult({
+        type: 'openapi-mcp',
+        content,
+        filename: `mcp-server-${slug}.ts`,
+        placement: 'Save as src/app/api/mcp/route.ts in your Next.js app',
+      })
+    } catch (err) {
+      setOpenApiError(err instanceof Error ? err.message : 'Conversion failed')
+    } finally {
+      setOpenApiLoading(false)
+    }
+  }
+
+  // ==========================================================================
+  // Render
+  // ==========================================================================
 
   return (
     <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
@@ -419,7 +782,7 @@ export default function RemediatePage() {
                     </p>
                   </div>
 
-                  {/* Fix Actions — only show for failing categories */}
+                  {/* Fix Actions */}
                   {isFailing && fixes.length > 0 && (
                     <div className="border-t border-zinc-800/80 p-5 space-y-3">
                       <h4 className="text-[10px] font-medium text-amber-500/80 uppercase tracking-wider">
@@ -491,50 +854,13 @@ export default function RemediatePage() {
                 Generated Files
               </h3>
               {generatedFiles.map((file) => (
-                <div
+                <FilePreview
                   key={file.type}
-                  className="rounded-xl bg-zinc-900/50 border border-emerald-800/30 overflow-hidden"
-                >
-                  <div className="flex items-center gap-3 p-4 border-b border-zinc-800/80">
-                    <FileText className="h-4 w-4 text-emerald-500" />
-                    <span className="text-sm font-semibold text-zinc-200">
-                      {file.filename}
-                    </span>
-                    <span className="text-xs text-zinc-500 ml-1">
-                      {file.placement}
-                    </span>
-                    <div className="ml-auto flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => copyToClipboard(file)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-zinc-700 hover:border-zinc-600 text-zinc-300 hover:text-zinc-100 text-xs font-medium transition-colors"
-                      >
-                        {copiedFile === file.type ? (
-                          <>
-                            <Check className="h-3 w-3 text-emerald-500" />
-                            Copied
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="h-3 w-3" />
-                            Copy
-                          </>
-                        )}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => downloadFile(file)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-colors"
-                      >
-                        <Download className="h-3 w-3" />
-                        Download
-                      </button>
-                    </div>
-                  </div>
-                  <pre className="p-4 text-xs text-zinc-400 font-mono overflow-x-auto max-h-64 overflow-y-auto">
-                    {file.content}
-                  </pre>
-                </div>
+                  file={file}
+                  copiedId={copiedFile}
+                  onCopy={copyToClipboard}
+                  onDownload={downloadFile}
+                />
               ))}
             </div>
           )}
@@ -597,6 +923,459 @@ export default function RemediatePage() {
           </div>
         </div>
       )}
+
+      {/* ================================================================== */}
+      {/* Standalone Generators — always visible */}
+      {/* ================================================================== */}
+
+      <div className="mt-16 space-y-16">
+        {/* ---- Divider ---- */}
+        <div className="flex items-center gap-4">
+          <div className="flex-1 h-px bg-zinc-800" />
+          <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
+            Standalone Generators
+          </span>
+          <div className="flex-1 h-px bg-zinc-800" />
+        </div>
+
+        {/* ==== Schema.org Generator ==== */}
+        <section>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-violet-500/10 border border-violet-500/20">
+              <Braces className="h-5 w-5 text-violet-500" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold">Schema.org Generator</h2>
+              <p className="text-xs text-zinc-500">
+                Generate JSON-LD structured data markup for your business.
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-xl bg-zinc-900/50 border border-zinc-800/80 p-6 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Domain</label>
+                <input
+                  type="text"
+                  placeholder="example.com"
+                  value={schemaDomain}
+                  onChange={(e) => setSchemaDomain(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/80 border border-zinc-700 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Business Name</label>
+                <input
+                  type="text"
+                  placeholder="Example Corp"
+                  value={schemaName}
+                  onChange={(e) => setSchemaName(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/80 border border-zinc-700 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-colors"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5">Description</label>
+              <textarea
+                rows={2}
+                placeholder="What does the business do?"
+                value={schemaDesc}
+                onChange={(e) => setSchemaDesc(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/80 border border-zinc-700 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-colors resize-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5">Schema Type</label>
+              <select
+                value={schemaType}
+                onChange={(e) => setSchemaType(e.target.value as SchemaOrgType)}
+                className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/80 border border-zinc-700 text-sm text-zinc-100 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-colors"
+              >
+                <option value="Organization">Organization</option>
+                <option value="SoftwareApplication">Software Application</option>
+                <option value="LocalBusiness">Local Business</option>
+                <option value="Product">Product</option>
+              </select>
+            </div>
+
+            <button
+              type="button"
+              onClick={generateSchema}
+              disabled={schemaLoading || !schemaDomain.trim() || !schemaName.trim() || !schemaDesc.trim()}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-violet-600 hover:bg-violet-500 disabled:bg-violet-800 disabled:text-violet-400 text-white text-sm font-semibold transition-colors"
+            >
+              {schemaLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Braces className="h-4 w-4" />
+              )}
+              Generate Schema.org JSON-LD
+            </button>
+          </div>
+
+          {schemaResult && (
+            <div className="mt-4">
+              <FilePreview
+                file={schemaResult}
+                copiedId={copiedFile}
+                onCopy={copyToClipboard}
+                onDownload={downloadFile}
+              />
+            </div>
+          )}
+        </section>
+
+        {/* ==== MCP Server Proxy Generator ==== */}
+        <section>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
+              <Server className="h-5 w-5 text-cyan-500" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold">MCP Server Proxy Generator</h2>
+              <p className="text-xs text-zinc-500">
+                Build a complete MCP server that wraps any REST API. Define your endpoints and get deployable code.
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-xl bg-zinc-900/50 border border-zinc-800/80 p-6 space-y-5">
+            {/* Server Config */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Server Name</label>
+                <input
+                  type="text"
+                  placeholder="Example Corp"
+                  value={mcpName}
+                  onChange={(e) => setMcpName(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/80 border border-zinc-700 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Domain</label>
+                <input
+                  type="text"
+                  placeholder="example.com"
+                  value={mcpDomain}
+                  onChange={(e) => setMcpDomain(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/80 border border-zinc-700 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-colors"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5">API Base URL</label>
+              <input
+                type="text"
+                placeholder="https://api.example.com"
+                value={mcpApiBase}
+                onChange={(e) => setMcpApiBase(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/80 border border-zinc-700 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-colors"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Auth Type</label>
+                <select
+                  value={mcpAuthType}
+                  onChange={(e) => setMcpAuthType(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/80 border border-zinc-700 text-sm text-zinc-100 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-colors"
+                >
+                  <option value="api_key">API Key</option>
+                  <option value="bearer">Bearer Token</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Auth Header</label>
+                <input
+                  type="text"
+                  placeholder="X-API-Key"
+                  value={mcpAuthHeader}
+                  onChange={(e) => setMcpAuthHeader(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/80 border border-zinc-700 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-colors"
+                />
+              </div>
+            </div>
+
+            {/* Endpoints Builder */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-xs font-medium text-zinc-400 uppercase tracking-wider">
+                  API Endpoints ({mcpEndpoints.length})
+                </h4>
+                <button
+                  type="button"
+                  onClick={addEndpoint}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-cyan-800/50 text-cyan-400 hover:text-cyan-300 hover:border-cyan-700/50 text-xs font-medium transition-colors"
+                >
+                  <Plus className="h-3 w-3" />
+                  Add Endpoint
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {mcpEndpoints.map((ep) => (
+                  <div
+                    key={ep.id}
+                    className="rounded-lg bg-zinc-800/40 border border-zinc-700/40 p-4 space-y-3"
+                  >
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={ep.method}
+                        onChange={(e) => updateEndpoint(ep.id, 'method', e.target.value)}
+                        className="px-2 py-1.5 rounded-md bg-zinc-900 border border-zinc-700 text-xs font-mono text-cyan-400 focus:outline-none focus:border-cyan-600"
+                      >
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="PATCH">PATCH</option>
+                        <option value="DELETE">DELETE</option>
+                      </select>
+                      <input
+                        type="text"
+                        placeholder="/users"
+                        value={ep.path}
+                        onChange={(e) => updateEndpoint(ep.id, 'path', e.target.value)}
+                        className="flex-1 px-2 py-1.5 rounded-md bg-zinc-900 border border-zinc-700 text-xs font-mono text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-cyan-600"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeEndpoint(ep.id)}
+                        disabled={mcpEndpoints.length <= 1}
+                        className="p-1.5 rounded-md text-zinc-500 hover:text-red-400 disabled:opacity-30 transition-colors"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+
+                    <input
+                      type="text"
+                      placeholder="Description: e.g. List all users"
+                      value={ep.description}
+                      onChange={(e) => updateEndpoint(ep.id, 'description', e.target.value)}
+                      className="w-full px-2 py-1.5 rounded-md bg-zinc-900 border border-zinc-700 text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-cyan-600"
+                    />
+
+                    {/* Query Params */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider">
+                          Query Params
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => addParam(ep.id)}
+                          className="text-[10px] text-cyan-500 hover:text-cyan-400 font-medium"
+                        >
+                          + Add
+                        </button>
+                      </div>
+                      {ep.params.map((p, idx) => (
+                        <div key={idx} className="flex items-center gap-1.5 mb-1.5">
+                          <input
+                            type="text"
+                            placeholder="name"
+                            value={p.name}
+                            onChange={(e) => updateParam(ep.id, idx, 'name', e.target.value)}
+                            className="flex-1 px-2 py-1 rounded bg-zinc-900 border border-zinc-700/50 text-[11px] font-mono text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-cyan-700"
+                          />
+                          <select
+                            value={p.type}
+                            onChange={(e) => updateParam(ep.id, idx, 'type', e.target.value)}
+                            className="px-1.5 py-1 rounded bg-zinc-900 border border-zinc-700/50 text-[11px] text-zinc-300 focus:outline-none"
+                          >
+                            <option value="string">string</option>
+                            <option value="number">number</option>
+                            <option value="boolean">boolean</option>
+                          </select>
+                          <label className="flex items-center gap-1 text-[10px] text-zinc-500">
+                            <input
+                              type="checkbox"
+                              checked={p.required}
+                              onChange={(e) => updateParam(ep.id, idx, 'required', e.target.checked)}
+                              className="rounded border-zinc-600"
+                            />
+                            req
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => removeParam(ep.id, idx)}
+                            className="p-0.5 text-zinc-600 hover:text-red-400"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Body Fields (for POST/PUT/PATCH) */}
+                    {['POST', 'PUT', 'PATCH'].includes(ep.method) && (
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider">
+                            Body Fields
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => addBodyField(ep.id)}
+                            className="text-[10px] text-cyan-500 hover:text-cyan-400 font-medium"
+                          >
+                            + Add
+                          </button>
+                        </div>
+                        {ep.bodyFields.map((bf, idx) => (
+                          <div key={idx} className="flex items-center gap-1.5 mb-1.5">
+                            <input
+                              type="text"
+                              placeholder="field name"
+                              value={bf.name}
+                              onChange={(e) => updateBodyField(ep.id, idx, 'name', e.target.value)}
+                              className="flex-1 px-2 py-1 rounded bg-zinc-900 border border-zinc-700/50 text-[11px] font-mono text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-cyan-700"
+                            />
+                            <select
+                              value={bf.type}
+                              onChange={(e) => updateBodyField(ep.id, idx, 'type', e.target.value)}
+                              className="px-1.5 py-1 rounded bg-zinc-900 border border-zinc-700/50 text-[11px] text-zinc-300 focus:outline-none"
+                            >
+                              <option value="string">string</option>
+                              <option value="number">number</option>
+                              <option value="boolean">boolean</option>
+                            </select>
+                            <button
+                              type="button"
+                              onClick={() => removeBodyField(ep.id, idx)}
+                              className="p-0.5 text-zinc-600 hover:text-red-400"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={generateMcpProxy}
+              disabled={mcpLoading || !mcpName.trim() || !mcpApiBase.trim()}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 disabled:bg-cyan-800 disabled:text-cyan-400 text-white text-sm font-semibold transition-colors"
+            >
+              {mcpLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Server className="h-4 w-4" />
+              )}
+              Generate MCP Server
+            </button>
+          </div>
+
+          {mcpResult && (
+            <div className="mt-4">
+              <FilePreview
+                file={mcpResult}
+                copiedId={copiedFile}
+                onCopy={copyToClipboard}
+                onDownload={downloadFile}
+              />
+            </div>
+          )}
+        </section>
+
+        {/* ==== OpenAPI-to-MCP Converter ==== */}
+        <section>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+              <Code2 className="h-5 w-5 text-emerald-500" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold">OpenAPI-to-MCP Converter</h2>
+              <p className="text-xs text-zinc-500">
+                Paste an OpenAPI/Swagger JSON spec and get a fully generated MCP server.
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-xl bg-zinc-900/50 border border-zinc-800/80 p-6 space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+                OpenAPI Spec (JSON)
+              </label>
+              <textarea
+                rows={10}
+                placeholder='{ "openapi": "3.0.0", "info": { "title": "My API" }, "paths": { ... } }'
+                value={openApiJson}
+                onChange={(e) => {
+                  setOpenApiJson(e.target.value)
+                  setOpenApiError('')
+                }}
+                className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/80 border border-zinc-700 text-xs font-mono text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-colors resize-y"
+              />
+              {openApiError && (
+                <p className="mt-1.5 text-xs text-red-400">{openApiError}</p>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={generateFromOpenApi}
+                disabled={openApiLoading || !openApiJson.trim()}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 disabled:text-emerald-400 text-white text-sm font-semibold transition-colors"
+              >
+                {openApiLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Code2 className="h-4 w-4" />
+                )}
+                Convert to MCP Server
+              </button>
+
+              <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-zinc-700 hover:border-zinc-600 text-zinc-300 hover:text-zinc-100 text-sm font-medium transition-colors cursor-pointer">
+                <Upload className="h-4 w-4" />
+                Upload JSON
+                <input
+                  type="file"
+                  accept=".json"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+                    const reader = new FileReader()
+                    reader.onload = (ev) => {
+                      const text = ev.target?.result
+                      if (typeof text === 'string') {
+                        setOpenApiJson(text)
+                        setOpenApiError('')
+                      }
+                    }
+                    reader.readAsText(file)
+                    e.target.value = ''
+                  }}
+                />
+              </label>
+            </div>
+          </div>
+
+          {openApiResult && (
+            <div className="mt-4">
+              <FilePreview
+                file={openApiResult}
+                copiedId={copiedFile}
+                onCopy={copyToClipboard}
+                onDownload={downloadFile}
+              />
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   )
 }
