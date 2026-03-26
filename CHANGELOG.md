@@ -1,5 +1,15 @@
 # AgentHermes Changelog
 
+## Audit Cycle 6 — 2026-03-26T08:15:00Z
+
+### Focus: Dogfood completeness (llms.txt update)
+- **IMPROVE**: llms.txt updated from 8 endpoints to 48+ endpoints
+- **IMPROVE**: Now documents 9-dimension scoring system (was old 5-category)
+- **IMPROVE**: MCP section: 7 tools, 4 resources, 3 prompts documented
+- **IMPROVE**: 12 organized sections covering full API surface
+
+### No bugs found — codebase remains clean after 6 cycles.
+
 ## Audit Cycle 5 — 2026-03-26T07:50:00Z
 
 ### Focus: Hardening + Resilience (no bugs remaining, improving production quality)
