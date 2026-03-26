@@ -120,6 +120,24 @@ const TOOLS: ToolDef[] = [
       required: ['from_business_id', 'to_business_id', 'amount', 'service_description'],
     },
   },
+  {
+    name: 'verify_hermes_json',
+    description:
+      'Verify a .well-known/agent-hermes.json file — checks HMAC signature, score accuracy, and certification status.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        domain: {
+          type: 'string',
+          description: 'Domain to fetch and verify .well-known/agent-hermes.json from',
+        },
+        hermes_json: {
+          type: 'object',
+          description: 'Alternative: provide the hermes JSON content directly instead of fetching from domain',
+        },
+      },
+    },
+  },
 ]
 
 // --- Resource definitions -------------------------------------------------
@@ -592,6 +610,25 @@ async function executeInitiatePayment(params: Record<string, unknown>) {
   }
 }
 
+async function executeVerifyHermesJson(params: Record<string, unknown>) {
+  const domain = params.domain as string | undefined
+  const hermesJson = params.hermes_json as Record<string, unknown> | undefined
+
+  if (!domain && !hermesJson) {
+    throw new Error('Provide either "domain" or "hermes_json"')
+  }
+
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://agenthermes.ai'
+  const response = await fetch(`${baseUrl}/api/v1/hermes-json/verify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ domain, hermes_json: hermesJson }),
+  })
+
+  const result = await response.json()
+  return result
+}
+
 // Tool dispatch map
 const TOOL_HANDLERS: Record<
   string,
@@ -603,6 +640,7 @@ const TOOL_HANDLERS: Record<
   run_audit: executeRunAudit,
   check_wallet_balance: executeCheckBalance,
   initiate_payment: executeInitiatePayment,
+  verify_hermes_json: executeVerifyHermesJson,
 }
 
 // --- JSON-RPC types -----------------------------------------------------

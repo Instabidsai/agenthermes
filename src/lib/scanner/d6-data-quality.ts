@@ -1,0 +1,364 @@
+// ---------------------------------------------------------------------------
+// D6 — Data Quality (weight: 0.10)
+// Does the API return clean, consistent, well-structured data?
+// Checks: sample API responses, null rates, schema compliance, date formats
+//         (ISO 8601), field naming consistency
+// ---------------------------------------------------------------------------
+
+import type { DimensionResult, Check, Recommendation } from './types'
+import { probeEndpoint, isJsonContentType } from './types'
+
+/** Recursively collect all keys and values from a JSON object */
+function flattenObject(
+  obj: unknown,
+  prefix = ''
+): { keys: string[]; values: unknown[] } {
+  const keys: string[] = []
+  const values: unknown[] = []
+
+  if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+    for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
+      const fullKey = prefix ? `${prefix}.${k}` : k
+      keys.push(fullKey)
+      values.push(v)
+      if (v && typeof v === 'object') {
+        const nested = flattenObject(v, fullKey)
+        keys.push(...nested.keys)
+        values.push(...nested.values)
+      }
+    }
+  } else if (Array.isArray(obj)) {
+    for (let i = 0; i < Math.min(obj.length, 5); i++) {
+      const nested = flattenObject(obj[i], `${prefix}[${i}]`)
+      keys.push(...nested.keys)
+      values.push(...nested.values)
+    }
+  }
+
+  return { keys, values }
+}
+
+/** Check if a string looks like ISO 8601 */
+function isIso8601(val: unknown): boolean {
+  if (typeof val !== 'string') return false
+  return /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2})?/.test(val)
+}
+
+/** Detect naming convention: camelCase, snake_case, kebab-case, PascalCase */
+function detectNamingConvention(key: string): string {
+  if (key.includes('_')) return 'snake_case'
+  if (key.includes('-')) return 'kebab-case'
+  if (/^[A-Z]/.test(key)) return 'PascalCase'
+  if (/[a-z][A-Z]/.test(key)) return 'camelCase'
+  return 'unknown'
+}
+
+export async function scanDataQuality(
+  base: string,
+  globalSignal?: AbortSignal
+): Promise<DimensionResult> {
+  const checks: Check[] = []
+  const recommendations: Recommendation[] = []
+  let rawScore = 0
+
+  // -----------------------------------------------------------------------
+  // Collect JSON API responses to analyze
+  // -----------------------------------------------------------------------
+  const samplePaths = [
+    '/api',
+    '/api/v1',
+    '/api/health',
+    '/api/status',
+    '/health',
+    '/status',
+    '/api/pricing',
+    '/api/v1/pricing',
+    '/.well-known/agent.json',
+    '/.well-known/mcp.json',
+  ]
+
+  const sampleResults = await Promise.all(
+    samplePaths.map((p) => probeEndpoint(`${base}${p}`, 'GET', globalSignal))
+  )
+
+  const jsonResponses = sampleResults.filter(
+    (r) => r.found && isJsonContentType(r.contentType) && r.body && typeof r.body === 'object'
+  )
+
+  if (jsonResponses.length === 0) {
+    // No JSON API responses to analyze — score heavily penalized
+    checks.push({
+      name: 'JSON API Responses',
+      passed: false,
+      details: `Checked ${samplePaths.length} endpoints — none return JSON. Cannot assess data quality without structured responses.`,
+      points: 0,
+    })
+    recommendations.push({
+      action:
+        'Ensure your API endpoints return application/json responses. Data quality cannot be assessed without structured API data.',
+      impact: '+60 points',
+      difficulty: 'medium',
+      auto_fixable: false,
+    })
+
+    return {
+      dimension: 'D6',
+      label: 'Data Quality',
+      score: 0,
+      weight: 0.1,
+      checks,
+      recommendations,
+    }
+  }
+
+  checks.push({
+    name: 'JSON API Responses',
+    passed: true,
+    details: `${jsonResponses.length} endpoint(s) return valid JSON for analysis`,
+    points: 10,
+  })
+  rawScore += 10
+
+  // -----------------------------------------------------------------------
+  // 1. Null rate analysis (up to 20 pts)
+  // -----------------------------------------------------------------------
+  let totalValues = 0
+  let nullValues = 0
+
+  for (const resp of jsonResponses) {
+    const { values } = flattenObject(resp.body)
+    for (const v of values) {
+      totalValues++
+      if (v === null || v === undefined || v === '') {
+        nullValues++
+      }
+    }
+  }
+
+  const nullRate = totalValues > 0 ? nullValues / totalValues : 0
+
+  if (totalValues > 0) {
+    let nullPoints = 0
+    if (nullRate < 0.05) nullPoints = 20
+    else if (nullRate < 0.15) nullPoints = 15
+    else if (nullRate < 0.3) nullPoints = 10
+    else if (nullRate < 0.5) nullPoints = 5
+    else nullPoints = 2
+
+    rawScore += nullPoints
+    checks.push({
+      name: 'Null Rate',
+      passed: nullRate < 0.15,
+      details: `${Math.round(nullRate * 100)}% null/empty values across ${totalValues} fields (${nullValues} null)`,
+      points: nullPoints,
+    })
+
+    if (nullRate >= 0.15) {
+      recommendations.push({
+        action: `Reduce null/empty fields in API responses (currently ${Math.round(nullRate * 100)}%). Use defaults or omit empty optional fields.`,
+        impact: `+${20 - nullPoints} points`,
+        difficulty: 'medium',
+        auto_fixable: false,
+      })
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // 2. Date format compliance — ISO 8601 (up to 20 pts)
+  // -----------------------------------------------------------------------
+  let dateFields = 0
+  let isoDateFields = 0
+  let nonIsoDateFields = 0
+
+  for (const resp of jsonResponses) {
+    const { keys, values } = flattenObject(resp.body)
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i]
+      const val = values[i]
+      // Detect date-like fields by key name
+      if (
+        typeof val === 'string' &&
+        /date|time|created|updated|timestamp|_at$|_on$/i.test(key)
+      ) {
+        dateFields++
+        if (isIso8601(val)) {
+          isoDateFields++
+        } else {
+          nonIsoDateFields++
+        }
+      }
+    }
+  }
+
+  if (dateFields > 0) {
+    const isoRate = isoDateFields / dateFields
+    let datePoints = 0
+    if (isoRate === 1) datePoints = 20
+    else if (isoRate >= 0.75) datePoints = 15
+    else if (isoRate >= 0.5) datePoints = 10
+    else datePoints = 3
+
+    rawScore += datePoints
+    checks.push({
+      name: 'ISO 8601 Date Format',
+      passed: isoRate >= 0.75,
+      details: `${isoDateFields}/${dateFields} date fields use ISO 8601 format`,
+      points: datePoints,
+    })
+
+    if (isoRate < 1) {
+      recommendations.push({
+        action: `Standardize all date fields to ISO 8601 format (YYYY-MM-DDTHH:MM:SSZ). ${nonIsoDateFields} field(s) use non-standard formats.`,
+        impact: `+${20 - datePoints} points`,
+        difficulty: 'easy',
+        auto_fixable: true,
+      })
+    }
+  } else {
+    // No date fields found — give partial credit (might just not have date data)
+    rawScore += 10
+    checks.push({
+      name: 'ISO 8601 Date Format',
+      passed: true,
+      details: 'No date fields detected in sample responses (neutral)',
+      points: 10,
+    })
+  }
+
+  // -----------------------------------------------------------------------
+  // 3. Field naming consistency (up to 20 pts)
+  // -----------------------------------------------------------------------
+  const conventionCounts: Record<string, number> = {}
+
+  for (const resp of jsonResponses) {
+    const { keys } = flattenObject(resp.body)
+    for (const key of keys) {
+      // Get the last segment of the key (after last dot)
+      const leafKey = key.includes('.') ? key.split('.').pop()! : key
+      // Skip array indices
+      if (leafKey.startsWith('[')) continue
+      const convention = detectNamingConvention(leafKey)
+      conventionCounts[convention] = (conventionCounts[convention] || 0) + 1
+    }
+  }
+
+  const totalKeys = Object.values(conventionCounts).reduce((a, b) => a + b, 0)
+  const dominantConvention = Object.entries(conventionCounts).sort(
+    (a, b) => b[1] - a[1]
+  )[0]
+
+  if (totalKeys > 0 && dominantConvention) {
+    const consistencyRate = dominantConvention[1] / totalKeys
+    let namingPoints = 0
+    if (consistencyRate >= 0.9) namingPoints = 20
+    else if (consistencyRate >= 0.75) namingPoints = 15
+    else if (consistencyRate >= 0.5) namingPoints = 10
+    else namingPoints = 5
+
+    rawScore += namingPoints
+    checks.push({
+      name: 'Field Naming Consistency',
+      passed: consistencyRate >= 0.75,
+      details: `${Math.round(consistencyRate * 100)}% of fields use ${dominantConvention[0]} (${totalKeys} fields analyzed)`,
+      points: namingPoints,
+    })
+
+    if (consistencyRate < 0.9) {
+      recommendations.push({
+        action: `Standardize field naming to ${dominantConvention[0]} across all endpoints. Currently ${Math.round(consistencyRate * 100)}% consistent.`,
+        impact: `+${20 - namingPoints} points`,
+        difficulty: 'medium',
+        auto_fixable: false,
+      })
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // 4. Schema consistency across responses (up to 15 pts)
+  // -----------------------------------------------------------------------
+  // Check if multiple responses from the same domain follow a consistent envelope pattern
+  const envelopePatterns = jsonResponses.map((r) => {
+    const body = r.body as Record<string, unknown>
+    const topKeys = Object.keys(body).sort().join(',')
+    return topKeys
+  })
+
+  // Check for common envelope patterns like { data, error, meta } or { status, result }
+  const hasEnvelope = envelopePatterns.some((pattern) => {
+    return /data|result|response|payload/i.test(pattern)
+  })
+
+  if (hasEnvelope) {
+    rawScore += 15
+    checks.push({
+      name: 'Response Envelope',
+      passed: true,
+      details: 'Responses use a structured envelope pattern (data/result/response wrapper)',
+      points: 15,
+    })
+  } else if (jsonResponses.length > 0) {
+    rawScore += 5
+    checks.push({
+      name: 'Response Envelope',
+      passed: false,
+      details: 'Responses lack a consistent envelope pattern (e.g., { data, error, meta })',
+      points: 5,
+    })
+    recommendations.push({
+      action:
+        'Wrap all API responses in a consistent envelope: { "data": ..., "error": null, "meta": { ... } }. This helps agents parse responses reliably.',
+      impact: '+10 points',
+      difficulty: 'easy',
+      auto_fixable: true,
+    })
+  }
+
+  // -----------------------------------------------------------------------
+  // 5. Content-Type header correctness (up to 15 pts)
+  // -----------------------------------------------------------------------
+  const correctContentType = jsonResponses.filter((r) =>
+    r.contentType?.includes('application/json')
+  )
+  const ctRate =
+    jsonResponses.length > 0
+      ? correctContentType.length / jsonResponses.length
+      : 0
+
+  if (ctRate === 1) {
+    rawScore += 15
+    checks.push({
+      name: 'Content-Type Headers',
+      passed: true,
+      details: 'All JSON responses correctly set application/json content-type',
+      points: 15,
+    })
+  } else if (ctRate > 0) {
+    rawScore += 8
+    checks.push({
+      name: 'Content-Type Headers',
+      passed: false,
+      details: `${Math.round(ctRate * 100)}% of JSON responses have correct content-type header`,
+      points: 8,
+    })
+    recommendations.push({
+      action:
+        'Ensure all JSON responses set Content-Type: application/json header.',
+      impact: '+7 points',
+      difficulty: 'easy',
+      auto_fixable: true,
+    })
+  }
+
+  const score = Math.min(rawScore, 100)
+
+  return {
+    dimension: 'D6',
+    label: 'Data Quality',
+    score,
+    weight: 0.1,
+    checks,
+    recommendations: recommendations.sort(
+      (a, b) => parseInt(b.impact) - parseInt(a.impact)
+    ),
+  }
+}
