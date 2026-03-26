@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
     // Fetch all services for this business
     const { data: services, error: svcError } = await supabase
       .from('services')
-      .select('id, name, description, endpoint_url, status, avg_response_ms, uptime_pct, pricing_model, price_per_call, auth_type, calls_last_30d')
+      .select('id, name, description, mcp_endpoint, status, avg_response_ms, uptime_pct, pricing_model, price_per_call, auth_type, calls_last_30d')
       .eq('business_id', resolvedBusinessId!)
       .order('name', { ascending: true })
 
