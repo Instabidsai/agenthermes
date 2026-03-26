@@ -3,13 +3,14 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import clsx from 'clsx'
-import { Shield, Search, BarChart3, LayoutDashboard, Menu, X, UserPlus, Trophy } from 'lucide-react'
+import { Shield, Search, BarChart3, LayoutDashboard, Menu, X, UserPlus, Trophy, FileText } from 'lucide-react'
 import { useState, useEffect, useCallback } from 'react'
 
 const navLinks = [
   { href: '/discover', label: 'Discover', icon: Search },
   { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
   { href: '/audit', label: 'Audit', icon: BarChart3 },
+  { href: '/report', label: 'Report', icon: FileText },
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
 ]
 

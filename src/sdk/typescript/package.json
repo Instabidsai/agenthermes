@@ -1,0 +1,44 @@
+{
+  "name": "@agenthermes/sdk",
+  "version": "1.0.0",
+  "description": "AgentHermes SDK — Check Agent Readiness Scores, discover agent-ready businesses, and facilitate verified agent-to-business commerce.",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "agenthermes",
+    "agent-readiness",
+    "ai-agents",
+    "mcp",
+    "agent-commerce",
+    "trust-score",
+    "agent-to-business"
+  ],
+  "author": "AgentHermes <hello@agenthermes.ai>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agenthermes/sdk-typescript"
+  },
+  "homepage": "https://agenthermes.ai/docs/sdk",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}
