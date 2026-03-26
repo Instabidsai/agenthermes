@@ -102,10 +102,11 @@ export async function computeTrustScore(businessId: string): Promise<TrustScoreR
   if (biz?.domain) completenessPoints++
   if (biz?.capabilities && Array.isArray(biz.capabilities) && biz.capabilities.length > 0) completenessPoints++
   if (services.length > 0) completenessPoints++
-  const completenessNorm = completenessPoints / 5
+  const completenessNorm = Math.min(Math.max(completenessPoints / 5, 0), 1)
   const completenessWeighted = Math.round(completenessNorm * 10)
 
-  const trustScore = auditWeighted + txSuccessWeighted + volumeWeighted + uptimeWeighted + responseWeighted + completenessWeighted
+  const rawScore = auditWeighted + txSuccessWeighted + volumeWeighted + uptimeWeighted + responseWeighted + completenessWeighted
+  const trustScore = Math.min(Math.max(Math.round(rawScore), 0), 100)
 
   return {
     trust_score: Math.min(trustScore, 100),

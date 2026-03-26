@@ -54,7 +54,12 @@ async function fireWebhookInternal(
     .filter((sub) => matchesFilters(sub.filters, payload))
     .map((sub) => deliverWebhook(sub, eventType, payload))
 
-  await Promise.allSettled(deliveryPromises)
+  const results = await Promise.allSettled(deliveryPromises)
+  for (const result of results) {
+    if (result.status === 'rejected') {
+      console.error('[webhooks] Delivery failed:', result.reason)
+    }
+  }
 }
 
 /**

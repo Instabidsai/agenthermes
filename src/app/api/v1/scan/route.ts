@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
 
     // Find D1 and D2 results for backward-compatible fields
     const d1 = scanResult.dimensions.find((d) => d.dimension === 'D1')
-    const d2 = scanResult.dimensions.find((d) => d.dimension === 'D3')
+    const d2 = scanResult.dimensions.find((d) => d.dimension === 'D2')
     const d4 = scanResult.dimensions.find((d) => d.dimension === 'D4')
 
     // Extract agent card body if found

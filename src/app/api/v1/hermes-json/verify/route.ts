@@ -15,13 +15,20 @@ function getSigningSecret(): string {
 }
 
 function verifySignature(payload: Record<string, unknown>, signature: string): boolean {
-  const secret = getSigningSecret()
-  const canonical = JSON.stringify(payload, Object.keys(payload).sort())
-  const expected = crypto
-    .createHmac('sha256', secret)
-    .update(canonical)
-    .digest('base64')
-  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature))
+  try {
+    const secret = getSigningSecret()
+    const canonical = JSON.stringify(payload, Object.keys(payload).sort())
+    const expected = crypto
+      .createHmac('sha256', secret)
+      .update(canonical)
+      .digest('base64')
+    const expectedBuf = Buffer.from(expected, 'base64')
+    const signatureBuf = Buffer.from(signature, 'base64')
+    if (expectedBuf.length !== signatureBuf.length) return false
+    return crypto.timingSafeEqual(expectedBuf, signatureBuf)
+  } catch {
+    return false
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -69,6 +76,14 @@ export async function POST(request: NextRequest) {
     // Option 2: Fetch from domain's .well-known/agent-hermes.json
     if (!jsonToVerify && domain) {
       const cleanDomain = domain.toLowerCase().trim().replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/+$/, '')
+
+      // SSRF protection — block private/internal IPs
+      const forbidden = ['localhost', '127.0.0.1', '0.0.0.0', '169.254.169.254', '::1', '::']
+      const privateRanges = ['10.', '172.16.', '172.17.', '172.18.', '172.19.', '172.20.', '172.21.', '172.22.', '172.23.', '172.24.', '172.25.', '172.26.', '172.27.', '172.28.', '172.29.', '172.30.', '172.31.', '192.168.', '169.254.']
+      if (forbidden.includes(cleanDomain) || privateRanges.some(r => cleanDomain.startsWith(r))) {
+        return NextResponse.json({ valid: false, reason: 'Cannot verify private/internal domains' }, { status: 400, headers: corsHeaders() })
+      }
+
       const url = `https://${cleanDomain}/.well-known/agent-hermes.json`
 
       try {
