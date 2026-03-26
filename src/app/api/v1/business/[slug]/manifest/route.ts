@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/supabase'
 import { getBusinessBySlug } from '@/lib/business'
+import { trackEvent } from '@/lib/analytics'
 import type { BusinessManifest } from '@/types/database'
 
 export async function GET(
@@ -80,6 +81,12 @@ export async function GET(
         wallet_status: wallet?.status ?? null,
       },
     }
+
+    // Track manifest view (fire-and-forget)
+    trackEvent(business.id, 'manifest_view', {
+      agent_id: _request.headers.get('x-agent-id') || undefined,
+      source: 'api',
+    })
 
     return NextResponse.json(manifest, {
       headers: { 'Content-Type': 'application/json' },

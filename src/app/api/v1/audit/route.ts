@@ -3,6 +3,7 @@ import { runAudit, tierFromScore, normalizeUrl } from '@/lib/audit-engine'
 import { getServiceClient } from '@/lib/supabase'
 import { notifyTierPromotion } from '@/lib/hive-brain'
 import { rateLimit } from '@/lib/auth'
+import { fireWebhook } from '@/lib/webhooks'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60 // allow up to 60s for a full audit
@@ -112,11 +113,23 @@ export async function POST(req: NextRequest) {
       console.error('Audit results insert error:', auditError)
     }
 
-    // Notify Hive Brain for Gold+ tier promotions
+    // Fire webhook for score change (fire-and-forget)
+    fireWebhook('score_change', {
+      business: { id: businessId, name: scorecard.business_name, domain },
+      score: scorecard.total_score,
+      tier: scorecard.tier,
+    })
+
+    // Notify Hive Brain + fire webhook for Gold+ tier promotions
     if (scorecard.tier === 'gold' || scorecard.tier === 'platinum') {
       notifyTierPromotion(scorecard.business_name, scorecard.tier, scorecard.total_score).catch(
         (err) => console.error('Tier promotion notification failed:', err)
       )
+      fireWebhook('tier_promotion', {
+        business: { id: businessId, name: scorecard.business_name, domain },
+        tier: scorecard.tier,
+        score: scorecard.total_score,
+      })
     }
 
     return NextResponse.json({

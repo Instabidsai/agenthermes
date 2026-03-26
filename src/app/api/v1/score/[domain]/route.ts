@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/supabase'
+import { trackEvent } from '@/lib/analytics'
 
 const TIER_LABELS: Record<string, string> = {
   platinum: 'Agent-Native Leader',
@@ -133,6 +134,12 @@ export async function GET(
         status: categoryStatus(result.score, result.max_score),
       }
     }
+
+    // Track score check (fire-and-forget)
+    trackEvent(business.id, 'score_check', {
+      agent_id: _request.headers.get('x-agent-id') || undefined,
+      source: 'api',
+    })
 
     // Build the slug for the profile URL
     const slug = business.slug || decodedDomain.replace(/[^a-z0-9]+/gi, '-').toLowerCase()

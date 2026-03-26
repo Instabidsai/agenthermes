@@ -21,19 +21,25 @@ function buildBadgeSvg(
   tier: string,
   score: number | null,
   tierLabel: string,
-  tierColor: string
+  tierColor: string,
+  certified: boolean = false
 ): string {
-  const leftText = 'Agent Ready'
+  const leftText = certified ? 'Certified' : 'Agent Ready'
   const rightText =
     score !== null ? `${tierLabel} \u00B7 ${score}` : tierLabel
 
   // Calculate widths based on text length for a balanced badge
-  const leftWidth = 98
+  const leftWidth = certified ? 88 : 98
   const rightWidth = score !== null ? 92 : 82
   const totalWidth = leftWidth + rightWidth
 
   const leftCenter = leftWidth / 2
   const rightCenter = leftWidth + rightWidth / 2
+
+  // Certified badges get a gold border glow
+  const borderRect = certified
+    ? `<rect width="${totalWidth}" height="28" rx="4" fill="none" stroke="${tierColor}" stroke-width="2"/>`
+    : ''
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${totalWidth}" height="28" role="img" aria-label="${leftText}: ${rightText}">
   <title>${leftText}: ${rightText}</title>
@@ -49,8 +55,9 @@ function buildBadgeSvg(
     <rect x="${leftWidth}" width="${rightWidth}" height="28" fill="${tierColor}"/>
     <rect width="${totalWidth}" height="28" fill="url(#s)"/>
   </g>
+  ${borderRect}
   <g fill="#fff" text-anchor="middle" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="12" font-weight="600">
-    <text x="${leftCenter}" y="18" fill="#e4e4e7">${leftText}</text>
+    <text x="${leftCenter}" y="18" fill="${certified ? '#fbbf24' : '#e4e4e7'}">${escapeXml(leftText)}</text>
     <text x="${rightCenter}" y="18" fill="#fff">${escapeXml(rightText)}</text>
   </g>
 </svg>`
@@ -93,23 +100,39 @@ export async function GET(
 
     const { data: businessRaw, error: bizError } = await supabase
       .from('businesses')
-      .select('audit_score, audit_tier')
+      .select('id, audit_score, audit_tier')
       .eq('domain', decodedDomain)
       .single()
 
     let tier = 'unaudited'
     let score: number | null = null
+    let certified = false
 
     if (!bizError && businessRaw) {
       const business = businessRaw as Record<string, any>
       tier = business.audit_tier || 'unaudited'
       score = business.audit_score ?? null
+
+      // Check for active certification
+      const { data: certRaw } = await supabase
+        .from('certifications')
+        .select('status, expires_at')
+        .eq('business_id', business.id)
+        .single()
+
+      if (certRaw) {
+        const cert = certRaw as Record<string, any>
+        const daysRemaining = Math.ceil(
+          (new Date(cert.expires_at).getTime() - Date.now()) / (24 * 60 * 60 * 1000)
+        )
+        certified = cert.status === 'active' && daysRemaining > 0
+      }
     }
 
     const tierLabel = TIER_LABELS[tier] || TIER_LABELS.unaudited
     const tierColor = TIER_COLORS[tier] || TIER_COLORS.unaudited
 
-    const svg = buildBadgeSvg(tier, score, tierLabel, tierColor)
+    const svg = buildBadgeSvg(tier, score, tierLabel, tierColor, certified)
 
     return new NextResponse(svg, {
       status: 200,

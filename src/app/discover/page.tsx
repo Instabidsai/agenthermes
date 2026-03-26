@@ -17,8 +17,19 @@ interface DiscoverBusiness {
   audit_tier: 'unaudited' | 'bronze' | 'silver' | 'gold' | 'platinum'
   capabilities: string[]
   vertical: string | null
-  mcp_endpoints: string[]
-  services: { id: string; name: string }[]
+  mcp_endpoints?: string[]
+  trust_score?: number
+  services?: { id: string; name: string }[]
+  similarity?: number | null
+}
+
+/**
+ * Detect whether a query looks like natural language (semantic search candidate).
+ * Heuristic: 3+ words suggests a natural language query.
+ */
+function isNaturalLanguageQuery(q: string): boolean {
+  const words = q.trim().split(/\s+/).filter(Boolean)
+  return words.length >= 3
 }
 
 const verticals = [
@@ -50,6 +61,8 @@ export default function DiscoverPage() {
   const [total, setTotal] = useState(0)
   const [offset, setOffset] = useState(0)
   const [error, setError] = useState('')
+  const [searchType, setSearchType] = useState<'regular' | 'semantic' | 'fulltext_ranked' | 'fallback_ilike'>('regular')
+  const [semanticMode, setSemanticMode] = useState(false)
 
   useEffect(() => {
     document.title = 'Discover | AgentHermes'
@@ -65,6 +78,32 @@ export default function DiscoverPage() {
 
     try {
       const currentOffset = append ? offset : 0
+      const useSemantic = query && (semanticMode || isNaturalLanguageQuery(query)) && !vertical && !tier && minScore === 0
+
+      if (useSemantic && !append) {
+        // Use semantic search endpoint for natural language queries
+        const params = new URLSearchParams()
+        params.set('q', query)
+        params.set('limit', String(LIMIT))
+
+        const res = await fetch(`/api/v1/discover/semantic?${params.toString()}`)
+        const data = await res.json()
+
+        if (!res.ok) {
+          setError(data.error || 'Failed to fetch businesses. Please try again.')
+          return
+        }
+
+        if (data.businesses) {
+          setBusinesses(data.businesses)
+          setTotal(data.result_count ?? data.businesses.length)
+          setSearchType(data.search_type === 'semantic' ? 'semantic' : data.search_type === 'fulltext_ranked' ? 'fulltext_ranked' : 'fallback_ilike')
+        }
+        return
+      }
+
+      // Regular discover endpoint
+      setSearchType('regular')
       const params = new URLSearchParams()
       if (query) params.set('q', query)
       if (vertical) params.set('vertical', vertical)
@@ -95,7 +134,7 @@ export default function DiscoverPage() {
       setLoading(false)
       setLoadingMore(false)
     }
-  }, [query, vertical, tier, minScore, offset])
+  }, [query, vertical, tier, minScore, offset, semanticMode])
 
   // Reset offset and fetch on filter changes
   useEffect(() => {
@@ -103,7 +142,7 @@ export default function DiscoverPage() {
     const timeout = setTimeout(() => fetchBusinesses(false), 300)
     return () => clearTimeout(timeout)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, vertical, tier, minScore])
+  }, [query, vertical, tier, minScore, semanticMode])
 
   const handleLoadMore = () => {
     const newOffset = offset + LIMIT
@@ -179,6 +218,22 @@ export default function DiscoverPage() {
               </button>
             )}
           </div>
+
+          {/* Semantic Search Toggle */}
+          <button
+            type="button"
+            onClick={() => setSemanticMode(!semanticMode)}
+            className={clsx(
+              'flex items-center gap-2 px-4 py-3 rounded-lg border text-sm font-medium transition-colors',
+              semanticMode
+                ? 'border-purple-500/50 text-purple-400 bg-purple-500/5'
+                : 'border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
+            )}
+            title="Toggle semantic search mode for natural language queries"
+          >
+            <Zap className="h-4 w-4" />
+            Semantic
+          </button>
 
           {/* Filter Toggle */}
           <button
@@ -274,9 +329,23 @@ export default function DiscoverPage() {
           </div>
         )}
 
-        {/* Result count */}
-        <div className="text-xs text-zinc-500">
-          {loading ? 'Searching...' : `${total} business${total !== 1 ? 'es' : ''} found`}
+        {/* Result count + search mode indicator */}
+        <div className="flex items-center gap-2 text-xs text-zinc-500">
+          <span>
+            {loading ? 'Searching...' : `${total} business${total !== 1 ? 'es' : ''} found`}
+          </span>
+          {!loading && searchType === 'semantic' && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 text-[10px] font-medium">
+              <Zap className="h-2.5 w-2.5" />
+              Semantic Search
+            </span>
+          )}
+          {!loading && searchType === 'fulltext_ranked' && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 text-[10px] font-medium">
+              <Zap className="h-2.5 w-2.5" />
+              Full-Text Ranked
+            </span>
+          )}
         </div>
       </div>
 
@@ -376,6 +445,11 @@ export default function DiscoverPage() {
                     <span className="flex items-center gap-1 text-[10px] font-medium text-emerald-500/70 bg-emerald-500/5 px-2 py-0.5 rounded">
                       <Zap className="h-2.5 w-2.5" />
                       MCP
+                    </span>
+                  )}
+                  {biz.similarity != null && (
+                    <span className="text-[10px] font-medium text-purple-400/80 bg-purple-500/10 px-2 py-0.5 rounded">
+                      {(biz.similarity * 100).toFixed(0)}% match
                     </span>
                   )}
                 </div>

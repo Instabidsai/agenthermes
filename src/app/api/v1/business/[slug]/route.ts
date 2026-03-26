@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/supabase'
 import { requireAuth } from '@/lib/auth'
+import { trackEvent } from '@/lib/analytics'
 
 export async function GET(
   _request: NextRequest,
@@ -62,6 +63,12 @@ export async function GET(
         transactionVolume = txns.reduce((sum: number, t: any) => sum + (t.amount || 0), 0)
       }
     }
+
+    // Track profile view (fire-and-forget)
+    trackEvent(business.id, 'profile_view', {
+      agent_id: _request.headers.get('x-agent-id') || undefined,
+      source: 'api',
+    })
 
     return NextResponse.json({
       ...business,

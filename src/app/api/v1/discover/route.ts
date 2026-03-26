@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/supabase'
+import { trackEvent } from '@/lib/analytics'
 
 export async function GET(request: NextRequest) {
   try {
@@ -80,6 +81,19 @@ export async function GET(request: NextRequest) {
         if (!services || services.length === 0) return true
         return services.some((s) => s.price_per_call <= maxPriceNum)
       })
+    }
+
+    // Track search impressions for each result (fire-and-forget)
+    const agentId = request.headers.get('x-agent-id') || undefined
+    for (const biz of results) {
+      const b = biz as Record<string, any>
+      if (b.id) {
+        trackEvent(b.id, 'search_impression', {
+          agent_id: agentId,
+          query_text: q || undefined,
+          source: 'discover',
+        })
+      }
     }
 
     return NextResponse.json({

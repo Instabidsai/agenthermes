@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/supabase'
+import { fireWebhook } from '@/lib/webhooks'
 
 function slugify(name: string): string {
   return name
@@ -99,6 +100,9 @@ export async function POST(request: NextRequest) {
       console.error('[business] Insert error:', error.message)
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
+
+    // Fire webhook for new business registration (fire-and-forget)
+    fireWebhook('new_business', data as Record<string, unknown>)
 
     return NextResponse.json(data, { status: 201 })
   } catch (err) {
