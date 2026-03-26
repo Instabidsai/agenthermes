@@ -313,8 +313,9 @@ function tierBg(tier: string): string {
 }
 
 function scoreBarColor(score: number): string {
-  if (score >= 75) return 'bg-emerald-500'
-  if (score >= 60) return 'bg-yellow-500'
+  if (score >= 90) return 'bg-emerald-500'
+  if (score >= 75) return 'bg-yellow-500'
+  if (score >= 60) return 'bg-zinc-300'
   if (score >= 40) return 'bg-amber-500'
   return 'bg-red-500'
 }

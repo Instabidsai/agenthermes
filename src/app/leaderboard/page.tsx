@@ -122,7 +122,7 @@ export default function LeaderboardPage() {
         setLoadingMore(false)
       }
     },
-    [vertical, offset]
+    [vertical]
   )
 
   // Reset and fetch on filter change

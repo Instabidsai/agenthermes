@@ -4,18 +4,20 @@ import { useEffect, useRef } from 'react'
 import clsx from 'clsx'
 
 function getScoreColor(score: number): string {
-  if (score >= 80) return '#10b981' // emerald-500
-  if (score >= 60) return '#eab308' // yellow-500
-  if (score >= 40) return '#f59e0b' // amber-500
-  if (score > 0) return '#ef4444' // red-500
+  if (score >= 90) return '#10b981' // emerald-500 — platinum
+  if (score >= 75) return '#eab308' // yellow-500 — gold
+  if (score >= 60) return '#a1a1aa' // zinc-400 — silver
+  if (score >= 40) return '#f59e0b' // amber-500 — bronze
+  if (score > 0) return '#ef4444' // red-500 — failing
   return '#71717a' // zinc-500 — grey for unrated
 }
 
 function getScoreLabel(score: number): string {
-  if (score >= 80) return 'Excellent'
-  if (score >= 60) return 'Good'
-  if (score >= 40) return 'Fair'
-  if (score > 0) return 'Needs Work'
+  if (score >= 90) return 'Platinum'
+  if (score >= 75) return 'Gold'
+  if (score >= 60) return 'Silver'
+  if (score >= 40) return 'Bronze'
+  if (score > 0) return 'Failing'
   return 'Unrated'
 }
 

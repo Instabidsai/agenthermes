@@ -369,8 +369,8 @@ export default function RemediatePage() {
 
   const getStatus = (score: number, maxScore: number): 'pass' | 'warn' | 'fail' => {
     const pct = maxScore > 0 ? score / maxScore : 0
-    if (pct >= 0.7) return 'pass'
-    if (pct >= 0.35) return 'warn'
+    if (pct >= 0.75) return 'pass'
+    if (pct >= 0.4) return 'warn'
     return 'fail'
   }
 

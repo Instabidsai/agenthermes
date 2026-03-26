@@ -71,7 +71,7 @@ const categoryIcons: Record<string, typeof Shield> = {
 }
 
 const tierDescriptions: Record<string, { label: string; description: string; color: string }> = {
-  unaudited: { label: 'Unscored', description: 'Not yet scanned', color: 'text-zinc-500' },
+  unaudited: { label: 'Failing', description: 'Invisible to AI agents', color: 'text-red-500' },
   bronze: { label: 'Bronze', description: 'Partially discoverable by AI agents', color: 'text-amber-500' },
   silver: { label: 'Silver', description: 'Agent-usable with friction', color: 'text-zinc-300' },
   gold: { label: 'Gold', description: 'Fully agent-native', color: 'text-yellow-500' },
