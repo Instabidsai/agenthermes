@@ -15,6 +15,8 @@ import {
 } from 'lucide-react'
 import type { Metadata } from 'next'
 
+export const revalidate = 300
+
 export const metadata: Metadata = {
   title: 'State of Agent Readiness Report | AgentHermes',
   description:

@@ -65,3 +65,30 @@ export function rateLimit(
 
   return null
 }
+
+/**
+ * Returns rate-limit headers for successful (non-blocked) responses.
+ * Call this in route handlers and spread the result into your NextResponse headers.
+ */
+export function getRateLimitHeaders(
+  request: NextRequest,
+  maxRequests: number = 5,
+  windowMs: number = 60_000
+): Record<string, string> {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+  const now = Date.now()
+
+  const entry = rateLimitStore.get(ip)
+  const remaining = entry && now <= entry.resetAt
+    ? Math.max(0, maxRequests - entry.count)
+    : maxRequests
+  const resetAt = entry && now <= entry.resetAt
+    ? entry.resetAt
+    : now + windowMs
+
+  return {
+    'X-RateLimit-Limit': String(maxRequests),
+    'X-RateLimit-Remaining': String(remaining),
+    'X-RateLimit-Reset': String(Math.ceil(resetAt / 1000)),
+  }
+}

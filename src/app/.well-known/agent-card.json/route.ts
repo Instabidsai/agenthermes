@@ -21,7 +21,7 @@ const agentCard = {
       id: 'score-business',
       name: 'Score Business Agent Readiness',
       description:
-        'Scan any URL and return an Agent Readiness Score (0-100) across 5 categories',
+        'Scan any URL and return an Agent Readiness Score (0-100) across 9 weighted dimensions',
       input: {
         type: 'object',
         properties: { url: { type: 'string' } },

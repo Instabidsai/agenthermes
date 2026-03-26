@@ -12,6 +12,8 @@ import {
 import { getServiceClient } from '@/lib/supabase'
 import HeroScanForm from '@/components/HeroScanForm'
 
+export const revalidate = 60
+
 function formatNumber(n: number): string {
   return new Intl.NumberFormat('en-US').format(n)
 }
@@ -106,8 +108,25 @@ export default async function HomePage() {
     { label: 'Active Connections', value: formatNumber(stats.connectionCount), icon: Network },
   ]
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "AgentHermes",
+    "url": "https://agenthermes.ai",
+    "description": "The verified commerce network for AI agent-to-business transactions.",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://agenthermes.ai/discover?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+
   return (
     <div className="relative">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Hero — Score First */}
       <section className="relative overflow-hidden">
         {/* Subtle grid background */}

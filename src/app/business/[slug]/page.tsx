@@ -40,16 +40,20 @@ async function getBusiness(slug: string): Promise<{
 
   if (error || !business) return null
 
-  const { count: connectionsCount } = await supabase
-    .from('connections')
-    .select('*', { count: 'exact', head: true })
-    .or(`business_a_id.eq.${business.id},business_b_id.eq.${business.id}`)
+  // Parallelize independent queries after initial business fetch
+  const [connectionsRes, walletRes] = await Promise.all([
+    supabase
+      .from('connections')
+      .select('*', { count: 'exact', head: true })
+      .or(`business_a_id.eq.${business.id},business_b_id.eq.${business.id}`),
+    supabase
+      .from('agent_wallets')
+      .select('id')
+      .eq('business_id', business.id),
+  ])
 
-  const { data: walletDataRaw } = await supabase
-    .from('agent_wallets')
-    .select('id')
-    .eq('business_id', business.id)
-  const walletData = (walletDataRaw || []) as any[]
+  const connectionsCount = connectionsRes.count ?? 0
+  const walletData = (walletRes.data || []) as any[]
 
   let transactionVolume = 0
   let transactionCount = 0
@@ -71,7 +75,7 @@ async function getBusiness(slug: string): Promise<{
 
   return {
     business: business as BusinessWithRelations,
-    connectionsCount: connectionsCount ?? 0,
+    connectionsCount,
     transactionVolume,
     transactionCount,
   }
@@ -138,8 +142,27 @@ export default async function BusinessProfilePage({
   const { business, connectionsCount, transactionVolume, transactionCount } = result
   const activeServices = business.services.filter((s) => s.status === 'active')
 
+  const businessJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": business.name,
+    "url": business.domain ? `https://${business.domain}` : `https://agenthermes.ai/business/${slug}`,
+    ...(business.description ? { "description": business.description } : {}),
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": business.audit_score,
+      "bestRating": 100,
+      "worstRating": 0,
+      "ratingCount": business.audit_results?.length || 1,
+    },
+  }
+
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(businessJsonLd) }}
+      />
       {/* Header */}
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex-1">
