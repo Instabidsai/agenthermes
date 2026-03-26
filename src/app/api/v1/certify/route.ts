@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/supabase'
 import { getBusinessBySlug } from '@/lib/business'
 import { requireAuth } from '@/lib/auth'
-import { runAudit } from '@/lib/audit-engine'
+import { runScan } from '@/lib/scanner'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -56,28 +56,28 @@ export async function POST(request: NextRequest) {
 
     if (business.domain) {
       try {
-        const scorecard = await runAudit(business.domain)
-        auditScore = scorecard.total_score
+        const scanResult = await runScan(business.domain)
+        auditScore = scanResult.total_score
 
-        // Update business with new audit score
+        // Update business with new scan score
         await (supabase.from('businesses') as any)
           .update({
-            audit_score: scorecard.total_score,
-            audit_tier: scorecard.tier,
+            audit_score: scanResult.total_score,
+            audit_tier: scanResult.tier,
             updated_at: new Date().toISOString(),
           })
           .eq('id', business.id)
 
-        // Save audit results
+        // Save scan results mapped to audit_results format
         const now = new Date()
         const nextAudit = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
-        const auditRows = scorecard.categories.map((cat) => ({
+        const auditRows = scanResult.dimensions.map((dim) => ({
           business_id: business!.id,
-          category: cat.category,
-          score: cat.score,
-          max_score: cat.max_score,
-          details: cat.details,
-          recommendations: cat.recommendations,
+          category: dim.dimension,
+          score: Math.round(dim.score * dim.weight),
+          max_score: Math.round(100 * dim.weight),
+          details: { checks: dim.checks, label: dim.label },
+          recommendations: dim.recommendations.map((r) => r.action),
           audited_at: now.toISOString(),
           next_audit_at: nextAudit.toISOString(),
         }))

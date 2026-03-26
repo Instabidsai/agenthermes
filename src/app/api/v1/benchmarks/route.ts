@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       query = query.eq('vertical', vertical)
     }
 
-    const { data: bizRaw, error: bizError } = await query
+    const { data: bizRaw, error: bizError } = await query.limit(1000)
 
     if (bizError) {
       console.error('[benchmarks] Query error:', bizError.message)
@@ -52,7 +52,9 @@ export async function GET(request: NextRequest) {
     // Compute stats
     const scores = businesses.map((b: any) => b.audit_score ?? 0).sort((a: number, b: number) => a - b)
     const avgScore = Math.round(scores.reduce((s: number, v: number) => s + v, 0) / totalBusinesses)
-    const medianScore = scores[Math.floor(totalBusinesses / 2)]
+    const medianScore = totalBusinesses % 2 === 1
+      ? scores[Math.floor(totalBusinesses / 2)]
+      : Math.round((scores[totalBusinesses / 2 - 1] + scores[totalBusinesses / 2]) / 2)
     const topQuartileIdx = Math.floor(totalBusinesses * 0.75)
     const topQuartileScore = scores[topQuartileIdx] ?? scores[scores.length - 1]
 

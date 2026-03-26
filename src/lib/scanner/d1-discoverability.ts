@@ -137,10 +137,11 @@ export async function scanDiscoverability(
 
   if (robotsResult.found) {
     const body = typeof robotsResult.body === 'string' ? robotsResult.body : ''
+    const rootDisallow = /Disallow:\s*\/\s*$/m.test(body)
     const allowsAgents =
-      !body.includes('Disallow: /') ||
+      !rootDisallow ||
       body.includes('User-agent: AgentHermes') ||
-      body.includes('User-agent: *\nAllow:')
+      /User-agent:\s*\*[\s\S]*?Allow:/i.test(body)
 
     rawScore += allowsAgents ? 10 : 5
     checks.push({

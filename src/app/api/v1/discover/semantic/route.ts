@@ -6,8 +6,9 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl
     const q = searchParams.get('q')
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100)
-    const threshold = parseFloat(searchParams.get('threshold') || '0.3')
+    const limit = Math.max(1, Math.min(parseInt(searchParams.get('limit') || '20', 10) || 20, 100))
+    const rawThreshold = parseFloat(searchParams.get('threshold') || '0.3')
+    const threshold = isNaN(rawThreshold) || rawThreshold < 0 || rawThreshold > 1 ? 0.3 : rawThreshold
 
     if (!q || q.trim().length === 0) {
       return NextResponse.json(

@@ -1,5 +1,24 @@
 # AgentHermes Changelog
 
+## Audit Cycle 3 — 2026-03-26T07:05:00Z
+
+### Findings (deep sweep of scanners, certify, benchmarks, semantic search)
+- **CRITICAL**: Certify route used old 5-category audit engine instead of new 9-dimension scanner
+- **HIGH**: Benchmarks median calculation wrong for even-count arrays (always overestimated)
+- **HIGH**: Robots.txt check matched path-specific Disallows as root blocks (false negatives)
+- **MEDIUM**: Semantic search threshold/limit params not validated (NaN/negative possible)
+- **MEDIUM**: Benchmarks queries unbounded (no limit, could timeout at scale)
+
+### Fixes Applied
+1. Certify route: switched from `runAudit` to `runScan` (9-dimension scanner)
+2. Benchmarks: proper median for even arrays (average of two middle values)
+3. D1 scanner: robots.txt uses regex for root-only Disallow, handles CRLF
+4. Semantic search: threshold validated 0-1, limit clamped 1-100
+5. Benchmarks: added `.limit(1000)` to prevent unbounded queries
+
+### Build Status
+- Build passes (0 TypeScript errors), deployed
+
 ## Audit Cycle 2 — 2026-03-26T06:40:00Z
 
 ### Findings
