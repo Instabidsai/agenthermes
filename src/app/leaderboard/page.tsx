@@ -57,7 +57,7 @@ function RankIcon({ rank }: { rank: number }) {
     )
   }
   return (
-    <div className="flex items-center justify-center w-8 h-8">
+    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-zinc-800/60">
       <span className="text-sm font-mono font-medium text-zinc-500">
         {rank}
       </span>
@@ -74,10 +74,6 @@ export default function LeaderboardPage() {
   const [error, setError] = useState('')
   const [vertical, setVertical] = useState('')
   const [verticals, setVerticals] = useState<string[]>([])
-
-  useEffect(() => {
-    document.title = 'Leaderboard | AgentHermes'
-  }, [])
 
   const fetchLeaderboard = useCallback(
     async (append = false) => {
@@ -345,6 +341,23 @@ export default function LeaderboardPage() {
                 </div>
               </Link>
             ))}
+          </div>
+
+          {/* Get Ranked CTA */}
+          <div className="mt-10 p-6 rounded-xl bg-zinc-900/50 border border-zinc-800/80 text-center">
+            <p className="text-zinc-300 font-medium mb-2">
+              Not ranked yet?
+            </p>
+            <p className="text-sm text-zinc-500 mb-4">
+              Get your Agent Readiness Score and join the leaderboard.
+            </p>
+            <Link
+              href="/audit"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors"
+            >
+              <Zap className="h-4 w-4" />
+              Get Your Agent Readiness Score
+            </Link>
           </div>
 
           {/* Load More */}

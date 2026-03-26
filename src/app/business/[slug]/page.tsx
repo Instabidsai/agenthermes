@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { getServiceClient } from '@/lib/supabase'
 import type { Business, Service, AuditResult } from '@/types/database'
 import { clsx } from 'clsx'
@@ -12,6 +13,9 @@ import {
   TrendingUp,
   Shield,
   ExternalLink,
+  Search,
+  Wrench,
+  BarChart3,
 } from 'lucide-react'
 
 interface BusinessWithRelations extends Business {
@@ -364,6 +368,35 @@ export default async function BusinessProfilePage({
           </div>
         </div>
       )}
+
+      {/* Bottom CTAs */}
+      <div className="mt-14 p-6 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
+        <div className="flex flex-wrap gap-3 justify-center">
+          <Link
+            href="/audit"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors"
+          >
+            <BarChart3 className="h-4 w-4" />
+            Scan your own business
+          </Link>
+          <Link
+            href="/discover"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-zinc-700 hover:border-zinc-600 text-zinc-300 hover:text-zinc-100 text-sm font-medium transition-colors"
+          >
+            <Search className="h-4 w-4" />
+            Browse more businesses
+          </Link>
+          {business.domain && (
+            <Link
+              href={`/remediate?domain=${business.domain}`}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-zinc-700 hover:border-zinc-600 text-zinc-300 hover:text-zinc-100 text-sm font-medium transition-colors"
+            >
+              <Wrench className="h-4 w-4" />
+              Improve this score
+            </Link>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

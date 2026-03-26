@@ -73,10 +73,6 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    document.title = 'Dashboard | AgentHermes'
-  }, [])
-
-  useEffect(() => {
     async function loadData() {
       setLoading(true)
       setError(null)
@@ -128,9 +124,61 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
-        <div className="flex items-center justify-center py-32">
-          <Loader2 className="h-8 w-8 text-emerald-500 animate-spin" />
-          <span className="ml-3 text-zinc-400">Loading dashboard...</span>
+        {/* Skeleton header */}
+        <div className="mb-10">
+          <div className="h-8 w-48 bg-zinc-800 rounded animate-pulse mb-2" />
+          <div className="h-4 w-72 bg-zinc-800/50 rounded animate-pulse" />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Business card skeletons */}
+          <div className="lg:col-span-2 space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-5 p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/80 animate-pulse"
+              >
+                <div className="h-14 w-14 rounded-full bg-zinc-800/60 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="h-5 w-40 bg-zinc-800 rounded mb-2" />
+                  <div className="flex items-center gap-4">
+                    <div className="h-3 w-28 bg-zinc-800/50 rounded" />
+                    <div className="h-3 w-20 bg-zinc-800/50 rounded" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Sidebar skeletons */}
+          <div className="space-y-6">
+            {/* Wallet card skeleton */}
+            <div className="p-6 rounded-xl bg-zinc-900/50 border border-zinc-800/80 animate-pulse">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-4 w-4 bg-zinc-800/60 rounded" />
+                <div className="h-4 w-24 bg-zinc-800/60 rounded" />
+              </div>
+              <div className="h-8 w-28 bg-zinc-800 rounded mb-2" />
+              <div className="h-3 w-20 bg-zinc-800/50 rounded" />
+            </div>
+
+            {/* Transactions list skeleton */}
+            <div className="p-6 rounded-xl bg-zinc-900/50 border border-zinc-800/80 animate-pulse">
+              <div className="h-4 w-36 bg-zinc-800/60 rounded mb-4" />
+              <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="h-7 w-7 rounded-full bg-zinc-800/60 flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="h-3 w-32 bg-zinc-800/50 rounded mb-1" />
+                      <div className="h-2 w-16 bg-zinc-800/30 rounded" />
+                    </div>
+                    <div className="h-3 w-14 bg-zinc-800/50 rounded" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -142,7 +190,7 @@ export default function DashboardPage() {
       <div className="mb-6 p-3 rounded-lg bg-amber-950/30 border border-amber-800/40 flex items-center gap-2">
         <AlertCircle className="h-4 w-4 text-amber-500 flex-shrink-0" />
         <p className="text-xs text-amber-400">
-          Showing all network data. Sign in to see your businesses.
+          Dashboard preview — authentication coming soon. Showing all network data.
         </p>
       </div>
 

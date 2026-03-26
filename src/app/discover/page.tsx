@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Search, SlidersHorizontal, X, Globe, Zap, AlertCircle, RotateCcw, ChevronDown } from 'lucide-react'
 import clsx from 'clsx'
@@ -49,7 +50,8 @@ const tierOptions = ['Any Tier', 'bronze', 'silver', 'gold', 'platinum']
 
 const LIMIT = 20
 
-export default function DiscoverPage() {
+function DiscoverPageContent() {
+  const searchParams = useSearchParams()
   const [query, setQuery] = useState('')
   const [vertical, setVertical] = useState('')
   const [tier, setTier] = useState('')
@@ -64,9 +66,14 @@ export default function DiscoverPage() {
   const [searchType, setSearchType] = useState<'regular' | 'semantic' | 'fulltext_ranked' | 'fallback_ilike'>('regular')
   const [semanticMode, setSemanticMode] = useState(false)
 
+  // Read vertical from query params
   useEffect(() => {
-    document.title = 'Discover | AgentHermes'
-  }, [])
+    const verticalParam = searchParams.get('vertical')
+    if (verticalParam) {
+      setVertical(verticalParam)
+      setShowFilters(true)
+    }
+  }, [searchParams])
 
   const fetchBusinesses = useCallback(async (append = false) => {
     if (append) {
@@ -226,7 +233,7 @@ export default function DiscoverPage() {
             className={clsx(
               'flex items-center gap-2 px-4 py-3 rounded-lg border text-sm font-medium transition-colors',
               semanticMode
-                ? 'border-purple-500/50 text-purple-400 bg-purple-500/5'
+                ? 'border-emerald-500/50 text-emerald-400 bg-emerald-500/5'
                 : 'border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
             )}
             title="Toggle semantic search mode for natural language queries"
@@ -335,13 +342,13 @@ export default function DiscoverPage() {
             {loading ? 'Searching...' : `${total} business${total !== 1 ? 'es' : ''} found`}
           </span>
           {!loading && searchType === 'semantic' && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 text-[10px] font-medium">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-medium">
               <Zap className="h-2.5 w-2.5" />
               Semantic Search
             </span>
           )}
           {!loading && searchType === 'fulltext_ranked' && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 text-[10px] font-medium">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-medium">
               <Zap className="h-2.5 w-2.5" />
               Full-Text Ranked
             </span>
@@ -404,9 +411,15 @@ export default function DiscoverPage() {
           <p className="text-zinc-400 font-medium mb-1">
             No businesses match your search.
           </p>
-          <p className="text-sm text-zinc-600">
+          <p className="text-sm text-zinc-600 mb-4">
             Try broader filters or a different query.
           </p>
+          <Link
+            href="/register"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors"
+          >
+            Register your business
+          </Link>
         </div>
       ) : (
         <>
@@ -448,7 +461,7 @@ export default function DiscoverPage() {
                     </span>
                   )}
                   {biz.similarity != null && (
-                    <span className="text-[10px] font-medium text-purple-400/80 bg-purple-500/10 px-2 py-0.5 rounded">
+                    <span className="text-[10px] font-medium text-emerald-400/80 bg-emerald-500/10 px-2 py-0.5 rounded">
                       {(biz.similarity * 100).toFixed(0)}% match
                     </span>
                   )}
@@ -501,5 +514,19 @@ export default function DiscoverPage() {
         </>
       )}
     </div>
+  )
+}
+
+export default function DiscoverPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-14 text-center">
+          <div className="h-8 w-8 border-2 border-zinc-500 border-t-zinc-200 rounded-full animate-spin mx-auto" />
+        </div>
+      }
+    >
+      <DiscoverPageContent />
+    </Suspense>
   )
 }

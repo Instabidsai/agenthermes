@@ -31,7 +31,7 @@ export default function HeroScanForm() {
         <button
           type="submit"
           disabled={!domain.trim()}
-          className="px-8 py-4 sm:py-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 disabled:text-emerald-500 text-white font-bold text-base sm:text-lg transition-colors flex items-center justify-center gap-2 flex-shrink-0"
+          className="px-8 py-4 sm:py-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 disabled:text-emerald-500 text-white font-semibold text-base sm:text-lg transition-colors flex items-center justify-center gap-2 flex-shrink-0"
         >
           Scan Now — Free
           <ArrowRight className="h-5 w-5" />

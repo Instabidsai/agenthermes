@@ -49,6 +49,7 @@ interface ReportData {
   top_10_businesses: {
     rank: number
     name: string
+    slug: string | null
     domain: string | null
     score: number
     tier: string
@@ -73,7 +74,7 @@ async function fetchReport(): Promise<ReportData> {
   const { data: bizRaw } = await db
     .from('businesses')
     .select(
-      'id, name, domain, audit_score, audit_tier, vertical, created_at, updated_at'
+      'id, name, slug, domain, audit_score, audit_tier, vertical, created_at, updated_at'
     )
     .order('audit_score', { ascending: false })
 
@@ -184,6 +185,7 @@ async function fetchReport(): Promise<ReportData> {
   const top10 = businesses.slice(0, 10).map((biz, i) => ({
     rank: i + 1,
     name: biz.name as string,
+    slug: (biz.slug as string) ?? null,
     domain: (biz.domain as string) ?? null,
     score: (biz.audit_score as number) ?? 0,
     tier: (biz.audit_tier as string) ?? 'unaudited',
@@ -315,7 +317,7 @@ function tierBg(tier: string): string {
 function scoreBarColor(score: number): string {
   if (score >= 90) return 'bg-emerald-500'
   if (score >= 75) return 'bg-yellow-500'
-  if (score >= 60) return 'bg-zinc-300'
+  if (score >= 60) return 'bg-zinc-400'
   if (score >= 40) return 'bg-amber-500'
   return 'bg-red-500'
 }
@@ -573,8 +575,9 @@ export default async function ReportPage() {
 
               {/* Rows */}
               {industry_breakdown.map((row) => (
-                <div
+                <Link
                   key={row.vertical}
+                  href={`/discover?vertical=${row.vertical}`}
                   className="grid grid-cols-[1fr_5rem_6rem] gap-4 px-5 py-3 border-b border-zinc-800/30 last:border-b-0 hover:bg-zinc-800/20 transition-colors"
                 >
                   <span className="text-sm text-zinc-200 capitalize">
@@ -594,7 +597,7 @@ export default async function ReportPage() {
                       {row.avg_score}
                     </span>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
@@ -611,65 +614,81 @@ export default async function ReportPage() {
             />
 
             <div className="space-y-2 mt-8">
-              {top_10_businesses.map((biz) => (
-                <div
-                  key={biz.rank}
-                  className="flex items-center gap-4 px-5 py-3.5 rounded-xl bg-zinc-900/30 border border-zinc-800/50 hover:border-zinc-700/60 transition-colors"
-                >
-                  {/* Rank */}
-                  <div className="flex-shrink-0 w-8 text-center">
-                    {biz.rank <= 3 ? (
-                      <span className="text-lg font-bold text-emerald-500">
-                        #{biz.rank}
-                      </span>
-                    ) : (
-                      <span className="text-sm font-mono text-zinc-500">
-                        #{biz.rank}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Business info */}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-semibold text-zinc-100 truncate">
-                      {biz.name}
-                    </h3>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      {biz.domain && (
-                        <div className="flex items-center gap-1">
-                          <Globe className="h-3 w-3 text-zinc-600" />
-                          <span className="text-xs text-zinc-500 truncate">
-                            {biz.domain}
-                          </span>
-                        </div>
-                      )}
-                      {biz.vertical && (
-                        <span className="text-[10px] font-medium text-zinc-500 bg-zinc-800/80 px-2 py-0.5 rounded">
-                          {biz.vertical}
+              {top_10_businesses.map((biz) => {
+                const inner = (
+                  <>
+                    {/* Rank */}
+                    <div className="flex-shrink-0 w-8 text-center">
+                      {biz.rank <= 3 ? (
+                        <span className="text-lg font-bold text-emerald-500">
+                          #{biz.rank}
+                        </span>
+                      ) : (
+                        <span className="text-sm font-mono text-zinc-500">
+                          #{biz.rank}
                         </span>
                       )}
                     </div>
-                  </div>
 
-                  {/* Score */}
-                  <div className="flex items-center gap-3 flex-shrink-0">
-                    <div className="w-20 h-2 rounded-full bg-zinc-800 overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${scoreBarColor(biz.score)}`}
-                        style={{ width: `${biz.score}%` }}
-                      />
+                    {/* Business info */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-semibold text-zinc-100 truncate">
+                        {biz.name}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        {biz.domain && (
+                          <div className="flex items-center gap-1">
+                            <Globe className="h-3 w-3 text-zinc-600" />
+                            <span className="text-xs text-zinc-500 truncate">
+                              {biz.domain}
+                            </span>
+                          </div>
+                        )}
+                        {biz.vertical && (
+                          <span className="text-[10px] font-medium text-zinc-500 bg-zinc-800/80 px-2 py-0.5 rounded">
+                            {biz.vertical}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <span className="text-sm font-bold font-mono text-zinc-200 w-8 text-right">
-                      {biz.score}
-                    </span>
-                    <span
-                      className={`text-xs font-medium capitalize ${tierColor(biz.tier)}`}
-                    >
-                      {biz.tier}
-                    </span>
+
+                    {/* Score */}
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      <div className="w-20 h-2 rounded-full bg-zinc-800 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${scoreBarColor(biz.score)}`}
+                          style={{ width: `${biz.score}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-bold font-mono text-zinc-200 w-8 text-right">
+                        {biz.score}
+                      </span>
+                      <span
+                        className={`text-xs font-medium capitalize ${tierColor(biz.tier)}`}
+                      >
+                        {biz.tier}
+                      </span>
+                    </div>
+                  </>
+                )
+
+                return biz.slug ? (
+                  <Link
+                    key={biz.rank}
+                    href={`/business/${biz.slug}`}
+                    className="flex items-center gap-4 px-5 py-3.5 rounded-xl bg-zinc-900/30 border border-zinc-800/50 hover:border-zinc-700/60 transition-colors"
+                  >
+                    {inner}
+                  </Link>
+                ) : (
+                  <div
+                    key={biz.rank}
+                    className="flex items-center gap-4 px-5 py-3.5 rounded-xl bg-zinc-900/30 border border-zinc-800/50 hover:border-zinc-700/60 transition-colors"
+                  >
+                    {inner}
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         </section>

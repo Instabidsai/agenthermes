@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Building2,
   Globe,
@@ -34,8 +34,9 @@ function isValidDomain(domain: string): boolean {
   return domainRegex.test(domain)
 }
 
-export default function RegisterPage() {
+function RegisterPageContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const [form, setForm] = useState({
     name: '',
@@ -50,9 +51,17 @@ export default function RegisterPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [success, setSuccess] = useState(false)
 
+  // Auto-fill from query params
   useEffect(() => {
-    document.title = 'Register | AgentHermes'
-  }, [])
+    const domainParam = searchParams.get('domain')
+    const nameParam = searchParams.get('name')
+    if (domainParam) {
+      setForm((prev) => ({ ...prev, domain: domainParam }))
+    }
+    if (nameParam) {
+      setForm((prev) => ({ ...prev, name: nameParam }))
+    }
+  }, [searchParams])
 
   const update = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -327,5 +336,19 @@ export default function RegisterPage() {
         </p>
       </form>
     </div>
+  )
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8 py-10 sm:py-14 text-center">
+          <Loader2 className="h-8 w-8 text-emerald-500 animate-spin mx-auto" />
+        </div>
+      }
+    >
+      <RegisterPageContent />
+    </Suspense>
   )
 }

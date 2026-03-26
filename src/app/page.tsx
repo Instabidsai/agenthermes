@@ -67,9 +67,9 @@ const scoreTiers = [
   {
     range: '60-74',
     label: 'Silver',
-    color: 'text-zinc-300',
-    bg: 'bg-zinc-300',
-    barColor: 'bg-zinc-300',
+    color: 'text-zinc-400',
+    bg: 'bg-zinc-400',
+    barColor: 'bg-zinc-400',
     description: 'Agent-usable with friction',
   },
   {
@@ -128,7 +128,7 @@ export default async function HomePage() {
               Score?
             </h1>
 
-            <p className="text-lg sm:text-xl text-zinc-400 leading-relaxed max-w-2xl mx-auto mb-10">
+            <p className="text-lg sm:text-xl text-zinc-300 leading-relaxed tracking-tight max-w-2xl mx-auto mb-10">
               Find out if AI agents can find, use, and pay your business.
             </p>
 
@@ -146,17 +146,16 @@ export default async function HomePage() {
                   cy="100"
                   r="88"
                   fill="none"
-                  stroke="#3f3f46"
+                  stroke="#eab308"
                   strokeWidth="8"
                   strokeLinecap="round"
                   strokeDasharray={2 * Math.PI * 88}
-                  strokeDashoffset={2 * Math.PI * 88}
-                  opacity="0.3"
+                  strokeDashoffset={2 * Math.PI * 88 * (1 - 73 / 100)}
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-5xl font-bold text-zinc-600">?</span>
-                <span className="text-xs text-zinc-600 font-medium mt-1">Scan to reveal</span>
+                <span className="text-5xl font-bold text-yellow-500">73</span>
+                <span className="text-xs text-zinc-500 font-medium mt-1">Gold</span>
               </div>
             </div>
           </div>
@@ -235,13 +234,13 @@ export default async function HomePage() {
           </div>
 
           {/* Score meter visualization */}
-          <div className="p-8 rounded-2xl bg-zinc-900/50 border border-zinc-800/80">
+          <div className="p-8 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
             {/* Gradient bar */}
             <div className="relative mb-8">
               <div className="h-4 rounded-full overflow-hidden flex">
                 <div className="w-[40%] bg-gradient-to-r from-red-600 to-red-500" />
                 <div className="w-[20%] bg-gradient-to-r from-amber-600 to-amber-500" />
-                <div className="w-[15%] bg-gradient-to-r from-zinc-400 to-zinc-300" />
+                <div className="w-[15%] bg-gradient-to-r from-zinc-500 to-zinc-400" />
                 <div className="w-[15%] bg-gradient-to-r from-yellow-500 to-yellow-400" />
                 <div className="w-[10%] bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-r-full" />
               </div>
@@ -333,14 +332,14 @@ export default async function HomePage() {
             {statItems.map((stat) => (
               <div
                 key={stat.label}
-                className="flex items-center gap-3 p-3 rounded-lg"
+                className="flex items-center gap-3 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/80"
               >
                 <stat.icon className="h-4 w-4 text-zinc-600 flex-shrink-0" />
                 <div>
-                  <div className="text-lg font-bold tracking-tight">
+                  <div className="text-xl font-bold font-mono tabular-nums">
                     {stat.value}
                   </div>
-                  <div className="text-[10px] text-zinc-600 font-medium">
+                  <div className="text-xs text-zinc-600 font-medium">
                     {stat.label}
                   </div>
                 </div>

@@ -148,10 +148,6 @@ function AuditPageContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
 
-  useEffect(() => {
-    document.title = 'Your Agent Readiness Score | AgentHermes'
-  }, [])
-
   const toggleCategory = (cat: string) => {
     setExpandedCategories((prev) => {
       const next = new Set(prev)
@@ -322,7 +318,7 @@ function AuditPageContent() {
       {audit.phase === 'complete' && (
         <div className="space-y-8">
           {/* HUGE Score Display — Credit Karma style */}
-          <div className="p-10 rounded-2xl bg-zinc-900/50 border border-zinc-800/80">
+          <div className="p-10 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
             <div className="flex flex-col items-center text-center">
               {/* Giant score number */}
               <div className="mb-6">
@@ -588,6 +584,32 @@ function AuditPageContent() {
             </div>
           </div>
 
+          {/* Action Buttons */}
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href={`/remediate?domain=${audit.domain}`}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-colors"
+            >
+              <Zap className="h-4 w-4" />
+              Fix Your Score
+            </Link>
+            <button
+              type="button"
+              onClick={() => runAuditForDomain(audit.domain)}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-zinc-700 hover:border-zinc-600 text-zinc-300 hover:text-zinc-100 text-sm font-medium transition-colors"
+            >
+              <Shield className="h-4 w-4" />
+              Re-scan
+            </button>
+            <Link
+              href="/report"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-zinc-700 hover:border-zinc-600 text-zinc-300 hover:text-zinc-100 text-sm font-medium transition-colors"
+            >
+              <FileText className="h-4 w-4" />
+              See how you compare
+            </Link>
+          </div>
+
           {/* Bottom CTAs */}
           <div className="space-y-4">
             {/* AffixedAI consulting CTA */}
@@ -641,7 +663,7 @@ function AuditPageContent() {
       {/* Idle state — show what to expect */}
       {audit.phase === 'idle' && !searchParams.get('domain') && (
         <div className="text-center py-16">
-          <div className="inline-flex items-center justify-center h-20 w-20 rounded-2xl bg-zinc-900/50 border border-zinc-800/80 mb-6">
+          <div className="inline-flex items-center justify-center h-20 w-20 rounded-xl bg-zinc-900/50 border border-zinc-800/80 mb-6">
             <Shield className="h-10 w-10 text-zinc-700" />
           </div>
           <p className="text-sm text-zinc-600 max-w-sm mx-auto">

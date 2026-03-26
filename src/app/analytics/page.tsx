@@ -71,10 +71,6 @@ export default function AnalyticsPage() {
   const [loadingBiz, setLoadingBiz] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    document.title = 'Analytics | AgentHermes'
-  }, [])
-
   // Load businesses list
   useEffect(() => {
     async function loadBusinesses() {
@@ -204,13 +200,13 @@ export default function AnalyticsPage() {
               label="Profile Views"
               value={data.total_views}
               icon={Eye}
-              color="bg-blue-500/10 text-blue-400"
+              color="bg-zinc-800 text-zinc-300"
             />
             <StatCard
               label="Search Impressions"
               value={data.total_searches}
               icon={Search}
-              color="bg-purple-500/10 text-purple-400"
+              color="bg-zinc-800 text-zinc-300"
             />
             <StatCard
               label="Service Calls"
@@ -222,13 +218,13 @@ export default function AnalyticsPage() {
               label="Score Checks"
               value={data.total_score_checks}
               icon={Shield}
-              color="bg-amber-500/10 text-amber-400"
+              color="bg-zinc-800 text-zinc-300"
             />
             <StatCard
               label="Manifest Views"
               value={data.total_manifest_views}
               icon={FileText}
-              color="bg-cyan-500/10 text-cyan-400"
+              color="bg-zinc-800 text-zinc-300"
             />
           </div>
 

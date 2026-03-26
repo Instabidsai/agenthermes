@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import {
   Wrench,
   Globe,
@@ -224,9 +226,12 @@ function FilePreview({
 // Main Page
 // ==========================================================================
 
-export default function RemediatePage() {
+function RemediatePageContent() {
+  const searchParams = useSearchParams()
+
   // --- Audit State ---
   const [domainInput, setDomainInput] = useState('')
+  const [fixParam, setFixParam] = useState<string | null>(null)
   const [phase, setPhase] = useState<'idle' | 'loading' | 'results' | 'error'>('idle')
   const [audit, setAudit] = useState<AuditData | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
@@ -263,6 +268,45 @@ export default function RemediatePage() {
   useEffect(() => {
     document.title = 'Remediate | AgentHermes'
   }, [])
+
+  // Auto-fill domain from query params and auto-trigger scan
+  useEffect(() => {
+    const domainParam = searchParams.get('domain')
+    const fixParamValue = searchParams.get('fix')
+    if (domainParam && phase === 'idle') {
+      const domain = domainParam.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '')
+      if (domain) {
+        setDomainInput(domain)
+        if (fixParamValue) setFixParam(fixParamValue)
+        // Auto-trigger fetch via a deferred call
+        setTimeout(() => {
+          document.getElementById('remediate-scan-btn')?.click()
+        }, 100)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
+
+  // Auto-scroll to fix section when results load and fix param is present
+  useEffect(() => {
+    if (phase === 'results' && fixParam) {
+      const generatorMap: Record<string, string> = {
+        'llms-txt': 'machine_readable_profile',
+        'agent-card': 'machine_readable_profile',
+        'openapi': 'mcp_api_endpoints',
+        'onboarding': 'agent_native_onboarding',
+        'payments': 'agent_payment_acceptance',
+      }
+      const targetCategory = generatorMap[fixParam]
+      if (targetCategory) {
+        setTimeout(() => {
+          const el = document.getElementById(`cat-${targetCategory}`)
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }, 300)
+      }
+      setFixParam(null)
+    }
+  }, [phase, fixParam])
 
   // ==== Audit Logic ====
 
@@ -654,6 +698,7 @@ export default function RemediatePage() {
             />
           </div>
           <button
+            id="remediate-scan-btn"
             type="button"
             onClick={fetchScore}
             disabled={phase === 'loading' || !domainInput.trim()}
@@ -748,6 +793,7 @@ export default function RemediatePage() {
               return (
                 <div
                   key={cat.category}
+                  id={`cat-${cat.category}`}
                   className={clsx(
                     'rounded-xl border overflow-hidden',
                     isFailing
@@ -896,6 +942,23 @@ export default function RemediatePage() {
               </ol>
             </div>
           )}
+
+          {/* Re-audit + Register CTAs */}
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href={`/audit?domain=${audit.domain}`}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold transition-colors"
+            >
+              <Shield className="h-4 w-4" />
+              Re-scan your score
+            </Link>
+            <Link
+              href={`/register?domain=${audit.domain}`}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-zinc-700 hover:border-zinc-600 text-zinc-300 hover:text-zinc-100 text-sm font-medium transition-colors"
+            >
+              Register your business
+            </Link>
+          </div>
 
           {/* AffixedAI CTA */}
           <div className="p-6 rounded-xl bg-zinc-900/50 border border-amber-800/30">
@@ -1377,5 +1440,19 @@ export default function RemediatePage() {
         </section>
       </div>
     </div>
+  )
+}
+
+export default function RemediatePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10 sm:py-14 text-center">
+          <Loader2 className="h-8 w-8 text-amber-500 animate-spin mx-auto" />
+        </div>
+      }
+    >
+      <RemediatePageContent />
+    </Suspense>
   )
 }

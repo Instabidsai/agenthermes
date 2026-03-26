@@ -32,13 +32,33 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/leaderboard" className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
+                  Leaderboard
+                </Link>
+              </li>
+              <li>
                 <Link href="/audit" className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
                   Audit Your Business
                 </Link>
               </li>
               <li>
+                <Link href="/remediate" className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
+                  Fix Your Readiness
+                </Link>
+              </li>
+              <li>
+                <Link href="/report" className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
+                  Report
+                </Link>
+              </li>
+              <li>
                 <Link href="/register" className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
                   Register
+                </Link>
+              </li>
+              <li>
+                <Link href="/dashboard" className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
+                  Dashboard
                 </Link>
               </li>
             </ul>
