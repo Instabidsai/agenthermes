@@ -250,11 +250,12 @@ function AuditPageContent() {
             <input
               type="text"
               placeholder="yourbusiness.com"
+              aria-label="Domain or URL to audit"
               value={domainInput}
               onChange={(e) => setDomainInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && audit.phase !== 'running' && runAudit()}
               disabled={audit.phase === 'running'}
-              className="w-full pl-10 pr-4 py-3.5 rounded-lg bg-zinc-900/80 border border-zinc-800 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-colors disabled:opacity-50"
+              className="w-full pl-10 pr-4 py-3.5 rounded-lg bg-zinc-900/80 border border-zinc-800 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-colors disabled:opacity-50"
             />
           </div>
           <button
@@ -278,6 +279,8 @@ function AuditPageContent() {
         </div>
       </div>
 
+      {/* Results / Status Area */}
+      <div aria-live="polite">
       {/* Running State */}
       {audit.phase === 'running' && (
         <div className="p-10 rounded-xl bg-zinc-900/50 border border-zinc-800/80 text-center">
@@ -673,6 +676,7 @@ function AuditPageContent() {
           </p>
         </div>
       )}
+      </div>
     </div>
   )
 }

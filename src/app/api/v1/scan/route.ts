@@ -39,6 +39,10 @@ export async function POST(req: NextRequest) {
 
     const rawUrl: string = body.url.trim()
 
+    if (rawUrl.length > 2048) {
+      return NextResponse.json({ error: 'URL too long (max 2048 characters)' }, { status: 400 })
+    }
+
     // -----------------------------------------------------------------------
     // 1. Run the 9-dimension scan
     // -----------------------------------------------------------------------
@@ -88,7 +92,7 @@ export async function POST(req: NextRequest) {
         } as any,
         { onConflict: 'domain' }
       )
-      .select('id')
+      .select('id, vertical')
       .single()
     const business = businessRaw as any
 
@@ -186,7 +190,7 @@ export async function POST(req: NextRequest) {
 
     // Fire webhook for score change (fire-and-forget)
     fireWebhook('score_change', {
-      business: { id: businessId, name: businessName, domain },
+      business: { id: businessId, name: businessName, domain, vertical: business?.vertical ?? null },
       score: scanResult.total_score,
       tier: scanResult.tier,
       scanner_version: '2.0',
@@ -220,7 +224,8 @@ export async function POST(req: NextRequest) {
     if (
       err instanceof Error &&
       (err.message.includes('private or internal') ||
-        err.message.includes('Only HTTP'))
+        err.message.includes('Only HTTP') ||
+        err.message.includes('Invalid URL'))
     ) {
       return NextResponse.json({ error: err.message }, { status: 400 })
     }

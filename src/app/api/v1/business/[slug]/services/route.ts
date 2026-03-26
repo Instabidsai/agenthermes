@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/supabase'
 import { getBusinessBySlug } from '@/lib/business'
 import { requireAuth } from '@/lib/auth'
+import { fireWebhook } from '@/lib/webhooks'
 
 export async function GET(
   _request: NextRequest,
@@ -107,6 +108,9 @@ export async function POST(
       console.error('[services] Insert error:', insertError.message)
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
+
+    // Fire new_service webhook (fire-and-forget)
+    fireWebhook('new_service', { business_id: business.id, service: service })
 
     return NextResponse.json(service, { status: 201 })
   } catch (err) {

@@ -63,6 +63,8 @@ export default function ScoreGauge({
         height={width}
         viewBox={`0 0 ${width} ${width}`}
         className="-rotate-90"
+        role="img"
+        aria-label={`Score gauge showing ${score} out of 100, rated ${label}`}
       >
         {/* Background circle */}
         <circle

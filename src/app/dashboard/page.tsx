@@ -196,7 +196,7 @@ export default function DashboardPage() {
 
       {/* Error banner */}
       {error && (
-        <div className="mb-6 p-3 rounded-lg bg-red-950/30 border border-red-800/40 flex items-center gap-2">
+        <div role="alert" className="mb-6 p-3 rounded-lg bg-red-950/30 border border-red-800/40 flex items-center gap-2">
           <AlertCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
           <p className="text-xs text-red-400">{error}</p>
         </div>

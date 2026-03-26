@@ -211,9 +211,10 @@ function DiscoverPageContent() {
             <input
               type="text"
               placeholder="Search businesses, capabilities, domains..."
+              aria-label="Search businesses"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 rounded-lg bg-zinc-900/80 border border-zinc-800 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-colors"
+              className="w-full pl-10 pr-4 py-3 rounded-lg bg-zinc-900/80 border border-zinc-800 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-colors"
             />
             {query && (
               <button
@@ -337,7 +338,7 @@ function DiscoverPageContent() {
         )}
 
         {/* Result count + search mode indicator */}
-        <div className="flex items-center gap-2 text-xs text-zinc-500">
+        <div className="flex items-center gap-2 text-xs text-zinc-500" aria-live="polite">
           <span>
             {loading ? 'Searching...' : `${total} business${total !== 1 ? 'es' : ''} found`}
           </span>

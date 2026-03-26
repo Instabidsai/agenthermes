@@ -23,9 +23,10 @@ export default function HeroScanForm() {
           <input
             type="text"
             placeholder="yourbusiness.com"
+            aria-label="Enter your business domain"
             value={domain}
             onChange={(e) => setDomain(e.target.value)}
-            className="w-full pl-12 pr-4 py-4 sm:py-5 rounded-xl bg-zinc-900/80 border border-zinc-700 text-base sm:text-lg text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+            className="w-full pl-12 pr-4 py-4 sm:py-5 rounded-xl bg-zinc-900/80 border border-zinc-700 text-base sm:text-lg text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/50 transition-all"
           />
         </div>
         <button

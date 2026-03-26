@@ -158,7 +158,7 @@ export default async function HomePage() {
           {/* Demo gauge placeholder */}
           <div className="flex justify-center mt-14">
             <div className="relative">
-              <svg width="200" height="200" viewBox="0 0 200 200" className="-rotate-90">
+              <svg width="200" height="200" viewBox="0 0 200 200" className="-rotate-90" role="img" aria-label="Demo score gauge showing 73 out of 100">
                 <circle cx="100" cy="100" r="88" fill="none" stroke="#27272a" strokeWidth="8" />
                 <circle
                   cx="100"

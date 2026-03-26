@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/supabase'
 import { requireAuth, rateLimit } from '@/lib/auth'
-import { runAudit, tierFromScore, normalizeUrl } from '@/lib/audit-engine'
+import { runScan } from '@/lib/scanner'
+import { tierFromScore, normalizeUrl } from '@/lib/audit-engine'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -130,7 +131,7 @@ export async function POST(request: NextRequest) {
       const scanResults = await Promise.allSettled(
         domainsToScan.map(async (domain) => {
           try {
-            const scorecard = await runAudit(domain)
+            const scorecard = await runScan(domain)
             const normalizedDomain = normalizeUrl(domain)
               .replace(/^https?:\/\//, '')
               .replace(/^www\./, '')
@@ -141,7 +142,7 @@ export async function POST(request: NextRequest) {
               .upsert(
                 {
                   domain: normalizedDomain,
-                  name: scorecard.business_name,
+                  name: normalizedDomain.split('.')[0],
                   slug: normalizedDomain.replace(/[^a-z0-9]+/gi, '-').toLowerCase(),
                   audit_score: scorecard.total_score,
                   audit_tier: scorecard.tier,
@@ -164,19 +165,30 @@ export async function POST(request: NextRequest) {
                 .toUpperCase()
               hermesId = `AH-${new Date().getFullYear()}-${hash}`
 
-              // Save audit results
+              // Save audit results (map 9 dimensions to 5 legacy categories)
               const now = new Date()
               const nextAudit = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
-              const auditRows = scorecard.categories.map((cat) => ({
-                business_id: biz.id,
-                category: cat.category,
-                score: cat.score,
-                max_score: cat.max_score,
-                details: cat.details,
-                recommendations: cat.recommendations,
-                audited_at: now.toISOString(),
-                next_audit_at: nextAudit.toISOString(),
-              }))
+              const catMap: Record<string, string[]> = {
+                machine_readable_profile: ['D1'],
+                mcp_api_endpoints: ['D2'],
+                agent_native_onboarding: ['D3'],
+                structured_pricing: ['D4', 'D5'],
+                agent_payment_acceptance: ['D6', 'D7', 'D8', 'D9'],
+              }
+              const auditRows = Object.entries(catMap).map(([category, dims]) => {
+                const matched = dims.map(id => scorecard.dimensions.find(d => d.dimension === id)).filter(Boolean) as any[]
+                const avg = matched.length > 0 ? matched.reduce((s: number, d: any) => s + d.score, 0) / matched.length : 0
+                return {
+                  business_id: biz.id,
+                  category,
+                  score: Math.round((avg / 100) * 20),
+                  max_score: 20,
+                  details: { dimensions: matched.map((d: any) => ({ dimension: d.dimension, score: d.score })) },
+                  recommendations: matched.flatMap((d: any) => d.recommendations?.map((r: any) => r.action) || []),
+                  audited_at: now.toISOString(),
+                  next_audit_at: nextAudit.toISOString(),
+                }
+              })
 
               await supabase.from('audit_results').delete().eq('business_id', biz.id)
               await supabase.from('audit_results').insert(auditRows as any)

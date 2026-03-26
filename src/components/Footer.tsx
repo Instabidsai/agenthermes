@@ -24,7 +24,7 @@ export default function Footer() {
 
           {/* Network */}
           <div>
-            <h4 className="text-sm font-semibold text-zinc-300 mb-3">Network</h4>
+            <h2 className="text-sm font-semibold text-zinc-300 mb-3">Network</h2>
             <ul className="space-y-2">
               <li>
                 <Link href="/discover" className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
@@ -66,7 +66,7 @@ export default function Footer() {
 
           {/* For Developers */}
           <div>
-            <h4 className="text-sm font-semibold text-zinc-300 mb-3">For Agents</h4>
+            <h2 className="text-sm font-semibold text-zinc-300 mb-3">For Agents</h2>
             <ul className="space-y-2">
               <li>
                 <span className="text-sm text-zinc-600">

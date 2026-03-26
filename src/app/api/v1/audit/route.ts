@@ -141,7 +141,7 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     console.error('Audit route error:', err instanceof Error ? err.message : err)
     // Allow SSRF validation errors to surface as 400 (user input error)
-    if (err instanceof Error && (err.message.includes('private or internal') || err.message.includes('Only HTTP'))) {
+    if (err instanceof Error && (err.message.includes('private or internal') || err.message.includes('Only HTTP') || err.message.includes('Invalid URL'))) {
       return NextResponse.json({ error: err.message }, { status: 400 })
     }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

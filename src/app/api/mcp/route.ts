@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/supabase'
 import { isStripeConfigured, transferFunds } from '@/lib/stripe'
-import { runAudit } from '@/lib/audit-engine'
+import { runScan } from '@/lib/scanner'
 
 // Payment tools that require authentication
 const AUTH_REQUIRED_TOOLS = new Set(['initiate_payment', 'check_wallet_balance'])
@@ -212,10 +212,23 @@ async function readResource(uri: string): Promise<{ uri: string; mimeType: strin
   const auditMatch = uri.match(/^agenthermes:\/\/audits\/(.+)$/)
   if (auditMatch) {
     const domain = auditMatch[1]
+
+    // Look up business by domain first, then query audit_results by business_id
+    const { data: bizData, error: bizError } = await supabase
+      .from('businesses')
+      .select('id')
+      .eq('domain', domain)
+      .single()
+
+    if (bizError) {
+      if (bizError.code === 'PGRST116') throw new Error(`No business found for domain "${domain}"`)
+      throw new Error(bizError.message)
+    }
+
     const { data, error } = await supabase
       .from('audit_results')
       .select('*')
-      .eq('domain', domain)
+      .eq('business_id', (bizData as any).id)
       .order('created_at', { ascending: false })
       .limit(10)
 
@@ -512,12 +525,19 @@ async function executeRunAudit(params: Record<string, unknown>) {
   const url = params.url as string
   if (!url) throw new Error('url is required')
 
-  const scorecard = await runAudit(url)
+  const scanResult = await runScan(url)
 
   return {
     url,
     business_id: params.business_id || null,
-    ...scorecard,
+    hermes_id: scanResult.hermes_id,
+    domain: scanResult.domain,
+    total_score: scanResult.total_score,
+    tier: scanResult.tier,
+    dimensions: scanResult.dimensions,
+    caps_applied: scanResult.caps_applied,
+    scanned_at: scanResult.scanned_at,
+    next_steps: scanResult.next_steps,
   }
 }
 

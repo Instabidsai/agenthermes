@@ -68,19 +68,54 @@ export async function POST(request: NextRequest) {
           })
           .eq('id', business.id)
 
-        // Save scan results mapped to audit_results format
+        // Save scan results mapped to audit_results format (5 legacy categories, 0-20 scoring)
         const now = new Date()
         const nextAudit = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
-        const auditRows = scanResult.dimensions.map((dim) => ({
-          business_id: business!.id,
-          category: dim.dimension,
-          score: Math.round(dim.score * dim.weight),
-          max_score: Math.round(100 * dim.weight),
-          details: { checks: dim.checks, label: dim.label },
-          recommendations: dim.recommendations.map((r) => r.action),
-          audited_at: now.toISOString(),
-          next_audit_at: nextAudit.toISOString(),
-        }))
+
+        const categoryMapping: Record<string, { category: string; dims: string[] }> = {
+          machine_readable_profile: { category: 'machine_readable_profile', dims: ['D1'] },
+          mcp_api_endpoints: { category: 'mcp_api_endpoints', dims: ['D2'] },
+          agent_native_onboarding: { category: 'agent_native_onboarding', dims: ['D3'] },
+          structured_pricing: { category: 'structured_pricing', dims: ['D4', 'D5'] },
+          agent_payment_acceptance: { category: 'agent_payment_acceptance', dims: ['D6', 'D7', 'D8', 'D9'] },
+        }
+
+        const auditRows = Object.entries(categoryMapping).map(([category, mapping]) => {
+          const dims = mapping.dims
+            .map((id) => scanResult.dimensions.find((d) => d.dimension === id))
+            .filter(Boolean) as typeof scanResult.dimensions
+
+          const avgDimScore = dims.length > 0
+            ? dims.reduce((sum, d) => sum + d.score, 0) / dims.length
+            : 0
+          const scaledScore = Math.round((avgDimScore / 100) * 20)
+
+          const details: Record<string, unknown> = {
+            scanner_version: '2.0',
+            dimensions: dims.map((d) => ({
+              dimension: d.dimension,
+              label: d.label,
+              score: d.score,
+              weight: d.weight,
+              checks: d.checks,
+            })),
+          }
+
+          const recommendations = dims.flatMap((d) =>
+            d.recommendations.map((r) => `[${d.label}] ${r.action}`)
+          )
+
+          return {
+            business_id: business!.id,
+            category,
+            score: scaledScore,
+            max_score: 20,
+            details,
+            recommendations,
+            audited_at: now.toISOString(),
+            next_audit_at: nextAudit.toISOString(),
+          }
+        })
 
         await supabase.from('audit_results').delete().eq('business_id', business.id)
         await supabase.from('audit_results').insert(auditRows as any)

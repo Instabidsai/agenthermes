@@ -133,26 +133,25 @@ async function deliverWebhook(
 
     clearTimeout(timeout)
 
-    console.log(
-      `[webhooks] Delivered ${eventType} to ${subscription.subscriber_url} — status: ${response.status}`
-    )
+    if (response.ok) {
+      console.log(
+        `[webhooks] Delivered ${eventType} to ${subscription.subscriber_url} — status: ${response.status}`
+      )
 
-    // Update last_triggered_at
-    const supabase = getServiceClient()
-    await (supabase
-      .from('webhook_subscriptions') as any)
-      .update({ last_triggered_at: new Date().toISOString() })
-      .eq('id', subscription.id)
-
-    // Deactivate on repeated failures (4xx/5xx) — simple approach
-    if (response.status >= 400) {
+      // Only update last_triggered_at on successful delivery (2xx)
+      const supabase = getServiceClient()
+      await (supabase
+        .from('webhook_subscriptions') as any)
+        .update({ last_triggered_at: new Date().toISOString() })
+        .eq('id', subscription.id)
+    } else {
       console.warn(
-        `[webhooks] Subscriber ${subscription.subscriber_url} returned ${response.status} for ${eventType}`
+        `[webhooks] Delivery failed for subscription ${subscription.id}: ${subscription.subscriber_url} returned ${response.status} for ${eventType}`
       )
     }
   } catch (err) {
     console.error(
-      `[webhooks] Failed to deliver ${eventType} to ${subscription.subscriber_url}:`,
+      `[webhooks] Delivery failed for subscription ${subscription.id}: ${subscription.subscriber_url} — ${eventType}:`,
       err instanceof Error ? err.message : err
     )
   }

@@ -115,3 +115,14 @@ input[type="range"]::-moz-range-track {
 .animate-subtle-pulse {
   animation: subtle-pulse 2s ease-in-out infinite;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-spin,
+  .animate-subtle-pulse,
+  .animate-pulse {
+    animation: none !important;
+  }
+  svg circle {
+    transition: none !important;
+  }
+}

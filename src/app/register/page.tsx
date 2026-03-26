@@ -181,7 +181,7 @@ function RegisterPageContent() {
             placeholder="Acme Legal AI"
             value={form.name}
             onChange={(e) => update('name', e.target.value)}
-            className={`w-full px-4 py-3 rounded-lg bg-zinc-900/80 border text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-colors ${
+            className={`w-full px-4 py-3 rounded-lg bg-zinc-900/80 border text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-colors ${
               fieldErrors.name ? 'border-red-500/50' : 'border-zinc-800'
             }`}
           />
@@ -205,7 +205,7 @@ function RegisterPageContent() {
             placeholder="acmelegal.ai"
             value={form.domain}
             onChange={(e) => update('domain', e.target.value)}
-            className={`w-full px-4 py-3 rounded-lg bg-zinc-900/80 border text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-colors ${
+            className={`w-full px-4 py-3 rounded-lg bg-zinc-900/80 border text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-colors ${
               fieldErrors.domain ? 'border-red-500/50' : 'border-zinc-800'
             }`}
           />
@@ -229,7 +229,7 @@ function RegisterPageContent() {
             placeholder="What does your business do? What services do you offer to agents?"
             value={form.description}
             onChange={(e) => update('description', e.target.value)}
-            className="w-full px-4 py-3 rounded-lg bg-zinc-900/80 border border-zinc-800 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-colors resize-none"
+            className="w-full px-4 py-3 rounded-lg bg-zinc-900/80 border border-zinc-800 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-colors resize-none"
           />
         </div>
 
@@ -248,7 +248,7 @@ function RegisterPageContent() {
             placeholder="you@company.com"
             value={form.owner_email}
             onChange={(e) => update('owner_email', e.target.value)}
-            className={`w-full px-4 py-3 rounded-lg bg-zinc-900/80 border text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-colors ${
+            className={`w-full px-4 py-3 rounded-lg bg-zinc-900/80 border text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-colors ${
               fieldErrors.owner_email ? 'border-red-500/50' : 'border-zinc-800'
             }`}
           />
@@ -270,7 +270,7 @@ function RegisterPageContent() {
             id="vertical"
             value={form.vertical}
             onChange={(e) => update('vertical', e.target.value)}
-            className="w-full px-4 py-3 rounded-lg bg-zinc-900/80 border border-zinc-800 text-sm text-zinc-100 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-colors"
+            className="w-full px-4 py-3 rounded-lg bg-zinc-900/80 border border-zinc-800 text-sm text-zinc-100 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-colors"
           >
             <option value="">Select a vertical...</option>
             {verticalOptions.filter(Boolean).map((v) => (
@@ -296,7 +296,7 @@ function RegisterPageContent() {
             placeholder="contract-review, compliance-check, data-enrichment"
             value={form.capabilities}
             onChange={(e) => update('capabilities', e.target.value)}
-            className="w-full px-4 py-3 rounded-lg bg-zinc-900/80 border border-zinc-800 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-colors"
+            className="w-full px-4 py-3 rounded-lg bg-zinc-900/80 border border-zinc-800 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-colors"
           />
           <p className="text-[10px] text-zinc-600 mt-1.5">
             Comma-separated list of capabilities agents can search for.

@@ -21,6 +21,7 @@
 //   - No callable endpoints at all → capped at 29
 // ---------------------------------------------------------------------------
 
+import { randomBytes } from 'crypto'
 import type { ScanResult, DimensionResult, CapApplied } from './types'
 import { scanDiscoverability } from './d1-discoverability'
 import { scanInteroperability } from './d2-interoperability'
@@ -122,11 +123,7 @@ function tierFromScore(
 }
 
 function generateHermesId(): string {
-  const hex = Array.from({ length: 5 }, () =>
-    Math.floor(Math.random() * 16)
-      .toString(16)
-      .toUpperCase()
-  ).join('')
+  const hex = randomBytes(4).toString('hex').toUpperCase()
   return `AH-2026-${hex}`
 }
 

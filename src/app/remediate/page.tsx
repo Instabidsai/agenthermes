@@ -690,6 +690,7 @@ function RemediatePageContent() {
             <input
               type="text"
               placeholder="yourbusiness.com"
+              aria-label="Domain to remediate"
               value={domainInput}
               onChange={(e) => setDomainInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && phase !== 'loading' && fetchScore()}
@@ -1379,7 +1380,7 @@ function RemediatePageContent() {
                   setOpenApiJson(e.target.value)
                   setOpenApiError('')
                 }}
-                className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/80 border border-zinc-700 text-xs font-mono text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-colors resize-y"
+                className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/80 border border-zinc-700 text-xs font-mono text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-colors resize-y"
               />
               {openApiError && (
                 <p className="mt-1.5 text-xs text-red-400">{openApiError}</p>
