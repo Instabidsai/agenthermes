@@ -162,10 +162,6 @@ class AgentHermes:
         """
         return self._request("POST", "/api/v1/scan", {"url": url})
 
-    def scan_v2(self, url: str) -> Dict[str, Any]:
-        """Alias for :meth:`scan` -- runs the 9-dimension scanner."""
-        return self.scan(url)
-
     def details(self, slug: str) -> Dict[str, Any]:
         """Get full details for a business.
 
@@ -476,6 +472,625 @@ class AgentHermes:
             Certification details with badge URL.
         """
         return self._request("POST", "/api/v1/certify", {"slug": slug})
+
+    # ------------------------------------------------------------------
+    # Audit (old 5-category system)
+    # ------------------------------------------------------------------
+
+    def run_audit(self, url: str) -> Dict[str, Any]:
+        """Run an audit using the old 5-category scoring system.
+
+        Args:
+            url: Domain or URL to audit.
+
+        Returns:
+            Audit results with category breakdown.
+        """
+        return self._request("POST", "/api/v1/audit", {"url": url})
+
+    def get_audit_by_id(self, id: str) -> Dict[str, Any]:
+        """Retrieve a previously completed audit by ID.
+
+        Args:
+            id: Audit UUID.
+
+        Returns:
+            Stored audit results.
+        """
+        return self._request("GET", f"/api/v1/audit/{quote(id, safe='')}")
+
+    # ------------------------------------------------------------------
+    # Wallet
+    # ------------------------------------------------------------------
+
+    def get_wallet(self, business_id: str) -> Dict[str, Any]:
+        """Get the wallet balance for a business.
+
+        Args:
+            business_id: UUID of the business.
+
+        Returns:
+            Wallet balance and status.
+        """
+        qs = self._build_query({"business_id": business_id})
+        return self._request("GET", f"/api/v1/wallet{qs}")
+
+    def get_transactions(
+        self,
+        business_id: str,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        """Get transaction history for a business wallet.
+
+        Args:
+            business_id: UUID of the business.
+            limit: Max results per page.
+            offset: Pagination offset.
+
+        Returns:
+            Paginated list of transactions.
+        """
+        qs = self._build_query({
+            "business_id": business_id,
+            "limit": limit,
+            "offset": offset,
+        })
+        return self._request("GET", f"/api/v1/wallet/transactions{qs}")
+
+    # ------------------------------------------------------------------
+    # Analytics
+    # ------------------------------------------------------------------
+
+    def get_analytics(
+        self,
+        business_id: str,
+        period: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Get analytics for a business.
+
+        Args:
+            business_id: UUID of the business.
+            period: Time period (e.g. ``"7d"``, ``"30d"``).
+
+        Returns:
+            Analytics metrics for the specified period.
+        """
+        qs = self._build_query({
+            "business_id": business_id,
+            "period": period,
+        })
+        return self._request("GET", f"/api/v1/analytics{qs}")
+
+    # ------------------------------------------------------------------
+    # Report
+    # ------------------------------------------------------------------
+
+    def get_report(self) -> Dict[str, Any]:
+        """Get the platform-wide report.
+
+        Returns:
+            Aggregate platform report.
+        """
+        return self._request("GET", "/api/v1/report")
+
+    # ------------------------------------------------------------------
+    # Mystery Shop
+    # ------------------------------------------------------------------
+
+    def run_mystery_shop(
+        self,
+        business_id: Optional[str] = None,
+        slug: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Run a mystery shop evaluation of a business.
+
+        Args:
+            business_id: UUID of the business.
+            slug: Business slug (alternative to business_id).
+
+        Returns:
+            Mystery shop evaluation results.
+        """
+        payload: Dict[str, Any] = {}
+        if business_id is not None:
+            payload["business_id"] = business_id
+        if slug is not None:
+            payload["slug"] = slug
+        return self._request("POST", "/api/v1/mystery-shop", payload)
+
+    def get_mystery_shop_history(
+        self,
+        business_id: Optional[str] = None,
+        slug: Optional[str] = None,
+        limit: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        """Get mystery shop history for a business.
+
+        Args:
+            business_id: UUID of the business.
+            slug: Business slug.
+            limit: Max results.
+
+        Returns:
+            Paginated list of past mystery shop results.
+        """
+        qs = self._build_query({
+            "business_id": business_id,
+            "slug": slug,
+            "limit": limit,
+        })
+        return self._request("GET", f"/api/v1/mystery-shop{qs}")
+
+    # ------------------------------------------------------------------
+    # Webhooks
+    # ------------------------------------------------------------------
+
+    def subscribe_webhook(
+        self,
+        url: str,
+        event_type: str,
+        filters: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Subscribe to webhook events.
+
+        Args:
+            url: Endpoint URL to receive events.
+            event_type: Event type to subscribe to.
+            filters: Optional event filters.
+
+        Returns:
+            The created webhook subscription.
+        """
+        payload: Dict[str, Any] = {"url": url, "event_type": event_type}
+        if filters is not None:
+            payload["filters"] = filters
+        return self._request("POST", "/api/v1/webhooks/subscribe", payload)
+
+    def list_webhooks(self) -> Dict[str, Any]:
+        """List all active webhook subscriptions.
+
+        Returns:
+            List of webhook subscriptions.
+        """
+        return self._request("GET", "/api/v1/webhooks/subscribe")
+
+    def unsubscribe_webhook(self, id: str) -> Dict[str, Any]:
+        """Unsubscribe from a webhook.
+
+        Args:
+            id: Webhook subscription ID to remove.
+
+        Returns:
+            Confirmation of deletion.
+        """
+        return self._request(
+            "DELETE",
+            f"/api/v1/webhooks/subscribe?id={quote(id, safe='')}",
+        )
+
+    # ------------------------------------------------------------------
+    # Services
+    # ------------------------------------------------------------------
+
+    def get_services(self, slug: str) -> Dict[str, Any]:
+        """List services for a business.
+
+        Args:
+            slug: Business slug.
+
+        Returns:
+            List of services.
+        """
+        return self._request(
+            "GET",
+            f"/api/v1/business/{quote(slug, safe='')}/services",
+        )
+
+    def create_service(
+        self,
+        slug: str,
+        name: str,
+        description: Optional[str] = None,
+        pricing_model: Optional[str] = None,
+        price_per_call: Optional[float] = None,
+    ) -> Dict[str, Any]:
+        """Create a new service for a business.
+
+        Args:
+            slug: Business slug.
+            name: Service name.
+            description: Service description.
+            pricing_model: Pricing model (per_call, monthly, etc.).
+            price_per_call: Price per API call in USD.
+
+        Returns:
+            The created service.
+        """
+        payload: Dict[str, Any] = {"name": name}
+        if description is not None:
+            payload["description"] = description
+        if pricing_model is not None:
+            payload["pricing_model"] = pricing_model
+        if price_per_call is not None:
+            payload["price_per_call"] = price_per_call
+        return self._request(
+            "POST",
+            f"/api/v1/business/{quote(slug, safe='')}/services",
+            payload,
+        )
+
+    def update_service(
+        self,
+        slug: str,
+        service_id: str,
+        data: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Update an existing service.
+
+        Args:
+            slug: Business slug.
+            service_id: Service UUID.
+            data: Fields to update.
+
+        Returns:
+            The updated service.
+        """
+        return self._request(
+            "PATCH",
+            f"/api/v1/business/{quote(slug, safe='')}/services"
+            f"?service_id={quote(service_id, safe='')}",
+            data,
+        )
+
+    def delete_service(self, slug: str, service_id: str) -> Dict[str, Any]:
+        """Delete a service from a business.
+
+        Args:
+            slug: Business slug.
+            service_id: Service UUID.
+
+        Returns:
+            Confirmation of deletion.
+        """
+        return self._request(
+            "DELETE",
+            f"/api/v1/business/{quote(slug, safe='')}/services"
+            f"?service_id={quote(service_id, safe='')}",
+        )
+
+    # ------------------------------------------------------------------
+    # Business management
+    # ------------------------------------------------------------------
+
+    def update_business(self, slug: str, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Update a business profile.
+
+        Args:
+            slug: Business slug.
+            data: Fields to update.
+
+        Returns:
+            The updated business.
+        """
+        return self._request(
+            "PATCH",
+            f"/api/v1/business/{quote(slug, safe='')}",
+            data,
+        )
+
+    def create_api_key(
+        self,
+        slug: str,
+        name: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Create a new API key for a business.
+
+        Args:
+            slug: Business slug.
+            name: Optional name for the key.
+
+        Returns:
+            The created API key (value only shown once).
+        """
+        payload = {"name": name} if name else None
+        return self._request(
+            "POST",
+            f"/api/v1/business/{quote(slug, safe='')}/api-keys",
+            payload,
+        )
+
+    def list_api_keys(self, slug: str) -> Dict[str, Any]:
+        """List API keys for a business (keys are masked).
+
+        Args:
+            slug: Business slug.
+
+        Returns:
+            List of API keys with masked values.
+        """
+        return self._request(
+            "GET",
+            f"/api/v1/business/{quote(slug, safe='')}/api-keys",
+        )
+
+    def revoke_api_key(self, slug: str, key_id: str) -> Dict[str, Any]:
+        """Revoke an API key.
+
+        Args:
+            slug: Business slug.
+            key_id: API key UUID to revoke.
+
+        Returns:
+            Confirmation of revocation.
+        """
+        return self._request(
+            "DELETE",
+            f"/api/v1/business/{quote(slug, safe='')}/api-keys"
+            f"?key_id={quote(key_id, safe='')}",
+        )
+
+    def connect_stripe(self, slug: str) -> Dict[str, Any]:
+        """Initiate Stripe Connect onboarding for a business.
+
+        Args:
+            slug: Business slug.
+
+        Returns:
+            Stripe Connect onboarding URL.
+        """
+        return self._request(
+            "POST",
+            f"/api/v1/business/{quote(slug, safe='')}/connect",
+        )
+
+    # ------------------------------------------------------------------
+    # Certification (lookup)
+    # ------------------------------------------------------------------
+
+    def get_certification(self, slug: str) -> Dict[str, Any]:
+        """Get the current certification status for a business.
+
+        Args:
+            slug: Business slug.
+
+        Returns:
+            Certification details or null if not certified.
+        """
+        qs = self._build_query({"slug": slug})
+        return self._request("GET", f"/api/v1/certify{qs}")
+
+    # ------------------------------------------------------------------
+    # Hermes JSON
+    # ------------------------------------------------------------------
+
+    def generate_hermes_json(
+        self,
+        domain: Optional[str] = None,
+        slug: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Generate a .well-known/agent-hermes.json file for a business.
+
+        Args:
+            domain: Domain to generate for.
+            slug: Business slug (alternative to domain).
+
+        Returns:
+            Generated JSON content and deployment instructions.
+        """
+        payload: Dict[str, Any] = {}
+        if domain is not None:
+            payload["domain"] = domain
+        if slug is not None:
+            payload["slug"] = slug
+        return self._request("POST", "/api/v1/hermes-json", payload)
+
+    # ------------------------------------------------------------------
+    # Health
+    # ------------------------------------------------------------------
+
+    def run_health_check(
+        self,
+        service_id: Optional[str] = None,
+        url: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Run a health check on a service or URL.
+
+        Args:
+            service_id: Service UUID to check.
+            url: URL to check (alternative to service_id).
+
+        Returns:
+            Health check results with latency.
+        """
+        payload: Dict[str, Any] = {}
+        if service_id is not None:
+            payload["service_id"] = service_id
+        if url is not None:
+            payload["url"] = url
+        return self._request("POST", "/api/v1/health/check", payload)
+
+    def get_health_status(
+        self,
+        business_id: Optional[str] = None,
+        slug: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Get the health status overview for a business.
+
+        Args:
+            business_id: UUID of the business.
+            slug: Business slug.
+
+        Returns:
+            Overall health status with per-service breakdown.
+        """
+        qs = self._build_query({
+            "business_id": business_id,
+            "slug": slug,
+        })
+        return self._request("GET", f"/api/v1/health/status{qs}")
+
+    # ------------------------------------------------------------------
+    # Monitoring
+    # ------------------------------------------------------------------
+
+    def trigger_monitoring(self) -> Dict[str, Any]:
+        """Trigger a monitoring sweep across all registered businesses.
+
+        Returns:
+            Number of monitoring events created.
+        """
+        return self._request("POST", "/api/v1/monitoring")
+
+    def get_monitoring_events(
+        self,
+        business_id: Optional[str] = None,
+        severity: Optional[str] = None,
+        limit: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        """Get monitoring events, optionally filtered.
+
+        Args:
+            business_id: Filter by business UUID.
+            severity: Filter by severity level.
+            limit: Max results.
+
+        Returns:
+            Paginated list of monitoring events.
+        """
+        qs = self._build_query({
+            "business_id": business_id,
+            "severity": severity,
+            "limit": limit,
+        })
+        return self._request("GET", f"/api/v1/monitoring{qs}")
+
+    # ------------------------------------------------------------------
+    # Semantic search
+    # ------------------------------------------------------------------
+
+    def semantic_search(
+        self,
+        q: str,
+        limit: Optional[int] = None,
+        threshold: Optional[float] = None,
+    ) -> Dict[str, Any]:
+        """Search businesses using natural language semantic matching.
+
+        Args:
+            q: Natural language query.
+            limit: Max results.
+            threshold: Minimum similarity threshold (0-1).
+
+        Returns:
+            Businesses ranked by semantic similarity.
+        """
+        qs = self._build_query({
+            "q": q,
+            "limit": limit,
+            "threshold": threshold,
+        })
+        return self._request("GET", f"/api/v1/discover/semantic{qs}")
+
+    # ------------------------------------------------------------------
+    # Remediation
+    # ------------------------------------------------------------------
+
+    def generate_llms_txt(
+        self,
+        domain: str,
+        name: str,
+        description: str,
+    ) -> Dict[str, Any]:
+        """Generate an llms.txt file for a domain.
+
+        Args:
+            domain: Target domain.
+            name: Business name.
+            description: Business description.
+
+        Returns:
+            Generated llms.txt content and deployment instructions.
+        """
+        return self._request("POST", "/api/v1/remediate/llms-txt", {
+            "domain": domain,
+            "name": name,
+            "description": description,
+        })
+
+    def generate_agent_card(
+        self,
+        domain: str,
+        name: str,
+        description: str,
+    ) -> Dict[str, Any]:
+        """Generate an A2A agent card for a domain.
+
+        Args:
+            domain: Target domain.
+            name: Business name.
+            description: Business description.
+
+        Returns:
+            Generated agent card JSON and deployment instructions.
+        """
+        return self._request("POST", "/api/v1/remediate/agent-card", {
+            "domain": domain,
+            "name": name,
+            "description": description,
+        })
+
+    def generate_schema_org(
+        self,
+        domain: str,
+        name: str,
+        description: str,
+        type: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Generate Schema.org structured data for a domain.
+
+        Args:
+            domain: Target domain.
+            name: Business name.
+            description: Business description.
+            type: Schema.org type (e.g. ``"SoftwareApplication"``).
+
+        Returns:
+            Generated JSON-LD and deployment instructions.
+        """
+        payload: Dict[str, Any] = {
+            "domain": domain,
+            "name": name,
+            "description": description,
+        }
+        if type is not None:
+            payload["type"] = type
+        return self._request("POST", "/api/v1/remediate/schema-org", payload)
+
+    def generate_mcp_proxy(
+        self,
+        domain: str,
+        name: str,
+        api_base: str,
+        endpoints: List[Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        """Generate an MCP proxy configuration for a domain.
+
+        Args:
+            domain: Target domain.
+            name: Business name.
+            api_base: Base URL for the API.
+            endpoints: List of endpoint definitions.
+
+        Returns:
+            Generated MCP proxy config and deployment instructions.
+        """
+        return self._request("POST", "/api/v1/remediate/mcp-proxy", {
+            "domain": domain,
+            "name": name,
+            "api_base": api_base,
+            "endpoints": endpoints,
+        })
 
     # ------------------------------------------------------------------
     # Context manager / cleanup

@@ -349,6 +349,186 @@ export interface CertifyResult {
   badge_url: string
 }
 
+/** Response from the old 5-category audit endpoint. */
+export interface AuditRunResult {
+  id: string
+  url: string
+  status: string
+  categories: Record<string, { score: number; max: number; checks: Check[] }>
+  overall_score: number
+  tier: Tier
+  created_at: string
+}
+
+/** Response from wallet balance endpoint. */
+export interface WalletResult {
+  business_id: string
+  balance: number
+  currency: string
+  status: string
+  created_at: string
+  updated_at: string
+}
+
+/** A wallet transaction record. */
+export interface Transaction {
+  id: string
+  from_business_id: string | null
+  to_business_id: string | null
+  amount: number
+  type: string
+  description: string
+  created_at: string
+}
+
+/** Response from wallet transactions endpoint. */
+export interface TransactionsResult {
+  transactions: Transaction[]
+  pagination: Pagination
+}
+
+/** Response from analytics endpoint. */
+export interface AnalyticsResult {
+  business_id: string
+  period: string
+  metrics: Record<string, unknown>
+}
+
+/** Response from report endpoint. */
+export interface ReportResult {
+  report: Record<string, unknown>
+}
+
+/** Response from mystery shop endpoint. */
+export interface MysteryShopResult {
+  id: string
+  business_id: string
+  slug: string
+  results: Record<string, unknown>
+  created_at: string
+}
+
+/** Response from mystery shop history endpoint. */
+export interface MysteryShopHistoryResult {
+  shops: MysteryShopResult[]
+  pagination: Pagination
+}
+
+/** A webhook subscription. */
+export interface WebhookSubscription {
+  id: string
+  url: string
+  event_type: string
+  filters: Record<string, unknown>
+  created_at: string
+}
+
+/** Response from webhook list endpoint. */
+export interface WebhookListResult {
+  webhooks: WebhookSubscription[]
+}
+
+/** Response from service CRUD operations. */
+export interface ServiceResult {
+  service: Service
+}
+
+/** Response from listing services. */
+export interface ServicesListResult {
+  services: Service[]
+}
+
+/** Response from API key creation. */
+export interface ApiKeyResult {
+  id: string
+  key: string
+  name: string
+  created_at: string
+}
+
+/** Response from listing API keys. */
+export interface ApiKeysListResult {
+  api_keys: { id: string; name: string; prefix: string; created_at: string }[]
+}
+
+/** Response from Stripe connect endpoint. */
+export interface ConnectStripeResult {
+  url: string
+  message: string
+}
+
+/** Response from certification lookup. */
+export interface CertificationResult {
+  certification: {
+    id: string
+    business_id: string
+    tier: Tier
+    audit_score: number
+    certified_at: string
+    expires_at: string
+    status: string
+  } | null
+  badge_url: string | null
+}
+
+/** Response from hermes-json generation. */
+export interface GenerateHermesJsonResult {
+  hermes_json: Record<string, unknown>
+  instructions: string
+}
+
+/** Response from health check endpoint. */
+export interface HealthCheckResult {
+  status: string
+  checks: { name: string; status: string; latency_ms: number; details?: string }[]
+  checked_at: string
+}
+
+/** Response from health status endpoint. */
+export interface HealthStatusResult {
+  business_id: string
+  overall_status: string
+  services: { service_id: string; name: string; status: string; uptime_pct: number; last_check: string }[]
+}
+
+/** Response from monitoring trigger endpoint. */
+export interface MonitoringTriggerResult {
+  message: string
+  events_created: number
+}
+
+/** A monitoring event. */
+export interface MonitoringEvent {
+  id: string
+  business_id: string
+  severity: string
+  event_type: string
+  message: string
+  created_at: string
+}
+
+/** Response from monitoring events endpoint. */
+export interface MonitoringEventsResult {
+  events: MonitoringEvent[]
+  pagination: Pagination
+}
+
+/** Response from semantic search endpoint. */
+export interface SemanticSearchResult {
+  results: {
+    business: Business
+    similarity: number
+  }[]
+  pagination: Pagination
+}
+
+/** Response from remediation endpoints. */
+export interface RemediationResult {
+  content: string
+  content_type: string
+  instructions: string
+}
+
 /** Constructor options for the SDK client. */
 export interface AgentHermesOptions {
   /** Base URL of the AgentHermes API. Defaults to https://agenthermes.ai */
@@ -409,7 +589,7 @@ export class AgentHermes {
   }
 
   private async request<T>(
-    method: 'GET' | 'POST' | 'PATCH',
+    method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
     path: string,
     body?: unknown,
   ): Promise<T> {
@@ -499,17 +679,6 @@ export class AgentHermes {
    */
   async scan(url: string): Promise<ScanResult> {
     return this.request<ScanResult>('POST', '/api/v1/scan', { url })
-  }
-
-  /**
-   * Alias for scan() — runs the 9-dimension scanner.
-   * Kept for backward compatibility with documentation referencing scanV2.
-   *
-   * @param url - Domain or URL to scan
-   * @returns Full 9-dimension scorecard
-   */
-  async scanV2(url: string): Promise<ScanResult> {
-    return this.scan(url)
   }
 
   /**
@@ -755,6 +924,458 @@ export class AgentHermes {
    */
   async certify(slug: string): Promise<CertifyResult> {
     return this.request<CertifyResult>('POST', '/api/v1/certify', { slug })
+  }
+
+  // -------------------------------------------------------------------------
+  // Audit (old 5-category system)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Run an audit using the old 5-category scoring system.
+   *
+   * @param url - Domain or URL to audit
+   * @returns Audit results with category breakdown
+   */
+  async runAudit(url: string): Promise<AuditRunResult> {
+    return this.request<AuditRunResult>('POST', '/api/v1/audit', { url })
+  }
+
+  /**
+   * Retrieve a previously completed audit by ID.
+   *
+   * @param id - Audit UUID
+   * @returns Stored audit results
+   */
+  async getAuditById(id: string): Promise<AuditRunResult> {
+    return this.request<AuditRunResult>('GET', `/api/v1/audit/${encodeURIComponent(id)}`)
+  }
+
+  // -------------------------------------------------------------------------
+  // Wallet
+  // -------------------------------------------------------------------------
+
+  /**
+   * Get the wallet balance for a business.
+   *
+   * @param businessId - UUID of the business
+   * @returns Wallet balance and status
+   */
+  async getWallet(businessId: string): Promise<WalletResult> {
+    const qs = this.buildQuery({ business_id: businessId })
+    return this.request<WalletResult>('GET', `/api/v1/wallet${qs}`)
+  }
+
+  /**
+   * Get transaction history for a business wallet.
+   *
+   * @param businessId - UUID of the business
+   * @param params - Optional pagination parameters
+   * @returns Paginated list of transactions
+   */
+  async getTransactions(businessId: string, params?: { limit?: number; offset?: number }): Promise<TransactionsResult> {
+    const qs = this.buildQuery({
+      business_id: businessId,
+      limit: params?.limit,
+      offset: params?.offset,
+    })
+    return this.request<TransactionsResult>('GET', `/api/v1/wallet/transactions${qs}`)
+  }
+
+  // -------------------------------------------------------------------------
+  // Analytics
+  // -------------------------------------------------------------------------
+
+  /**
+   * Get analytics for a business.
+   *
+   * @param businessId - UUID of the business
+   * @param params - Optional period filter
+   * @returns Analytics metrics for the specified period
+   */
+  async getAnalytics(businessId: string, params?: { period?: string }): Promise<AnalyticsResult> {
+    const qs = this.buildQuery({
+      business_id: businessId,
+      period: params?.period,
+    })
+    return this.request<AnalyticsResult>('GET', `/api/v1/analytics${qs}`)
+  }
+
+  // -------------------------------------------------------------------------
+  // Report
+  // -------------------------------------------------------------------------
+
+  /**
+   * Get the platform-wide report.
+   *
+   * @returns Aggregate platform report
+   */
+  async getReport(): Promise<ReportResult> {
+    return this.request<ReportResult>('GET', '/api/v1/report')
+  }
+
+  // -------------------------------------------------------------------------
+  // Mystery Shop
+  // -------------------------------------------------------------------------
+
+  /**
+   * Run a mystery shop evaluation of a business.
+   *
+   * @param params - Business ID or slug to shop
+   * @returns Mystery shop evaluation results
+   */
+  async runMysteryShop(params: { business_id?: string; slug?: string }): Promise<MysteryShopResult> {
+    return this.request<MysteryShopResult>('POST', '/api/v1/mystery-shop', params)
+  }
+
+  /**
+   * Get mystery shop history for a business.
+   *
+   * @param params - Business ID or slug and optional pagination
+   * @returns Paginated list of past mystery shop results
+   */
+  async getMysteryShopHistory(params: {
+    business_id?: string
+    slug?: string
+    limit?: number
+  }): Promise<MysteryShopHistoryResult> {
+    const qs = this.buildQuery({
+      business_id: params.business_id,
+      slug: params.slug,
+      limit: params.limit,
+    })
+    return this.request<MysteryShopHistoryResult>('GET', `/api/v1/mystery-shop${qs}`)
+  }
+
+  // -------------------------------------------------------------------------
+  // Webhooks
+  // -------------------------------------------------------------------------
+
+  /**
+   * Subscribe to webhook events.
+   *
+   * @param params - Webhook subscription parameters
+   * @returns The created webhook subscription
+   */
+  async subscribeWebhook(params: {
+    url: string
+    event_type: string
+    filters?: object
+  }): Promise<WebhookSubscription> {
+    return this.request<WebhookSubscription>('POST', '/api/v1/webhooks/subscribe', params)
+  }
+
+  /**
+   * List all active webhook subscriptions.
+   *
+   * @returns List of webhook subscriptions
+   */
+  async listWebhooks(): Promise<WebhookListResult> {
+    return this.request<WebhookListResult>('GET', '/api/v1/webhooks/subscribe')
+  }
+
+  /**
+   * Unsubscribe from a webhook.
+   *
+   * @param id - Webhook subscription ID to remove
+   * @returns Confirmation of deletion
+   */
+  async unsubscribeWebhook(id: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>('DELETE', `/api/v1/webhooks/subscribe?id=${encodeURIComponent(id)}`)
+  }
+
+  // -------------------------------------------------------------------------
+  // Services
+  // -------------------------------------------------------------------------
+
+  /**
+   * List services for a business.
+   *
+   * @param slug - Business slug
+   * @returns List of services
+   */
+  async getServices(slug: string): Promise<ServicesListResult> {
+    return this.request<ServicesListResult>('GET', `/api/v1/business/${encodeURIComponent(slug)}/services`)
+  }
+
+  /**
+   * Create a new service for a business.
+   *
+   * @param slug - Business slug
+   * @param data - Service details
+   * @returns The created service
+   */
+  async createService(slug: string, data: {
+    name: string
+    description?: string
+    pricing_model?: string
+    price_per_call?: number
+  }): Promise<ServiceResult> {
+    return this.request<ServiceResult>('POST', `/api/v1/business/${encodeURIComponent(slug)}/services`, data)
+  }
+
+  /**
+   * Update an existing service.
+   *
+   * @param slug - Business slug
+   * @param serviceId - Service UUID
+   * @param data - Fields to update
+   * @returns The updated service
+   */
+  async updateService(slug: string, serviceId: string, data: object): Promise<ServiceResult> {
+    return this.request<ServiceResult>(
+      'PATCH',
+      `/api/v1/business/${encodeURIComponent(slug)}/services?service_id=${encodeURIComponent(serviceId)}`,
+      data,
+    )
+  }
+
+  /**
+   * Delete a service from a business.
+   *
+   * @param slug - Business slug
+   * @param serviceId - Service UUID
+   * @returns Confirmation of deletion
+   */
+  async deleteService(slug: string, serviceId: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(
+      'DELETE',
+      `/api/v1/business/${encodeURIComponent(slug)}/services?service_id=${encodeURIComponent(serviceId)}`,
+    )
+  }
+
+  // -------------------------------------------------------------------------
+  // Business management
+  // -------------------------------------------------------------------------
+
+  /**
+   * Update a business profile.
+   *
+   * @param slug - Business slug
+   * @param data - Fields to update
+   * @returns The updated business
+   */
+  async updateBusiness(slug: string, data: object): Promise<Business> {
+    return this.request<Business>('PATCH', `/api/v1/business/${encodeURIComponent(slug)}`, data)
+  }
+
+  /**
+   * Create a new API key for a business.
+   *
+   * @param slug - Business slug
+   * @param name - Optional name for the key
+   * @returns The created API key (only shown once)
+   */
+  async createApiKey(slug: string, name?: string): Promise<ApiKeyResult> {
+    return this.request<ApiKeyResult>(
+      'POST',
+      `/api/v1/business/${encodeURIComponent(slug)}/api-keys`,
+      name ? { name } : undefined,
+    )
+  }
+
+  /**
+   * List API keys for a business (keys are masked).
+   *
+   * @param slug - Business slug
+   * @returns List of API keys with masked values
+   */
+  async listApiKeys(slug: string): Promise<ApiKeysListResult> {
+    return this.request<ApiKeysListResult>('GET', `/api/v1/business/${encodeURIComponent(slug)}/api-keys`)
+  }
+
+  /**
+   * Revoke an API key.
+   *
+   * @param slug - Business slug
+   * @param keyId - API key UUID to revoke
+   * @returns Confirmation of revocation
+   */
+  async revokeApiKey(slug: string, keyId: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(
+      'DELETE',
+      `/api/v1/business/${encodeURIComponent(slug)}/api-keys?key_id=${encodeURIComponent(keyId)}`,
+    )
+  }
+
+  /**
+   * Initiate Stripe Connect onboarding for a business.
+   *
+   * @param slug - Business slug
+   * @returns Stripe Connect onboarding URL
+   */
+  async connectStripe(slug: string): Promise<ConnectStripeResult> {
+    return this.request<ConnectStripeResult>('POST', `/api/v1/business/${encodeURIComponent(slug)}/connect`)
+  }
+
+  // -------------------------------------------------------------------------
+  // Certification (lookup)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Get the current certification status for a business.
+   *
+   * @param slug - Business slug
+   * @returns Certification details or null if not certified
+   */
+  async getCertification(slug: string): Promise<CertificationResult> {
+    const qs = this.buildQuery({ slug })
+    return this.request<CertificationResult>('GET', `/api/v1/certify${qs}`)
+  }
+
+  // -------------------------------------------------------------------------
+  // Hermes JSON
+  // -------------------------------------------------------------------------
+
+  /**
+   * Generate a .well-known/agent-hermes.json file for a business.
+   *
+   * @param params - Domain or slug to generate for
+   * @returns Generated JSON content and deployment instructions
+   */
+  async generateHermesJson(params: { domain?: string; slug?: string }): Promise<GenerateHermesJsonResult> {
+    return this.request<GenerateHermesJsonResult>('POST', '/api/v1/hermes-json', params)
+  }
+
+  // -------------------------------------------------------------------------
+  // Health
+  // -------------------------------------------------------------------------
+
+  /**
+   * Run a health check on a service or URL.
+   *
+   * @param params - Service ID or URL to check
+   * @returns Health check results with latency
+   */
+  async runHealthCheck(params: { service_id?: string; url?: string }): Promise<HealthCheckResult> {
+    return this.request<HealthCheckResult>('POST', '/api/v1/health/check', params)
+  }
+
+  /**
+   * Get the health status overview for a business.
+   *
+   * @param params - Business ID or slug
+   * @returns Overall health status with per-service breakdown
+   */
+  async getHealthStatus(params: { business_id?: string; slug?: string }): Promise<HealthStatusResult> {
+    const qs = this.buildQuery({
+      business_id: params.business_id,
+      slug: params.slug,
+    })
+    return this.request<HealthStatusResult>('GET', `/api/v1/health/status${qs}`)
+  }
+
+  // -------------------------------------------------------------------------
+  // Monitoring
+  // -------------------------------------------------------------------------
+
+  /**
+   * Trigger a monitoring sweep across all registered businesses.
+   *
+   * @returns Number of monitoring events created
+   */
+  async triggerMonitoring(): Promise<MonitoringTriggerResult> {
+    return this.request<MonitoringTriggerResult>('POST', '/api/v1/monitoring')
+  }
+
+  /**
+   * Get monitoring events, optionally filtered by business or severity.
+   *
+   * @param params - Optional filters
+   * @returns Paginated list of monitoring events
+   */
+  async getMonitoringEvents(params?: {
+    business_id?: string
+    severity?: string
+    limit?: number
+  }): Promise<MonitoringEventsResult> {
+    const qs = this.buildQuery({
+      business_id: params?.business_id,
+      severity: params?.severity,
+      limit: params?.limit,
+    })
+    return this.request<MonitoringEventsResult>('GET', `/api/v1/monitoring${qs}`)
+  }
+
+  // -------------------------------------------------------------------------
+  // Semantic search
+  // -------------------------------------------------------------------------
+
+  /**
+   * Search businesses using natural language semantic matching.
+   *
+   * @param q - Natural language query
+   * @param params - Optional limit and similarity threshold
+   * @returns Businesses ranked by semantic similarity
+   */
+  async semanticSearch(q: string, params?: { limit?: number; threshold?: number }): Promise<SemanticSearchResult> {
+    const qs = this.buildQuery({
+      q,
+      limit: params?.limit,
+      threshold: params?.threshold,
+    })
+    return this.request<SemanticSearchResult>('GET', `/api/v1/discover/semantic${qs}`)
+  }
+
+  // -------------------------------------------------------------------------
+  // Remediation
+  // -------------------------------------------------------------------------
+
+  /**
+   * Generate an llms.txt file for a domain.
+   *
+   * @param data - Domain info and description
+   * @returns Generated llms.txt content and deployment instructions
+   */
+  async generateLlmsTxt(data: {
+    domain: string
+    name: string
+    description: string
+  }): Promise<RemediationResult> {
+    return this.request<RemediationResult>('POST', '/api/v1/remediate/llms-txt', data)
+  }
+
+  /**
+   * Generate an A2A agent card for a domain.
+   *
+   * @param data - Domain info and description
+   * @returns Generated agent card JSON and deployment instructions
+   */
+  async generateAgentCard(data: {
+    domain: string
+    name: string
+    description: string
+  }): Promise<RemediationResult> {
+    return this.request<RemediationResult>('POST', '/api/v1/remediate/agent-card', data)
+  }
+
+  /**
+   * Generate Schema.org structured data for a domain.
+   *
+   * @param data - Domain info, description, and optional schema type
+   * @returns Generated JSON-LD and deployment instructions
+   */
+  async generateSchemaOrg(data: {
+    domain: string
+    name: string
+    description: string
+    type?: string
+  }): Promise<RemediationResult> {
+    return this.request<RemediationResult>('POST', '/api/v1/remediate/schema-org', data)
+  }
+
+  /**
+   * Generate an MCP proxy configuration for a domain.
+   *
+   * @param data - Domain info, API base URL, and endpoint definitions
+   * @returns Generated MCP proxy config and deployment instructions
+   */
+  async generateMcpProxy(data: {
+    domain: string
+    name: string
+    api_base: string
+    endpoints: object[]
+  }): Promise<RemediationResult> {
+    return this.request<RemediationResult>('POST', '/api/v1/remediate/mcp-proxy', data)
   }
 }
 
