@@ -1,5 +1,24 @@
 # AgentHermes Changelog
 
+## Audit Cycle 4 — 2026-03-26T07:30:00Z
+
+### Findings
+- **0 critical, 0 high, 0 medium** — codebase is clean
+- Final pass verified: scanner cap rules, TLS detection, data quality edge cases, batch scan caching, webhook HMAC security, API key hashing, Stripe Connect handling, all fetch error handling across 9 scanners
+
+### Areas Verified Clean
+1. Scanner orchestrator: cap rule interaction correct (lowest cap wins)
+2. D7 security: hasNoTls export + TLS detection working
+3. D6 data quality: flattenObject handles nulls, empty objects, arrays
+4. Batch scan: works with old engine, cached results correct
+5. Webhook subscribe: HMAC secret generation secure (randomBytes 32)
+6. API keys: SHA-256 hashing correct, IDOR prevention on delete
+7. Stripe Connect: 503 when not configured, no crash
+8. All scanners: probeEndpoint wraps every fetch in try/catch with timeout
+
+### Result
+**No fixes needed.** The continuous audit loop has converged — 4 cycles, all critical/high/medium issues resolved.
+
 ## Audit Cycle 3 — 2026-03-26T07:05:00Z
 
 ### Findings (deep sweep of scanners, certify, benchmarks, semantic search)
