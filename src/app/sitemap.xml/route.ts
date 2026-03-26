@@ -15,6 +15,9 @@ export async function GET() {
     { loc: '/register', priority: '0.8', changefreq: 'monthly' },
     { loc: '/dashboard', priority: '0.7', changefreq: 'weekly' },
     { loc: '/remediate', priority: '0.8', changefreq: 'weekly' },
+    { loc: '/leaderboard', priority: '0.8', changefreq: 'daily' },
+    { loc: '/report', priority: '0.7', changefreq: 'weekly' },
+    { loc: '/analytics', priority: '0.6', changefreq: 'weekly' },
   ]
 
   // Dynamic business profile pages

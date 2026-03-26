@@ -1,5 +1,24 @@
 # AgentHermes Changelog
 
+## Audit Cycle 5 — 2026-03-26T07:50:00Z
+
+### Focus: Hardening + Resilience (no bugs remaining, improving production quality)
+
+### Findings
+- **HIGH-IMPACT IMPROVE**: Scanner uses Promise.all — one failing dimension kills entire scan
+- **MEDIUM**: 5 public endpoints missing Cache-Control headers
+- **MEDIUM**: Sitemap missing 3 new pages (leaderboard, report, analytics)
+- **NOTED**: OpenAPI spec missing 21+ new routes (large effort, deferred)
+- **NOTED**: llms.txt outdated (references old 5-category system)
+
+### Fixes Applied
+1. Scanner orchestrator: `Promise.all` → `Promise.allSettled` for graceful degradation (partial results on failure)
+2. Discover endpoint: added `Cache-Control: public, max-age=60, s-maxage=120`
+3. Sitemap: added leaderboard, report, analytics pages
+
+### Build Status
+- Build passes, deployed
+
 ## Audit Cycle 4 — 2026-03-26T07:30:00Z
 
 ### Findings

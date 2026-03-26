@@ -213,8 +213,12 @@ export async function runScan(rawUrl: string): Promise<ScanResult> {
   const globalTimer = setTimeout(() => globalController.abort(), 50_000)
 
   try {
-    // Run all 9 dimension scanners in parallel
-    const [d1, d2, d3, d4, d5, d6, d7, d8, d9] = await Promise.all([
+    // Run all 9 dimension scanners in parallel with graceful degradation
+    const LABELS = ['Discoverability', 'Interoperability', 'Onboarding', 'Pricing', 'Payment', 'Data Quality', 'Security', 'Reliability', 'Agent Experience']
+    const DIMS = ['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9']
+    const WEIGHTS = [0.20, 0.20, 0.10, 0.10, 0.10, 0.10, 0.10, 0.05, 0.05]
+
+    const results = await Promise.allSettled([
       scanDiscoverability(base, globalController.signal),
       scanInteroperability(base, globalController.signal),
       scanOnboarding(base, globalController.signal),
@@ -226,7 +230,18 @@ export async function runScan(rawUrl: string): Promise<ScanResult> {
       scanAgentExperience(base, globalController.signal),
     ])
 
-    const dimensions = [d1, d2, d3, d4, d5, d6, d7, d8, d9]
+    const dimensions: DimensionResult[] = results.map((r, i) =>
+      r.status === 'fulfilled'
+        ? r.value
+        : {
+            dimension: DIMS[i],
+            label: LABELS[i],
+            score: 0,
+            weight: WEIGHTS[i],
+            checks: [{ name: 'Scanner Error', passed: false, details: r.reason?.message || 'Unknown error', points: 0 }],
+            recommendations: [{ action: `${LABELS[i]} scanner failed — retry later`, impact: 'unknown', difficulty: 'easy' as const, auto_fixable: false }],
+          }
+    )
 
     // Calculate weighted total
     const weightedRaw = dimensions.reduce(

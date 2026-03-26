@@ -104,6 +104,8 @@ export async function GET(request: NextRequest) {
         offset,
         has_more: (count ?? 0) > offset + limit,
       },
+    }, {
+      headers: { 'Cache-Control': 'public, max-age=60, s-maxage=120' },
     })
   } catch (err) {
     console.error('[discover] Unexpected error:', err instanceof Error ? err.message : err)
