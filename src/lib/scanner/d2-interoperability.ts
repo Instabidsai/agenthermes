@@ -35,19 +35,69 @@ export async function scanInteroperability(
     const isJson = isJsonContentType(mcpHit.contentType) && typeof body === 'object'
 
     if (isJson && body) {
-      // Check if the MCP manifest has tools listed
+      // Check if the MCP manifest has tools listed directly
       const hasTools = !!(
         body.tools ||
         body.capabilities ||
         body.methods ||
         body.resources
       )
-      if (hasTools) {
+
+      // If this is a discovery file (has 'endpoint'), try calling the actual MCP endpoint
+      let mcpToolsFound = hasTools
+      let mcpEndpointUrl = ''
+      if (!hasTools && body.endpoint && typeof body.endpoint === 'string') {
+        mcpEndpointUrl = body.endpoint as string
+        // Resolve relative endpoints
+        if (mcpEndpointUrl.startsWith('/')) mcpEndpointUrl = `${base}${mcpEndpointUrl}`
+        try {
+          const controller = new AbortController()
+          const timer = setTimeout(() => controller.abort(), 5000)
+          const mcpRes = await fetch(mcpEndpointUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list' }),
+            signal: globalSignal || controller.signal,
+          })
+          clearTimeout(timer)
+          if (mcpRes.ok) {
+            const mcpData = await mcpRes.json() as Record<string, unknown>
+            const result = mcpData.result as Record<string, unknown> | undefined
+            if (result?.tools && Array.isArray(result.tools) && result.tools.length > 0) {
+              mcpToolsFound = true
+            }
+          }
+        } catch { /* MCP call failed — scored as partial */ }
+      }
+
+      // Also try JSON-RPC tools/list on the hit URL itself (for direct MCP servers like /api/mcp)
+      if (!mcpToolsFound && !body.endpoint) {
+        try {
+          const controller = new AbortController()
+          const timer = setTimeout(() => controller.abort(), 5000)
+          const mcpRes = await fetch(mcpHit.url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list' }),
+            signal: globalSignal || controller.signal,
+          })
+          clearTimeout(timer)
+          if (mcpRes.ok) {
+            const mcpData = await mcpRes.json() as Record<string, unknown>
+            const result = mcpData.result as Record<string, unknown> | undefined
+            if (result?.tools && Array.isArray(result.tools) && result.tools.length > 0) {
+              mcpToolsFound = true
+            }
+          }
+        } catch { /* MCP call failed */ }
+      }
+
+      if (mcpToolsFound) {
         rawScore += 25
         checks.push({
           name: 'MCP Tools List',
           passed: true,
-          details: `MCP manifest at ${mcpHit.url} lists available tools/capabilities`,
+          details: `MCP server${mcpEndpointUrl ? ` at ${mcpEndpointUrl}` : ` at ${mcpHit.url}`} responds with callable tools`,
           points: 25,
         })
       } else {
@@ -55,12 +105,12 @@ export async function scanInteroperability(
         checks.push({
           name: 'MCP Tools List',
           passed: false,
-          details: `MCP endpoint at ${mcpHit.url} returns JSON but no tools/capabilities listed`,
+          details: `MCP discovery at ${mcpHit.url} but could not verify callable tools via JSON-RPC tools/list`,
           points: 12,
         })
         recommendations.push({
           action:
-            'Add a "tools" array to your MCP manifest listing available tools with name, description, and inputSchema.',
+            'Ensure your MCP endpoint supports JSON-RPC 2.0 tools/list method and returns a tools array.',
           impact: '+13 points',
           difficulty: 'medium',
           auto_fixable: false,
@@ -109,6 +159,9 @@ export async function scanInteroperability(
     '/api/status',
     '/health',
     '/status',
+    '/openapi.json',
+    '/swagger.json',
+    '/api/v1/discover',
   ]
 
   // Test GET
