@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
       console.error('Business upsert error:', bizError)
       return NextResponse.json({
         ...scanResult,
-        _db_error: 'Failed to save scan results. Scorecard is still valid.',
+        _db_error: `Upsert failed: ${bizError.message} (code: ${bizError.code})`,
       })
     }
 
