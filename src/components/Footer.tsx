@@ -64,7 +64,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* For Developers */}
+          {/* For Agents */}
           <div>
             <h2 className="text-sm font-semibold text-zinc-300 mb-3">For Agents</h2>
             <ul className="space-y-2">
@@ -74,9 +74,14 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <span className="text-sm text-zinc-600">
-                  A2A Protocol & API Docs <span className="text-zinc-700">(Coming Soon)</span>
-                </span>
+                <Link href="/.well-known/agent-card.json" className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
+                  A2A Protocol
+                </Link>
+              </li>
+              <li>
+                <Link href="/developers" className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
+                  API Docs
+                </Link>
               </li>
             </ul>
           </div>

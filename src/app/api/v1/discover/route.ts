@@ -3,6 +3,7 @@ import { getServiceClient } from '@/lib/supabase'
 import { trackEvent } from '@/lib/analytics'
 
 export async function GET(request: NextRequest) {
+  const requestId = request.headers.get('x-request-id') || ''
   try {
     const { searchParams } = request.nextUrl
     const q = searchParams.get('q')
@@ -13,8 +14,10 @@ export async function GET(request: NextRequest) {
     const mcp_compatible = searchParams.get('mcp_compatible')
     const max_price = searchParams.get('max_price')
     const sort = searchParams.get('sort') || 'audit_score'
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100)
-    const offset = parseInt(searchParams.get('offset') || '0', 10)
+    const rawLimit = parseInt(searchParams.get('limit') || '20', 10)
+    const limit = Math.min(Math.max(Number.isNaN(rawLimit) ? 20 : rawLimit, 1), 100)
+    const rawOffset = parseInt(searchParams.get('offset') || '0', 10)
+    const offset = Math.max(Number.isNaN(rawOffset) ? 0 : rawOffset, 0)
 
     const supabase = getServiceClient()
 
@@ -68,8 +71,17 @@ export async function GET(request: NextRequest) {
     const { data, error, count } = await query
 
     if (error) {
-      console.error('[discover] Query error:', error.message)
-      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+      console.error('[discover] Query error:', error.message, error.code)
+      // PostgREST range/filter errors are client mistakes, not server errors
+      const status = error.code === 'PGRST103' || error.message?.includes('range') ? 400 : 500
+      return NextResponse.json(
+        {
+          error: status === 400 ? 'Invalid query parameters' : 'Internal server error',
+          code: status === 400 ? 'INVALID_QUERY' : 'INTERNAL_ERROR',
+          request_id: requestId,
+        },
+        { status }
+      )
     }
 
     // Post-filter: max_price (filter businesses that have at least one service under max_price)
@@ -109,6 +121,9 @@ export async function GET(request: NextRequest) {
     })
   } catch (err) {
     console.error('[discover] Unexpected error:', err instanceof Error ? err.message : err)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Internal server error', code: 'INTERNAL_ERROR', request_id: requestId },
+      { status: 500 }
+    )
   }
 }

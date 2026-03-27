@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
 import {
   Building2,
@@ -347,6 +348,19 @@ export default async function HomePage() {
       {/* Network Stats — Compact bottom bar */}
       <section className="py-10 border-t border-zinc-800/50">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <Suspense fallback={
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex items-center gap-3 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
+                  <div className="h-4 w-4 bg-zinc-800 rounded animate-pulse flex-shrink-0" />
+                  <div>
+                    <div className="h-6 w-16 bg-zinc-800 rounded animate-pulse mb-1" />
+                    <div className="h-3 w-24 bg-zinc-800 rounded animate-pulse" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          }>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
             {statItems.map((stat) => (
               <div
@@ -365,6 +379,7 @@ export default async function HomePage() {
               </div>
             ))}
           </div>
+          </Suspense>
         </div>
       </section>
 

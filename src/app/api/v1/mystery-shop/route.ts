@@ -92,8 +92,10 @@ export async function GET(req: NextRequest) {
     const { searchParams } = req.nextUrl
     let businessId = searchParams.get('business_id')
     const slug = searchParams.get('slug')
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100)
-    const offset = parseInt(searchParams.get('offset') || '0', 10)
+    const rawLimit = parseInt(searchParams.get('limit') || '50', 10)
+    const limit = Math.min(Math.max(Number.isNaN(rawLimit) ? 50 : rawLimit, 1), 100)
+    const rawOffset = parseInt(searchParams.get('offset') || '0', 10)
+    const offset = Math.max(Number.isNaN(rawOffset) ? 0 : rawOffset, 0)
 
     // Resolve slug to business_id
     if (!businessId && slug) {

@@ -18,8 +18,10 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl
     const vertical = searchParams.get('vertical')
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100)
-    const offset = parseInt(searchParams.get('offset') || '0', 10)
+    const rawLimit = parseInt(searchParams.get('limit') || '50', 10)
+    const limit = Math.min(Math.max(Number.isNaN(rawLimit) ? 50 : rawLimit, 1), 100)
+    const rawOffset = parseInt(searchParams.get('offset') || '0', 10)
+    const offset = Math.max(Number.isNaN(rawOffset) ? 0 : rawOffset, 0)
 
     const supabase = getServiceClient()
 

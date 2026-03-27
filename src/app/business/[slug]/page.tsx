@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
@@ -17,6 +18,8 @@ import {
   Wrench,
   BarChart3,
 } from 'lucide-react'
+
+export const revalidate = 60
 
 interface BusinessWithRelations extends Business {
   services: Service[]
@@ -241,6 +244,20 @@ export default async function BusinessProfilePage({
       </div>
 
       {/* Services Table */}
+      <Suspense fallback={
+        <div className="mt-10">
+          <div className="h-6 w-32 bg-zinc-800 rounded animate-pulse mb-4" />
+          <div className="rounded-xl border border-zinc-800/80 overflow-hidden">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex gap-4 p-4 border-b border-zinc-800/50 last:border-0">
+                <div className="h-4 w-40 bg-zinc-800 rounded animate-pulse" />
+                <div className="h-4 w-24 bg-zinc-800 rounded animate-pulse" />
+                <div className="h-4 w-16 bg-zinc-800 rounded animate-pulse ml-auto" />
+              </div>
+            ))}
+          </div>
+        </div>
+      }>
       <div className="mt-10">
         <h2 className="text-lg font-semibold mb-4">
           Services
@@ -318,9 +335,24 @@ export default async function BusinessProfilePage({
           </div>
         )}
       </div>
+      </Suspense>
 
       {/* Audit Results */}
       {business.audit_results && business.audit_results.length > 0 && (
+        <Suspense fallback={
+          <div className="mt-10">
+            <div className="h-6 w-40 bg-zinc-800 rounded animate-pulse mb-4" />
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="rounded-xl border border-zinc-800/80 bg-zinc-900/50 p-5">
+                  <div className="h-3 w-24 bg-zinc-800 rounded animate-pulse mb-3" />
+                  <div className="h-6 w-16 bg-zinc-800 rounded animate-pulse mb-3" />
+                  <div className="h-1.5 w-full bg-zinc-800 rounded-full animate-pulse" />
+                </div>
+              ))}
+            </div>
+          </div>
+        }>
         <div className="mt-10">
           <h2 className="text-lg font-semibold mb-4">Score Breakdown</h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -367,6 +399,7 @@ export default async function BusinessProfilePage({
             })}
           </div>
         </div>
+        </Suspense>
       )}
 
       {/* MCP Endpoints */}

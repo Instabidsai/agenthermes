@@ -26,8 +26,10 @@ export async function GET(request: NextRequest) {
     const pricing_model = searchParams.get('pricing_model')
     const auth_type = searchParams.get('auth_type')
     const min_uptime = searchParams.get('min_uptime')
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100)
-    const offset = parseInt(searchParams.get('offset') || '0', 10)
+    const rawLimit = parseInt(searchParams.get('limit') || '20', 10)
+    const limit = Math.min(Math.max(Number.isNaN(rawLimit) ? 20 : rawLimit, 1), 100)
+    const rawOffset = parseInt(searchParams.get('offset') || '0', 10)
+    const offset = Math.max(Number.isNaN(rawOffset) ? 0 : rawOffset, 0)
 
     const supabase = getServiceClient()
 
@@ -87,8 +89,12 @@ export async function GET(request: NextRequest) {
     const { data, error, count } = await query
 
     if (error) {
-      console.error('[discover/services] Query error:', error.message)
-      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+      console.error('[discover/services] Query error:', error.message, error.code)
+      const status = error.code === 'PGRST103' || error.message?.includes('range') ? 400 : 500
+      return NextResponse.json(
+        { error: status === 400 ? 'Invalid query parameters' : 'Internal server error' },
+        { status }
+      )
     }
 
     // Reshape results to include parent business info at top level

@@ -35,6 +35,7 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ domain: string }> }
 ) {
+  const requestId = _request.headers.get('x-request-id') || ''
   try {
     const { domain } = await params
     const decodedDomain = decodeURIComponent(domain).toLowerCase().trim()
@@ -46,7 +47,7 @@ export async function GET(
       !/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*\.[a-z]{2,}$/i.test(decodedDomain)
     ) {
       return NextResponse.json(
-        { error: 'Invalid domain format. Provide a domain like "example.com".' },
+        { error: 'Invalid domain format. Provide a domain like "example.com".', code: 'INVALID_DOMAIN', request_id: requestId },
         { status: 400, headers: corsHeaders() }
       )
     }
@@ -63,7 +64,7 @@ export async function GET(
     if (bizError && bizError.code !== 'PGRST116') {
       console.error('[score/domain] Query error:', bizError.message)
       return NextResponse.json(
-        { error: 'Internal server error' },
+        { error: 'Internal server error', code: 'INTERNAL_ERROR', request_id: requestId },
         { status: 500, headers: corsHeaders() }
       )
     }
@@ -169,7 +170,7 @@ export async function GET(
       err instanceof Error ? err.message : err
     )
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', code: 'INTERNAL_ERROR', request_id: requestId },
       { status: 500, headers: corsHeaders() }
     )
   }

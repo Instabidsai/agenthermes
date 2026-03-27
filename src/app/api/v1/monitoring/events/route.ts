@@ -17,8 +17,10 @@ export async function GET(req: NextRequest) {
     const businessId = searchParams.get('business_id') ?? undefined
     const severity = searchParams.get('severity') ?? undefined
     const eventType = searchParams.get('event_type') ?? undefined
-    const limit = parseInt(searchParams.get('limit') || '50', 10)
-    const offset = parseInt(searchParams.get('offset') || '0', 10)
+    const rawLimit = parseInt(searchParams.get('limit') || '50', 10)
+    const limit = Math.min(Math.max(Number.isNaN(rawLimit) ? 50 : rawLimit, 1), 100)
+    const rawOffset = parseInt(searchParams.get('offset') || '0', 10)
+    const offset = Math.max(Number.isNaN(rawOffset) ? 0 : rawOffset, 0)
 
     // Validate UUID format if provided
     if (

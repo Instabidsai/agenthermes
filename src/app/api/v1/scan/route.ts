@@ -27,11 +27,15 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => null)
 
+    const requestId = req.headers.get('x-request-id') || ''
+
     if (!body || typeof body.url !== 'string' || body.url.trim().length === 0) {
       return NextResponse.json(
         {
           error:
             'Missing or invalid "url" field. Provide a domain or URL to scan.',
+          code: 'INVALID_URL',
+          request_id: requestId,
         },
         { status: 400 }
       )
@@ -40,7 +44,10 @@ export async function POST(req: NextRequest) {
     const rawUrl: string = body.url.trim()
 
     if (rawUrl.length > 2048) {
-      return NextResponse.json({ error: 'URL too long (max 2048 characters)' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'URL too long (max 2048 characters)', code: 'URL_TOO_LONG', request_id: requestId },
+        { status: 400 }
+      )
     }
 
     // -----------------------------------------------------------------------
@@ -217,6 +224,7 @@ export async function POST(req: NextRequest) {
       business_id: businessId,
     })
   } catch (err: unknown) {
+    const requestId = req.headers.get('x-request-id') || ''
     console.error(
       'Scan route error:',
       err instanceof Error ? err.message : err
@@ -227,10 +235,13 @@ export async function POST(req: NextRequest) {
         err.message.includes('Only HTTP') ||
         err.message.includes('Invalid URL'))
     ) {
-      return NextResponse.json({ error: err.message }, { status: 400 })
+      return NextResponse.json(
+        { error: err.message, code: 'INVALID_URL', request_id: requestId },
+        { status: 400 }
+      )
     }
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', code: 'INTERNAL_ERROR', request_id: requestId },
       { status: 500 }
     )
   }
