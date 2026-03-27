@@ -97,6 +97,10 @@ export async function GET() {
           certifications_issued: 0,
         },
         key_findings: ['No businesses have been scanned yet.'],
+      }, {
+        headers: {
+          'Cache-Control': 'public, max-age=300, s-maxage=600',
+        },
       })
     }
 
@@ -349,7 +353,11 @@ export async function GET() {
       key_findings: keyFindings,
     }
 
-    return NextResponse.json(report)
+    return NextResponse.json(report, {
+      headers: {
+        'Cache-Control': 'public, max-age=300, s-maxage=600',
+      },
+    })
   } catch (err: unknown) {
     console.error(
       '[report] Error:',

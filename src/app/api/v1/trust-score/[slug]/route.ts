@@ -46,6 +46,10 @@ export async function GET(
       trust_score: result.trust_score,
       breakdown: result.breakdown,
       computed_at: result.computed_at,
+    }, {
+      headers: {
+        'Cache-Control': 'public, max-age=300, s-maxage=600',
+      },
     })
   } catch (err) {
     console.error('[trust-score] Unexpected error:', err instanceof Error ? err.message : err)

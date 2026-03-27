@@ -152,6 +152,10 @@ export async function GET(request: NextRequest) {
       category_comparison: categoryComparison,
       strengths,
       weaknesses,
+    }, {
+      headers: {
+        'Cache-Control': 'public, max-age=300, s-maxage=600',
+      },
     })
   } catch (err) {
     console.error('[benchmarks/compare] Unexpected error:', err instanceof Error ? err.message : err)

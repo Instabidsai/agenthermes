@@ -75,6 +75,10 @@ export async function GET(
       connections_count: connectionCount ?? 0,
       transaction_volume: transactionVolume,
       transaction_count: transactionCount,
+    }, {
+      headers: {
+        'Cache-Control': 'public, max-age=60, s-maxage=120',
+      },
     })
   } catch (err) {
     console.error('[business/slug] Unexpected error:', err instanceof Error ? err.message : err)

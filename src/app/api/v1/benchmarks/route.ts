@@ -46,6 +46,10 @@ export async function GET(request: NextRequest) {
         tier_distribution: { platinum: 0, gold: 0, silver: 0, bronze: 0, unaudited: 0 },
         top_businesses: [],
         category_averages: {},
+      }, {
+        headers: {
+          'Cache-Control': 'public, max-age=300, s-maxage=600',
+        },
       })
     }
 
@@ -117,6 +121,10 @@ export async function GET(request: NextRequest) {
       tier_distribution: tierDistribution,
       top_businesses: topBusinesses,
       category_averages: categoryAverages,
+    }, {
+      headers: {
+        'Cache-Control': 'public, max-age=300, s-maxage=600',
+      },
     })
   } catch (err) {
     console.error('[benchmarks] Unexpected error:', err instanceof Error ? err.message : err)

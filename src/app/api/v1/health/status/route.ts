@@ -69,6 +69,10 @@ export async function GET(request: NextRequest) {
           down: 0,
           unknown: 0,
         },
+      }, {
+        headers: {
+          'Cache-Control': 'public, max-age=30, s-maxage=60',
+        },
       })
     }
 
@@ -137,6 +141,10 @@ export async function GET(request: NextRequest) {
       business_id: resolvedBusinessId,
       services: enrichedServices,
       summary,
+    }, {
+      headers: {
+        'Cache-Control': 'public, max-age=30, s-maxage=60',
+      },
     })
   } catch (err) {
     console.error('[health/status] Unexpected error:', err instanceof Error ? err.message : err)

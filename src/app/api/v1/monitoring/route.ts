@@ -80,6 +80,10 @@ export async function GET(req: NextRequest) {
         offset,
         has_more: offset + limit < total,
       },
+    }, {
+      headers: {
+        'Cache-Control': 'public, max-age=60, s-maxage=120',
+      },
     })
   } catch (err: unknown) {
     console.error(

@@ -1,29 +1,40 @@
 # AgentHermes — AI Agent Instructions
 
 ## Quick Start
-- `npm run dev` starts on port 3013
-- `npx next build` for production build
+- `npm run dev` — starts on port 3013
+- `npx next build` — production build (must pass with 0 errors)
 - Supabase project: jcuwzyjdpjmpxpsawudf
 
 ## Architecture
 - Next.js 16 App Router + TypeScript + Tailwind
-- Supabase for database (service client at src/lib/supabase.ts)
-- All API routes in src/app/api/
-- Shared helpers in src/lib/
+- Supabase for DB (service client at src/lib/supabase.ts)
+- 9-dimension scanner at src/lib/scanner/ (D1-D9, weighted scoring with cap rules)
+- MCP server at /api/mcp (7 tools, 4 resources, 3 prompts — JSON-RPC 2.0)
+- 11 pages + 51 route files across api/v1, mcp, badge, .well-known
 
 ## Key Patterns
-- Use getServiceClient() for server-side Supabase access
-- Use requireAuth() from src/lib/auth.ts on protected endpoints
-- Use rateLimit() from src/lib/auth.ts on expensive operations
+- `getServiceClient()` for server-side Supabase access
+- `requireAuth()` from src/lib/auth.ts on financial endpoints (wallet, payment)
+- `rateLimit()` from src/lib/auth.ts on expensive operations (scan, audit, monitoring)
 - Cast Supabase results as `Record<string, any>` (untyped client)
-- All routes return { error: 'message' } on failure
+- Error responses: `{ error: "msg", code: "CODE", request_id: "..." }`
+- All API routes get CORS + X-Request-ID via src/middleware.ts
 
 ## Testing
 - `npx next build` must pass (zero TypeScript errors)
-- Test API routes with curl
+- Test API routes with curl against https://agenthermes.ai
+- Health check: GET /api/v1/health
 - All financial endpoints require Bearer token auth
 
-## Don't
-- Don't use verify_jwt=true in Supabase
-- Don't expose owner_email or stripe_connect_id in public API responses
-- Don't use raw error messages in API responses (sanitize them)
+## Hard Rules
+- verify_jwt = false on all Supabase functions
+- Never expose owner_email or stripe_connect_id in public API responses
+- Sanitize all error messages (no internal details to clients)
+- Score thresholds: 90/75/60/40 (Platinum/Gold/Silver/Bronze) — keep consistent
+- "Agent Readiness Score" is the canonical name (not "trust score" or "audit score")
+- "Not Scored" for unaudited tier in user-facing text
+
+## Deploy
+- Push to master → Vercel auto-deploys
+- Domain: agenthermes.ai (Cloudflare DNS)
+- GitHub: Instabidsai/agenthermes

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import clsx from 'clsx'
-import { Shield, Search, BarChart3, LayoutDashboard, Menu, X, UserPlus, Trophy, FileText, Wrench } from 'lucide-react'
+import { Shield, Search, BarChart3, LayoutDashboard, Menu, X, UserPlus, Trophy, FileText, Wrench, Code2 } from 'lucide-react'
 import { useState, useEffect, useCallback } from 'react'
 
 const navLinks = [
@@ -11,6 +11,7 @@ const navLinks = [
   { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
   { href: '/audit', label: 'Audit', icon: BarChart3 },
   { href: '/report', label: 'Report', icon: FileText },
+  { href: '/developers', label: 'Developers', icon: Code2 },
   { href: '/remediate', label: 'Remediate', icon: Wrench },
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
 ]
