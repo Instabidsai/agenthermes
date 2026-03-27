@@ -14,10 +14,21 @@ function getSigningSecret(): string {
   return secret
 }
 
+function sortKeys(obj: unknown): unknown {
+  if (Array.isArray(obj)) return obj.map(sortKeys)
+  if (obj && typeof obj === 'object') {
+    return Object.keys(obj as Record<string, unknown>).sort().reduce((acc, key) => {
+      acc[key] = sortKeys((obj as Record<string, unknown>)[key])
+      return acc
+    }, {} as Record<string, unknown>)
+  }
+  return obj
+}
+
 function verifySignature(payload: Record<string, unknown>, signature: string): boolean {
   try {
     const secret = getSigningSecret()
-    const canonical = JSON.stringify(payload, Object.keys(payload).sort())
+    const canonical = JSON.stringify(sortKeys(payload))
     const expected = crypto
       .createHmac('sha256', secret)
       .update(canonical)

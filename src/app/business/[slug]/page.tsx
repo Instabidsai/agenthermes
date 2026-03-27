@@ -215,7 +215,7 @@ export default async function BusinessProfilePage({
       <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <StatCard
           value={business.audit_score}
-          label="Audit Score"
+          label="Agent Readiness Score"
           icon={Shield}
           accent
         />
