@@ -53,5 +53,37 @@ This would make the scanner much smarter — instead of blindly probing /api, it
 - Project memory written to agenthermes-project.md
 - MEMORY.md updated with AgentHermes entry
 
-## Cycle 3 — Build /developers page
-**Status**: PENDING (next cycle)
+## Cycle 3 — Build /developers page + OG images + edge cases + performance + API tests
+**Status**: COMPLETE (5-agent parallel build)
+
+### Built:
+- /developers page (8-section documentation)
+- OG images (root + dynamic per-business)
+- Edge case bug fix (negative limit/offset → 7 routes patched)
+- X-Request-ID on all API responses
+- /api/v1/health endpoint
+- Suspense boundaries + ISR on business profiles
+- Structured error codes (code + request_id)
+- 10/10 API endpoint tests passed
+- 11/12 edge case tests passed (1 bug fixed)
+- 64 routes total
+
+## Cycle 9 — Re-scan after improvements
+**Status**: COMPLETE
+
+### Self-scan results: 41 → 44 (Bronze)
+| Dimension | Before | After | Change |
+|-----------|--------|-------|--------|
+| D1 Discoverability | 55 | 55 | — |
+| D2 Interoperability | 70 | 65 | -5 (variance) |
+| D3 Onboarding | 0 | 10 | +10 |
+| D4 Pricing | 0 | 0 | — |
+| D5 Payment | 0 | 0 | — |
+| D6 Data Quality | 80 | 80 | — |
+| D7 Security | 60 | 60 | — |
+| D8 Reliability | 45 | 75 | +30 (/health found!) |
+| D9 Agent Experience | 0 | 20 | +20 (X-Request-ID!) |
+
+**Key wins**: /health endpoint → D8 +30pts, X-Request-ID → D9 +20pts
+**Still zero**: D4 Pricing, D5 Payment (legitimate — we don't charge for scans)
+**No cap applied** — callable endpoints detected correctly
