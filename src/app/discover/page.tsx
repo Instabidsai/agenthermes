@@ -198,7 +198,7 @@ function DiscoverPageContent() {
           Discover the Network
         </h1>
         <p className="text-sm text-zinc-500">
-          Search verified, agent-ready businesses by capability, vertical, or trust tier.
+          Browse businesses scored on AgentHermes. Filter by industry, readiness tier, or specific capabilities.
         </p>
       </div>
 
@@ -240,7 +240,7 @@ function DiscoverPageContent() {
             title="Toggle semantic search mode for natural language queries"
           >
             <Zap className="h-4 w-4" />
-            Semantic
+            Smart Search
           </button>
 
           {/* Filter Toggle */}
@@ -410,10 +410,10 @@ function DiscoverPageContent() {
         <div className="text-center py-20 rounded-xl bg-zinc-900/30 border border-zinc-800/50">
           <Search className="h-10 w-10 text-zinc-700 mx-auto mb-4" />
           <p className="text-zinc-400 font-medium mb-1">
-            No businesses match your search.
+            No businesses match your search yet.
           </p>
           <p className="text-sm text-zinc-600 mb-4">
-            Try broader filters or a different query.
+            The AgentHermes network is growing {'\u2014'} try broader filters, or register your own business to be among the first in your vertical.
           </p>
           <Link
             href="/register"

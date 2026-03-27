@@ -85,7 +85,7 @@ async function fetchReport(): Promise<ReportData> {
   if (businesses.length === 0) {
     const quarter = `Q${Math.ceil((now.getMonth() + 1) / 3)}`
     return {
-      report_title: `State of Agent Readiness -- ${quarter} ${now.getFullYear()}`,
+      report_title: `State of Agent Readiness \u2014 ${quarter} ${now.getFullYear()}`,
       generated_at: now.toISOString(),
       summary: {
         total_businesses_scanned: 0,
@@ -109,7 +109,7 @@ async function fetchReport(): Promise<ReportData> {
         avg_score_change_30d: 0,
         certifications_issued: 0,
       },
-      key_findings: ['No businesses have been scanned yet. Be the first.'],
+      key_findings: ['Insights will populate as more businesses are scored. Be among the first to shape your industry\'s benchmark.'],
     }
   }
 
@@ -222,14 +222,14 @@ async function fetchReport(): Promise<ReportData> {
   const onboardingAvg = dimensionAverages['agent_native_onboarding']
   if (onboardingAvg !== undefined && onboardingAvg < 10) {
     keyFindings.push(
-      `Average onboarding score is ${onboardingAvg}/20 -- most businesses require human signup and lack programmatic API key generation.`
+      `Average onboarding score is ${onboardingAvg}/20 \u2014 most businesses require human signup and lack programmatic API key generation.`
     )
   }
 
   const paymentAvg = dimensionAverages['agent_payment_acceptance']
   if (paymentAvg !== undefined) {
     keyFindings.push(
-      `Agent payment acceptance averages ${paymentAvg}/20 -- ${paymentAvg >= 10 ? 'decent but room for improvement' : 'most businesses lack programmatic payment flows'}.`
+      `Agent payment acceptance averages ${paymentAvg}/20 \u2014 ${paymentAvg >= 10 ? 'decent but room for improvement' : 'most businesses lack programmatic payment flows'}.`
     )
   }
 
@@ -245,7 +245,7 @@ async function fetchReport(): Promise<ReportData> {
   const mcpAvg = dimensionAverages['mcp_api_endpoints']
   if (mcpAvg !== undefined && mcpAvg < 10) {
     keyFindings.push(
-      `MCP & API endpoint scores average ${mcpAvg}/20 -- most businesses lack discoverable MCP servers or OpenAPI specs.`
+      `MCP & API endpoint scores average ${mcpAvg}/20 \u2014 most businesses lack discoverable MCP servers or OpenAPI specs.`
     )
   }
 
@@ -254,13 +254,13 @@ async function fetchReport(): Promise<ReportData> {
   }
 
   if (keyFindings.length === 0) {
-    keyFindings.push('Scan more businesses to generate statistically meaningful insights.')
+    keyFindings.push('Insights will populate as more businesses are scored. Be among the first to shape your industry\'s benchmark.')
   }
 
   const quarter = `Q${Math.ceil((now.getMonth() + 1) / 3)}`
 
   return {
-    report_title: `State of Agent Readiness -- ${quarter} ${now.getFullYear()}`,
+    report_title: `State of Agent Readiness \u2014 ${quarter} ${now.getFullYear()}`,
     generated_at: now.toISOString(),
     summary: {
       total_businesses_scanned: totalScanned,
@@ -350,6 +350,7 @@ export default async function ReportPage() {
       top_10_businesses: [],
       trends: { new_businesses_30d: 0, avg_score_change_30d: 0, certifications_issued: 0 },
       key_findings: ['Unable to load report data. Please try again later.'],
+
     }
   }
 
@@ -380,9 +381,9 @@ export default async function ReportPage() {
             </h1>
 
             <p className="text-lg text-zinc-400 leading-relaxed max-w-2xl mx-auto mb-10">
-              A data-driven snapshot of how prepared businesses are for AI agent
-              commerce. Based on {summary.total_businesses_scanned} real scans across
-              the AgentHermes network.
+              {summary.total_businesses_scanned < 50
+                ? 'An early snapshot of agent readiness across the AgentHermes network. Data grows as more businesses get scored.'
+                : `A data-driven snapshot of how prepared businesses are for AI agent commerce. Based on ${summary.total_businesses_scanned} real scans across the AgentHermes network.`}
             </p>
           </div>
         </div>
@@ -448,7 +449,7 @@ export default async function ReportPage() {
                       {count}
                     </div>
                     <div className="text-xs text-zinc-400 capitalize mt-1">
-                      {tier}
+                      {tier === 'unaudited' ? 'Not Scored' : tier}
                     </div>
                     <div className="text-[10px] text-zinc-600 mt-0.5">
                       {pct}%
@@ -668,7 +669,7 @@ export default async function ReportPage() {
                       <span
                         className={`text-xs font-medium capitalize ${tierColor(biz.tier)}`}
                       >
-                        {biz.tier}
+                        {biz.tier === 'unaudited' ? 'Not Scored' : biz.tier}
                       </span>
                     </div>
                   </>

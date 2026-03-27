@@ -104,7 +104,7 @@ export default async function HomePage() {
   const statItems = [
     { label: 'Businesses Scored', value: formatNumber(stats.businessCount), icon: Building2 },
     { label: 'Scores Calculated', value: formatNumber(stats.auditCount), icon: Shield },
-    { label: 'Agent Transactions', value: formatCurrency(stats.totalVolume), icon: TrendingUp },
+    { label: 'Transaction Volume', value: formatCurrency(stats.totalVolume), icon: TrendingUp },
     { label: 'Active Connections', value: formatNumber(stats.connectionCount), icon: Network },
   ]
 
@@ -148,7 +148,7 @@ export default async function HomePage() {
             </h1>
 
             <p className="text-lg sm:text-xl text-zinc-300 leading-relaxed tracking-tight max-w-2xl mx-auto mb-10">
-              Find out if AI agents can find, use, and pay your business.
+              AI agents are already choosing which businesses to transact with. See if yours makes the cut.
             </p>
 
             {/* Client island — URL input + scan button */}
@@ -175,6 +175,7 @@ export default async function HomePage() {
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-5xl font-bold text-yellow-500">73</span>
                 <span className="text-xs text-zinc-500 font-medium mt-1">Gold</span>
+                <span className="text-xs text-zinc-600 mt-1">Example score</span>
               </div>
             </div>
           </div>
@@ -316,7 +317,7 @@ export default async function HomePage() {
                 </h3>
                 <p className="text-sm text-zinc-500 leading-relaxed">
                   Autonomous AI agents are already making purchasing decisions. They evaluate businesses programmatically
-                  -- checking for machine-readable profiles, API access, structured pricing, and payment capabilities.
+                  {'\u2014'} checking for machine-readable profiles, API access, structured pricing, and payment capabilities.
                   Businesses without these signals are invisible.
                 </p>
               </div>
@@ -325,9 +326,8 @@ export default async function HomePage() {
                   The agent economy is growing exponentially
                 </h3>
                 <p className="text-sm text-zinc-500 leading-relaxed">
-                  By 2027, AI agents will influence over $1 trillion in B2B transactions. Your Agent Readiness Score
-                  determines whether your business captures that revenue or gets bypassed. It is the credit score
-                  of the agent economy.
+                  The share of B2B transactions influenced by autonomous agents is growing rapidly. Your Agent Readiness Score
+                  determines whether your business captures that revenue or gets bypassed.
                 </p>
               </div>
               <div className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
@@ -376,7 +376,7 @@ export default async function HomePage() {
             <span className="text-zinc-500">Are you?</span>
           </h2>
           <p className="text-zinc-400 text-lg mb-10 max-w-lg mx-auto">
-            Free. Takes 60 seconds. No signup required.
+            The first businesses to get scored set the benchmark for their industry.
           </p>
           <Link
             href="/audit"

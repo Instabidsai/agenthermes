@@ -221,7 +221,7 @@ export default async function BusinessProfilePage({
         />
         <StatCard
           value={business.trust_score}
-          label="Trust Score"
+          label="Trust Score (verification + history)"
           icon={Shield}
         />
         <StatCard
@@ -250,7 +250,7 @@ export default async function BusinessProfilePage({
         </h2>
         {activeServices.length === 0 ? (
           <div className="py-10 text-center rounded-xl bg-zinc-900/30 border border-zinc-800/50">
-            <p className="text-sm text-zinc-500">No active services listed.</p>
+            <p className="text-sm text-zinc-500">No services listed yet. Register and add your services to become discoverable by AI agents.</p>
           </div>
         ) : (
           <div className="overflow-x-auto rounded-xl border border-zinc-800/80">
@@ -261,7 +261,7 @@ export default async function BusinessProfilePage({
                   <th className="px-4 py-3 font-medium">Pricing</th>
                   <th className="px-4 py-3 font-medium text-right">Uptime</th>
                   <th className="px-4 py-3 font-medium text-right">Avg Response</th>
-                  <th className="px-4 py-3 font-medium text-right">Calls (30d)</th>
+                  <th className="px-4 py-3 font-medium text-right">Usage (30d)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800/80">
@@ -322,7 +322,7 @@ export default async function BusinessProfilePage({
       {/* Audit Results */}
       {business.audit_results && business.audit_results.length > 0 && (
         <div className="mt-10">
-          <h2 className="text-lg font-semibold mb-4">Audit Breakdown</h2>
+          <h2 className="text-lg font-semibold mb-4">Score Breakdown</h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {business.audit_results.map((audit) => {
               const pct = audit.max_score > 0 ? audit.score / audit.max_score : 0

@@ -677,8 +677,7 @@ function RemediatePageContent() {
           Fix Your Agent Readiness Score
         </h1>
         <p className="text-zinc-400 max-w-lg mx-auto">
-          Enter your domain to see what is failing, then generate the files you
-          need to become agent-ready. Download them and deploy.
+          Enter your domain to see what AI agents cannot access. We will show you exactly what to fix and generate the files your developer needs to deploy.
         </p>
       </div>
 
@@ -862,7 +861,7 @@ function RemediatePageContent() {
                             </button>
                           ) : (
                             <span className="flex-shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-md border border-zinc-700 text-zinc-400 text-xs font-medium">
-                              Manual
+                              Developer Required
                             </span>
                           )}
                         </div>
@@ -1002,6 +1001,10 @@ function RemediatePageContent() {
           <div className="flex-1 h-px bg-zinc-800" />
         </div>
 
+        <p className="text-sm text-zinc-500 text-center max-w-xl mx-auto -mt-8">
+          These tools generate agent-readiness files for any domain {'\u2014'} no audit required. Share the output with your developer for deployment.
+        </p>
+
         {/* ==== Schema.org Generator ==== */}
         <section>
           <div className="flex items-center gap-3 mb-4">
@@ -1099,7 +1102,10 @@ function RemediatePageContent() {
               <Server className="h-5 w-5 text-cyan-500" />
             </div>
             <div>
-              <h2 className="text-lg font-bold">MCP Server Proxy Generator</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-bold">MCP Server Proxy Generator</h2>
+                <span className="text-[10px] font-medium text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded-full">For Developers</span>
+              </div>
               <p className="text-xs text-zinc-500">
                 Build a complete MCP server that wraps any REST API. Define your endpoints and get deployable code.
               </p>
@@ -1360,7 +1366,10 @@ function RemediatePageContent() {
               <Code2 className="h-5 w-5 text-emerald-500" />
             </div>
             <div>
-              <h2 className="text-lg font-bold">OpenAPI-to-MCP Converter</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-bold">OpenAPI-to-MCP Converter</h2>
+                <span className="text-[10px] font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">For Developers</span>
+              </div>
               <p className="text-xs text-zinc-500">
                 Paste an OpenAPI/Swagger JSON spec and get a fully generated MCP server.
               </p>

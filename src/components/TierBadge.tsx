@@ -2,7 +2,7 @@ import clsx from 'clsx'
 
 const tierConfig = {
   unaudited: {
-    label: 'Unaudited',
+    label: 'Not Scored',
     bg: 'bg-zinc-800',
     text: 'text-zinc-400',
     border: 'border-zinc-700',

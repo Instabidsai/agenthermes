@@ -72,7 +72,7 @@ export async function GET() {
 
     if (businesses.length === 0) {
       return NextResponse.json({
-        report_title: 'State of Agent Readiness -- Q1 2026',
+        report_title: 'State of Agent Readiness \u2014 Q1 2026',
         generated_at: now.toISOString(),
         summary: {
           total_businesses_scanned: 0,
@@ -277,7 +277,7 @@ export async function GET() {
     const onboardingAvg = dimensionAverages['agent_native_onboarding']
     if (onboardingAvg !== undefined && onboardingAvg < 10) {
       keyFindings.push(
-        `Average onboarding score is ${onboardingAvg}/20 -- most businesses require human signup and lack programmatic API key generation.`
+        `Average onboarding score is ${onboardingAvg}/20 \u2014 most businesses require human signup and lack programmatic API key generation.`
       )
     }
 
@@ -285,7 +285,7 @@ export async function GET() {
     const paymentAvg = dimensionAverages['agent_payment_acceptance']
     if (paymentAvg !== undefined) {
       keyFindings.push(
-        `Agent payment acceptance averages ${paymentAvg}/20 -- ${paymentAvg >= 10 ? 'decent but room for improvement' : 'most businesses lack programmatic payment flows'}.`
+        `Agent payment acceptance averages ${paymentAvg}/20 \u2014 ${paymentAvg >= 10 ? 'decent but room for improvement' : 'most businesses lack programmatic payment flows'}.`
       )
     }
 
@@ -303,7 +303,7 @@ export async function GET() {
     const mcpAvg = dimensionAverages['mcp_api_endpoints']
     if (mcpAvg !== undefined && mcpAvg < 10) {
       keyFindings.push(
-        `MCP & API endpoint scores average ${mcpAvg}/20 -- most businesses lack discoverable MCP servers or OpenAPI specs.`
+        `MCP & API endpoint scores average ${mcpAvg}/20 \u2014 most businesses lack discoverable MCP servers or OpenAPI specs.`
       )
     }
 
@@ -328,7 +328,7 @@ export async function GET() {
     const year = now.getFullYear()
 
     const report = {
-      report_title: `State of Agent Readiness -- ${quarter} ${year}`,
+      report_title: `State of Agent Readiness \u2014 ${quarter} ${year}`,
       generated_at: now.toISOString(),
       summary: {
         total_businesses_scanned: totalScanned,

@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://agenthermes.ai'),
   title: "AgentHermes — Verified Commerce Network",
   description:
-    "The verified commerce network for agent-ready businesses. Machine-readable trust, real transactions, no black boxes.",
+    "Get your Agent Readiness Score \u2014 the industry standard for AI agent commerce. See if AI agents can discover, use, and pay your business. Free scan in 60 seconds.",
   openGraph: {
     title: 'AgentHermes — Verified Commerce Network',
     description:

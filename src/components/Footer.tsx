@@ -43,7 +43,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link href="/remediate" className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
-                  Fix Your Readiness
+                  Improve Your Score
                 </Link>
               </li>
               <li>
@@ -69,18 +69,13 @@ export default function Footer() {
             <h2 className="text-sm font-semibold text-zinc-300 mb-3">For Agents</h2>
             <ul className="space-y-2">
               <li>
-                <span className="text-sm text-zinc-600">
-                  MCP Integration <span className="text-zinc-700">(Coming Soon)</span>
-                </span>
+                <Link href="/api/mcp" className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
+                  MCP Server
+                </Link>
               </li>
               <li>
                 <span className="text-sm text-zinc-600">
-                  A2A Protocol <span className="text-zinc-700">(Coming Soon)</span>
-                </span>
-              </li>
-              <li>
-                <span className="text-sm text-zinc-600">
-                  API Docs <span className="text-zinc-700">(Coming Soon)</span>
+                  A2A Protocol & API Docs <span className="text-zinc-700">(Coming Soon)</span>
                 </span>
               </li>
             </ul>
@@ -92,7 +87,7 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} AgentHermes. All rights reserved.
           </p>
           <p className="text-xs text-zinc-600">
-            Verified trust for the agentic economy.
+            The trust layer for AI agent commerce.
           </p>
         </div>
       </div>

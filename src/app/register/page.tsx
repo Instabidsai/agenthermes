@@ -149,8 +149,7 @@ function RegisterPageContent() {
           Register Your Business
         </h1>
         <p className="text-sm text-zinc-500">
-          Add your business to the AgentHermes verified commerce network.
-          Once registered, run an audit to get your trust score.
+          Add your business to the AgentHermes network. Once registered, run a scan to get your Agent Readiness Score and become discoverable by AI agents.
         </p>
       </div>
 
@@ -226,7 +225,7 @@ function RegisterPageContent() {
           <textarea
             id="description"
             rows={3}
-            placeholder="What does your business do? What services do you offer to agents?"
+            placeholder="Describe your business and the services you provide. Include any APIs, tools, or automated services available."
             value={form.description}
             onChange={(e) => update('description', e.target.value)}
             className="w-full px-4 py-3 rounded-lg bg-zinc-900/80 border border-zinc-800 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-colors resize-none"
@@ -293,13 +292,13 @@ function RegisterPageContent() {
           <input
             id="capabilities"
             type="text"
-            placeholder="contract-review, compliance-check, data-enrichment"
+            placeholder="e.g., payment-processing, document-analysis, inventory-lookup, scheduling"
             value={form.capabilities}
             onChange={(e) => update('capabilities', e.target.value)}
             className="w-full px-4 py-3 rounded-lg bg-zinc-900/80 border border-zinc-800 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-colors"
           />
           <p className="text-[10px] text-zinc-600 mt-1.5">
-            Comma-separated list of capabilities agents can search for.
+            What can AI agents do through your business? Enter the specific tasks or services agents could use.
           </p>
         </div>
 
@@ -332,7 +331,7 @@ function RegisterPageContent() {
 
         <p className="text-center text-[11px] text-zinc-600">
           Registration is free. After registering, run an audit to receive
-          your trust tier and become discoverable by agents.
+          your Agent Readiness Score and tier and become discoverable by agents.
         </p>
       </form>
     </div>

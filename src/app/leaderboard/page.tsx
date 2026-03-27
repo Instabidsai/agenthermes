@@ -176,7 +176,7 @@ export default function LeaderboardPage() {
           </h1>
         </div>
         <p className="text-sm text-zinc-500 ml-[52px]">
-          Top agent-ready businesses ranked by Agent Readiness Score.
+          The most agent-ready businesses in every industry. Where does yours rank?
         </p>
       </div>
 
@@ -249,10 +249,10 @@ export default function LeaderboardPage() {
         <div className="text-center py-20 rounded-xl bg-zinc-900/30 border border-zinc-800/50">
           <Search className="h-10 w-10 text-zinc-700 mx-auto mb-4" />
           <p className="text-zinc-400 font-medium mb-1">
-            No ranked businesses found.
+            The leaderboard is just getting started.
           </p>
           <p className="text-sm text-zinc-600">
-            Businesses need at least one audit to appear on the leaderboard.
+            Get scored now to claim the #1 spot in your industry.
           </p>
         </div>
       ) : (
@@ -349,7 +349,7 @@ export default function LeaderboardPage() {
               Not ranked yet?
             </p>
             <p className="text-sm text-zinc-500 mb-4">
-              Get your Agent Readiness Score and join the leaderboard.
+              Every unscored business is invisible to AI agents. Get your score and claim your position.
             </p>
             <Link
               href="/audit"

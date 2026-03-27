@@ -332,9 +332,7 @@ function AuditPageContent() {
               <div className={clsx('text-7xl sm:text-8xl font-black tabular-nums tracking-tight mb-2', getScoreColor(audit.totalScore))}>
                 {audit.totalScore}
               </div>
-              <div className="text-sm text-zinc-600 font-medium mb-4">
-                out of 100
-              </div>
+              <div className="mb-4" />
 
               {/* Tier badge — prominent */}
               <div className="mb-4">
@@ -609,7 +607,7 @@ function AuditPageContent() {
               className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-zinc-700 hover:border-zinc-600 text-zinc-300 hover:text-zinc-100 text-sm font-medium transition-colors"
             >
               <FileText className="h-4 w-4" />
-              See how you compare
+              View industry benchmarks
             </Link>
           </div>
 
@@ -644,10 +642,10 @@ function AuditPageContent() {
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <div className="flex-1">
                   <h3 className="font-semibold text-zinc-200 mb-1">
-                    Already agent-ready?
+                    Own this profile
                   </h3>
                   <p className="text-xs text-zinc-500">
-                    Claim your profile on AgentHermes to appear in agent queries and start receiving agent traffic.
+                    Claim your business on AgentHermes to manage your score, track improvements, and appear in agent queries.
                   </p>
                 </div>
                 <Link
@@ -670,9 +668,9 @@ function AuditPageContent() {
             <Shield className="h-10 w-10 text-zinc-700" />
           </div>
           <p className="text-sm text-zinc-600 max-w-sm mx-auto">
-            Enter a domain above to calculate your Agent Readiness Score.
-            We check 5 categories: machine-readable profiles, API endpoints,
-            onboarding, pricing, and payment acceptance.
+            Enter a domain above to see how AI agents evaluate your business.
+            We score 9 dimensions that determine whether agents can discover,
+            use, and pay you.
           </p>
         </div>
       )}
