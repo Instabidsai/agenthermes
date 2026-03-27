@@ -128,7 +128,7 @@ export async function scanInteroperability(
   const optionsHits = optionsResults.filter((r) => r.found || r.status === 204)
 
   if (getHits.length > 0) {
-    const pts = Math.min(getHits.length * 5, 15)
+    const pts = Math.min(getHits.length * 5, 25)
     rawScore += pts
     checks.push({
       name: 'REST API Endpoints',
