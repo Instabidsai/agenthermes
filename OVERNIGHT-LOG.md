@@ -39,3 +39,19 @@ The scanner should also check:
 - Use the Agent Card's capabilities section to find endpoints
 
 This would make the scanner much smarter — instead of blindly probing /api, it reads the discovery files the business has published.
+
+### FIX APPLIED: Smarter D2 Scanner
+- Scanner now follows /.well-known/mcp.json endpoint references
+- Tries JSON-RPC tools/list POST on discovered MCP endpoints
+- Checks /openapi.json and /api/v1/discover as REST indicators
+- Re-scan result: **29 → 41 (Bronze!)**
+- D2 jumped from 22 → 70
+- Cap removed (callable endpoints now detected)
+- Committed and deployed
+
+### Memory Saved
+- Project memory written to agenthermes-project.md
+- MEMORY.md updated with AgentHermes entry
+
+## Cycle 3 — Build /developers page
+**Status**: PENDING (next cycle)
