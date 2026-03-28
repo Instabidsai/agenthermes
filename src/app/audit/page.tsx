@@ -25,6 +25,8 @@ import {
   Zap,
   Share2,
   Link2,
+  Mail,
+  Bell,
 } from 'lucide-react'
 import clsx from 'clsx'
 import ScoreGauge from '@/components/ScoreGauge'
@@ -140,6 +142,36 @@ function AuditPageContent() {
   )
   const [copiedEmbed, setCopiedEmbed] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
+  const [subscribeEmail, setSubscribeEmail] = useState('')
+  const [subscribeState, setSubscribeState] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
+  const [subscribeError, setSubscribeError] = useState('')
+  const [displayScore, setDisplayScore] = useState(0)
+
+  // Count-up animation for the big score number
+  useEffect(() => {
+    if (audit.phase !== 'complete') {
+      setDisplayScore(0)
+      return
+    }
+    // Respect prefers-reduced-motion
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setDisplayScore(audit.totalScore)
+      return
+    }
+    const target = audit.totalScore
+    const duration = 1500
+    const start = performance.now()
+    let raf: number
+    const animate = (now: number) => {
+      const elapsed = now - start
+      const progress = Math.min(elapsed / duration, 1)
+      const eased = 1 - Math.pow(1 - progress, 3) // ease-out cubic
+      setDisplayScore(Math.round(target * eased))
+      if (progress < 1) raf = requestAnimationFrame(animate)
+    }
+    raf = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(raf)
+  }, [audit.phase, audit.totalScore])
 
   // Auto-run audit if domain is in query params
   useEffect(() => {
@@ -230,6 +262,38 @@ function AuditPageContent() {
     navigator.clipboard.writeText(embedCode)
     setCopiedEmbed(true)
     setTimeout(() => setCopiedEmbed(false), 2000)
+  }
+
+  const handleSubscribe = async () => {
+    const emailTrimmed = subscribeEmail.trim()
+    if (!emailTrimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed)) {
+      setSubscribeError('Please enter a valid email address.')
+      setSubscribeState('error')
+      return
+    }
+    setSubscribeState('submitting')
+    setSubscribeError('')
+    try {
+      const res = await fetch('/api/v1/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: emailTrimmed,
+          domain: audit.domain,
+          score: audit.totalScore,
+          tier: audit.tier,
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => null)
+        throw new Error(data?.error || 'Subscription failed.')
+      }
+      setSubscribeState('success')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Something went wrong.'
+      setSubscribeError(msg)
+      setSubscribeState('error')
+    }
   }
 
   return (
@@ -331,9 +395,9 @@ function AuditPageContent() {
                 <ScoreGauge score={audit.totalScore} size="lg" />
               </div>
 
-              {/* Massive numeric score */}
+              {/* Massive numeric score — animated count-up */}
               <div className={clsx('text-6xl sm:text-7xl md:text-8xl font-black tabular-nums tracking-tight mb-2', getScoreColor(audit.totalScore))}>
-                {audit.totalScore}
+                {displayScore}
               </div>
               <div className="mb-4" />
 
@@ -407,6 +471,76 @@ function AuditPageContent() {
                 </>
               )}
             </button>
+          </div>
+
+          {/* Email Capture — Score Change Notifications */}
+          <div className="p-6 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
+            {subscribeState === 'success' ? (
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-600/20 flex-shrink-0">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-emerald-400">
+                    You&apos;re subscribed!
+                  </p>
+                  <p className="text-xs text-zinc-500">
+                    We&apos;ll email you when your score changes.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 mb-3">
+                  <Bell className="h-4 w-4 text-zinc-400" />
+                  <h3 className="text-sm font-semibold text-zinc-200">
+                    Get notified when your score changes
+                  </h3>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2.5">
+                  <div className="relative flex-1">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                    <input
+                      type="email"
+                      placeholder="you@company.com"
+                      aria-label="Email for score change notifications"
+                      value={subscribeEmail}
+                      onChange={(e) => {
+                        setSubscribeEmail(e.target.value)
+                        if (subscribeState === 'error') {
+                          setSubscribeState('idle')
+                          setSubscribeError('')
+                        }
+                      }}
+                      onKeyDown={(e) => e.key === 'Enter' && subscribeState !== 'submitting' && handleSubscribe()}
+                      disabled={subscribeState === 'submitting'}
+                      className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-zinc-950 border border-zinc-700/50 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-colors disabled:opacity-50"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSubscribe}
+                    disabled={subscribeState === 'submitting' || !subscribeEmail.trim()}
+                    className="px-5 py-2.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700/50 hover:border-zinc-600/50 text-zinc-200 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 flex-shrink-0"
+                  >
+                    {subscribeState === 'submitting' ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        Subscribing...
+                      </>
+                    ) : (
+                      'Subscribe'
+                    )}
+                  </button>
+                </div>
+                {subscribeState === 'error' && subscribeError && (
+                  <p className="mt-2 text-xs text-red-400">{subscribeError}</p>
+                )}
+                <p className="mt-2.5 text-[11px] text-zinc-600">
+                  We&apos;ll alert you when your Agent Readiness Score changes — improvements or drops.
+                </p>
+              </>
+            )}
           </div>
 
           {/* Category Breakdown — Score cards */}

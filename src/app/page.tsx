@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { getServiceClient } from '@/lib/supabase'
 import HeroScanForm from '@/components/HeroScanForm'
+import { FadeIn } from '@/components/FadeIn'
 
 export const revalidate = 60
 

@@ -7,6 +7,7 @@ import { Search, SlidersHorizontal, X, Globe, Zap, AlertCircle, RotateCcw, Chevr
 import clsx from 'clsx'
 import ScoreGauge from '@/components/ScoreGauge'
 import TierBadge from '@/components/TierBadge'
+import { BreadcrumbJsonLd } from '@/components/Breadcrumbs'
 
 interface DiscoverBusiness {
   id: string
@@ -192,6 +193,10 @@ function DiscoverPageContent() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+      <BreadcrumbJsonLd items={[
+        { name: 'Home', url: 'https://agenthermes.ai' },
+        { name: 'Discover', url: 'https://agenthermes.ai/discover' },
+      ]} />
       {/* Header */}
       <div className="mb-10">
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2">

@@ -4,6 +4,7 @@ import { getServiceClient } from '@/lib/supabase'
 import { notifyTierPromotion } from '@/lib/hive-brain'
 import { rateLimit } from '@/lib/auth'
 import { fireWebhook } from '@/lib/webhooks'
+import { logError } from '@/lib/error-logger'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -229,6 +230,12 @@ export async function POST(req: NextRequest) {
       'Scan route error:',
       err instanceof Error ? err.message : err
     )
+
+    // Log to error_log table (fire-and-forget)
+    if (err instanceof Error) {
+      logError('/api/v1/scan', 'POST', err, requestId)
+    }
+
     if (
       err instanceof Error &&
       (err.message.includes('private or internal') ||
