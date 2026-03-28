@@ -12,7 +12,27 @@ import {
   Bot,
   TrendingUp,
   Calendar,
+  ArrowRightLeft,
+  DollarSign,
+  Activity,
+  CheckCircle2,
+  XCircle,
+  ExternalLink,
 } from 'lucide-react'
+
+interface GatewayData {
+  total_calls: number
+  total_spent: number
+  top_services: { service_id: string; service_name: string; count: number }[]
+  recent_activity: {
+    id: string
+    service_name: string
+    action_name: string
+    cost: number
+    success: boolean
+    created_at: string
+  }[]
+}
 
 interface AnalyticsData {
   business_id: string
@@ -26,6 +46,7 @@ interface AnalyticsData {
   views_by_day: { date: string; count: number }[]
   top_search_queries: { query: string; count: number }[]
   top_agents: { agent_id: string; count: number }[]
+  gateway: GatewayData | null
 }
 
 interface BusinessOption {
@@ -363,6 +384,179 @@ export default function AnalyticsPage() {
                 )}
               </div>
             </div>
+          </div>
+
+          {/* Gateway Usage Section */}
+          <div className="mt-8">
+            <div className="flex items-center gap-2 mb-5">
+              <ArrowRightLeft className="h-5 w-5 text-violet-400" />
+              <h2 className="text-lg font-semibold tracking-tight">
+                Gateway Usage
+              </h2>
+            </div>
+
+            {data.gateway ? (
+              <>
+                {/* Gateway stat cards */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+                  <StatCard
+                    label="Gateway Calls"
+                    value={data.gateway.total_calls}
+                    icon={Activity}
+                    color="bg-violet-500/10 text-violet-400"
+                  />
+                  <div className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-500/10 text-violet-400">
+                        <DollarSign className="h-4 w-4" />
+                      </div>
+                      <span className="text-xs text-zinc-500 font-medium uppercase tracking-wider">
+                        Total Spent
+                      </span>
+                    </div>
+                    <div className="text-3xl font-bold tracking-tight tabular-nums">
+                      ${data.gateway.total_spent.toFixed(4)}
+                    </div>
+                  </div>
+                  <StatCard
+                    label="Services Used"
+                    value={data.gateway.top_services.length}
+                    icon={Zap}
+                    color="bg-violet-500/10 text-violet-400"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Recent Gateway Activity */}
+                  <div className="lg:col-span-2 p-6 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Activity className="h-4 w-4 text-zinc-500" />
+                      <h3 className="text-sm font-semibold text-zinc-400">
+                        Recent Gateway Activity
+                      </h3>
+                    </div>
+                    {data.gateway.recent_activity.length > 0 ? (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b border-zinc-800">
+                              <th className="text-left py-2 px-3 text-xs text-zinc-500 font-medium">
+                                Service
+                              </th>
+                              <th className="text-left py-2 px-3 text-xs text-zinc-500 font-medium">
+                                Action
+                              </th>
+                              <th className="text-right py-2 px-3 text-xs text-zinc-500 font-medium">
+                                Cost
+                              </th>
+                              <th className="text-center py-2 px-3 text-xs text-zinc-500 font-medium">
+                                Status
+                              </th>
+                              <th className="text-right py-2 px-3 text-xs text-zinc-500 font-medium">
+                                Time
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {data.gateway.recent_activity.map((activity) => (
+                              <tr
+                                key={activity.id}
+                                className="border-b border-zinc-800/50 hover:bg-zinc-800/30"
+                              >
+                                <td className="py-2 px-3 text-zinc-300 text-xs">
+                                  {activity.service_name}
+                                </td>
+                                <td className="py-2 px-3 text-zinc-400 font-mono text-xs">
+                                  {activity.action_name}
+                                </td>
+                                <td className="py-2 px-3 text-right text-zinc-200 tabular-nums text-xs">
+                                  ${activity.cost.toFixed(4)}
+                                </td>
+                                <td className="py-2 px-3 text-center">
+                                  {activity.success ? (
+                                    <CheckCircle2 className="h-4 w-4 text-emerald-500 mx-auto" />
+                                  ) : (
+                                    <XCircle className="h-4 w-4 text-red-500 mx-auto" />
+                                  )}
+                                </td>
+                                <td className="py-2 px-3 text-right text-zinc-500 text-xs whitespace-nowrap">
+                                  {new Date(activity.created_at).toLocaleString(undefined, {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-zinc-600 text-center py-8">
+                        No recent gateway activity.
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Top Services */}
+                  <div className="p-6 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Zap className="h-4 w-4 text-zinc-500" />
+                      <h3 className="text-sm font-semibold text-zinc-400">
+                        Top Services
+                      </h3>
+                    </div>
+                    {data.gateway.top_services.length > 0 ? (
+                      <div className="space-y-3">
+                        {data.gateway.top_services.map((svc, i) => {
+                          const maxCalls = Math.max(
+                            ...data.gateway!.top_services.map((s) => s.count)
+                          )
+                          const pct = maxCalls > 0 ? (svc.count / maxCalls) * 100 : 0
+                          return (
+                            <div key={svc.service_id}>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs text-zinc-300 truncate mr-2">
+                                  {svc.service_name}
+                                </span>
+                                <span className="text-xs text-zinc-500 tabular-nums flex-shrink-0">
+                                  {svc.count} calls
+                                </span>
+                              </div>
+                              <div className="w-full bg-zinc-800 rounded-full h-1.5">
+                                <div
+                                  className="bg-violet-500 h-1.5 rounded-full transition-all"
+                                  style={{ width: `${pct}%` }}
+                                />
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-zinc-600 text-center py-4">
+                        No services used yet.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="p-8 rounded-xl bg-zinc-900/30 border border-zinc-800/50 text-center">
+                <ArrowRightLeft className="h-8 w-8 text-zinc-700 mx-auto mb-3" />
+                <p className="text-sm text-zinc-500 mb-2">
+                  No gateway activity yet
+                </p>
+                <a
+                  href="/gateway"
+                  className="inline-flex items-center gap-1.5 text-xs text-violet-400 hover:text-violet-300 transition-colors"
+                >
+                  Explore the Gateway
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+            )}
           </div>
         </>
       ) : (

@@ -7,6 +7,7 @@ import type { Business, Service, AuditResult } from '@/types/database'
 import { clsx } from 'clsx'
 import ScoreGauge from '@/components/ScoreGauge'
 import TierBadge from '@/components/TierBadge'
+import { RequestScanButton } from '@/components/RequestScanButton'
 import {
   Globe,
   Zap,
@@ -17,6 +18,11 @@ import {
   Search,
   Wrench,
   BarChart3,
+  Clock,
+  ArrowUpRight,
+  ArrowDownRight,
+  Minus,
+  RotateCw,
 } from 'lucide-react'
 
 export const revalidate = 60
@@ -26,11 +32,27 @@ interface BusinessWithRelations extends Business {
   audit_results: AuditResult[]
 }
 
+interface ScanHistoryEntry {
+  date: string
+  score: number
+  tier: 'unaudited' | 'bronze' | 'silver' | 'gold' | 'platinum'
+  delta: number | null
+}
+
+function tierFromScore(score: number): 'platinum' | 'gold' | 'silver' | 'bronze' | 'unaudited' {
+  if (score >= 90) return 'platinum'
+  if (score >= 75) return 'gold'
+  if (score >= 60) return 'silver'
+  if (score >= 40) return 'bronze'
+  return 'unaudited'
+}
+
 async function getBusiness(slug: string): Promise<{
   business: BusinessWithRelations
   connectionsCount: number
   transactionVolume: number
   transactionCount: number
+  scanHistory: ScanHistoryEntry[]
 } | null> {
   const supabase = getServiceClient()
 
@@ -44,7 +66,7 @@ async function getBusiness(slug: string): Promise<{
   if (error || !business) return null
 
   // Parallelize independent queries after initial business fetch
-  const [connectionsRes, walletRes] = await Promise.all([
+  const [connectionsRes, walletRes, allAuditsRes] = await Promise.all([
     supabase
       .from('connections')
       .select('*', { count: 'exact', head: true })
@@ -53,6 +75,11 @@ async function getBusiness(slug: string): Promise<{
       .from('agent_wallets')
       .select('id')
       .eq('business_id', business.id),
+    supabase
+      .from('audit_results')
+      .select('score, max_score, audited_at')
+      .eq('business_id', business.id)
+      .order('audited_at', { ascending: false }),
   ])
 
   const connectionsCount = connectionsRes.count ?? 0
@@ -76,11 +103,43 @@ async function getBusiness(slug: string): Promise<{
     }
   }
 
+  // Build scan history from all audit results grouped by audited_at
+  const allAudits = (allAuditsRes.data || []) as { score: number; max_score: number; audited_at: string }[]
+  const dateMap = new Map<string, { totalScore: number; totalMax: number }>()
+  for (const audit of allAudits) {
+    const dateKey = audit.audited_at
+    const existing = dateMap.get(dateKey)
+    if (existing) {
+      existing.totalScore += audit.score
+      existing.totalMax += audit.max_score
+    } else {
+      dateMap.set(dateKey, { totalScore: audit.score, totalMax: audit.max_score })
+    }
+  }
+
+  // Convert to sorted array (newest first), limit to 10
+  const sortedDates = Array.from(dateMap.entries())
+    .sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime())
+    .slice(0, 10)
+
+  // Build history entries with deltas (compare each to the one after it in time, i.e. the previous scan)
+  const scanHistory: ScanHistoryEntry[] = sortedDates.map(([date, { totalScore }], idx) => {
+    const olderEntry = idx < sortedDates.length - 1 ? sortedDates[idx + 1] : null
+    const delta = olderEntry ? totalScore - olderEntry[1].totalScore : null
+    return {
+      date,
+      score: totalScore,
+      tier: tierFromScore(totalScore),
+      delta,
+    }
+  })
+
   return {
     business: business as BusinessWithRelations,
     connectionsCount,
     transactionVolume,
     transactionCount,
+    scanHistory,
   }
 }
 
@@ -142,7 +201,7 @@ export default async function BusinessProfilePage({
     notFound()
   }
 
-  const { business, connectionsCount, transactionVolume, transactionCount } = result
+  const { business, connectionsCount, transactionVolume, transactionCount, scanHistory } = result
   const activeServices = business.services.filter((s) => s.status === 'active')
 
   const businessJsonLd = {
@@ -176,16 +235,19 @@ export default async function BusinessProfilePage({
             <TierBadge tier={business.audit_tier} size="md" />
           </div>
           {business.domain && (
-            <a
-              href={`https://${business.domain}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-sm text-zinc-400 hover:text-zinc-200 transition-colors"
-            >
-              <Globe className="h-3.5 w-3.5" />
-              {business.domain}
-              <ExternalLink className="h-3 w-3" />
-            </a>
+            <div className="flex items-center gap-3">
+              <a
+                href={`https://${business.domain}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm text-zinc-400 hover:text-zinc-200 transition-colors"
+              >
+                <Globe className="h-3.5 w-3.5" />
+                {business.domain}
+                <ExternalLink className="h-3 w-3" />
+              </a>
+              <RequestScanButton domain={business.domain} />
+            </div>
           )}
           {business.description && (
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-400">
@@ -242,6 +304,110 @@ export default async function BusinessProfilePage({
           icon={Network}
         />
       </div>
+
+      {/* Score History */}
+      {scanHistory.length > 0 && (
+        <div className="mt-10">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <Clock className="h-4 w-4 text-zinc-400" />
+              Score History
+            </h2>
+            {business.domain && (
+              <Link
+                href={`/audit?domain=${business.domain}`}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-700 hover:border-zinc-600 text-zinc-400 hover:text-zinc-200 text-xs font-medium transition-colors"
+              >
+                <RotateCw className="h-3 w-3" />
+                Re-scan
+              </Link>
+            )}
+          </div>
+
+          {scanHistory.length === 1 ? (
+            <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/50 p-5">
+              <p className="text-sm text-zinc-400">
+                First scanned:{' '}
+                <span className="text-zinc-200 font-medium">
+                  {new Date(scanHistory[0].date).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })}
+                </span>
+                <span className="ml-3">
+                  <TierBadge tier={scanHistory[0].tier} size="sm" />
+                </span>
+              </p>
+            </div>
+          ) : (
+            <div className="relative pl-6">
+              {/* Vertical connecting line */}
+              <div className="absolute left-[9px] top-2 bottom-2 w-px bg-zinc-800" />
+
+              <div className="space-y-0">
+                {scanHistory.map((entry, idx) => (
+                  <div key={entry.date} className="relative flex items-start gap-4 pb-5 last:pb-0">
+                    {/* Timeline dot */}
+                    <div
+                      className={clsx(
+                        'absolute -left-6 top-1.5 h-[11px] w-[11px] rounded-full border-2',
+                        idx === 0
+                          ? 'bg-emerald-500 border-emerald-400'
+                          : 'bg-zinc-800 border-zinc-600'
+                      )}
+                    />
+
+                    {/* Date */}
+                    <div className="min-w-[110px] pt-0.5">
+                      <p className={clsx(
+                        'text-xs tabular-nums',
+                        idx === 0 ? 'text-zinc-300 font-medium' : 'text-zinc-500'
+                      )}>
+                        {new Date(entry.date).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </p>
+                    </div>
+
+                    {/* Score + tier + delta */}
+                    <div className="flex items-center gap-3">
+                      <span className={clsx(
+                        'text-sm font-bold tabular-nums',
+                        idx === 0 ? 'text-zinc-100' : 'text-zinc-400'
+                      )}>
+                        {entry.score}
+                      </span>
+                      <TierBadge tier={entry.tier} size="sm" />
+                      {entry.delta !== null && entry.delta !== 0 && (
+                        <span className={clsx(
+                          'inline-flex items-center gap-0.5 text-xs font-medium tabular-nums',
+                          entry.delta > 0 ? 'text-emerald-400' : 'text-red-400'
+                        )}>
+                          {entry.delta > 0 ? (
+                            <ArrowUpRight className="h-3 w-3" />
+                          ) : (
+                            <ArrowDownRight className="h-3 w-3" />
+                          )}
+                          {entry.delta > 0 ? '+' : ''}{entry.delta}
+                        </span>
+                      )}
+                      {entry.delta === 0 && (
+                        <span className="inline-flex items-center gap-0.5 text-xs text-zinc-600">
+                          <Minus className="h-3 w-3" />
+                          0
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Services Table */}
       <Suspense fallback={

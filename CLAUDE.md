@@ -25,7 +25,7 @@
 - Build must pass: `npx next build` (0 TypeScript errors)
 - Live API: https://agenthermes.ai
 - Health: GET /api/v1/health
-- Self-scan score: 44 (Bronze) — D2:70, D6:80, D7:60, D8:75
+- Self-scan score: 50 (Bronze) — D1:55, D2:75, D3:22, D4:15, D5:20, D6:80, D7:60, D8:75, D9:20
 
 ## Hard Rules
 1. verify_jwt = false on all Supabase functions

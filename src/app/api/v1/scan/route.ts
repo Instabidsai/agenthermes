@@ -5,6 +5,7 @@ import { notifyTierPromotion } from '@/lib/hive-brain'
 import { rateLimit } from '@/lib/auth'
 import { fireWebhook } from '@/lib/webhooks'
 import { logError } from '@/lib/error-logger'
+import { notifyScoreChange } from '@/lib/notifications'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -80,6 +81,14 @@ export async function POST(req: NextRequest) {
     const mcpCheck = scanResult.dimensions
       .find((d) => d.dimension === 'D2')
       ?.checks.find((c) => c.name === 'MCP Tools List')
+
+    // Fetch old score before upsert (for score change notifications)
+    const { data: existingBiz } = await db
+      .from('businesses')
+      .select('audit_score')
+      .eq('domain', domain)
+      .single()
+    const oldScore: number = (existingBiz as any)?.audit_score ?? 0
 
     // Upsert the business
     const { data: businessRaw, error: bizError } = await db
@@ -218,6 +227,13 @@ export async function POST(req: NextRequest) {
         tier: scanResult.tier,
         score: scanResult.total_score,
       })
+    }
+
+    // Notify email subscribers if score changed (fire-and-forget)
+    if (scanResult.total_score !== oldScore) {
+      notifyScoreChange(domain, oldScore, scanResult.total_score, scanResult.tier).catch((err) =>
+        console.error('Score change notification failed:', err)
+      )
     }
 
     return NextResponse.json({
