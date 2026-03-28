@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/supabase'
 import { isStripeConfigured, transferFunds } from '@/lib/stripe'
 import { runScan } from '@/lib/scanner'
+import { listGatewayServices, callService, getServiceActions } from '@/lib/gateway/proxy'
 
 // Payment tools that require authentication
-const AUTH_REQUIRED_TOOLS = new Set(['initiate_payment', 'check_wallet_balance'])
+const AUTH_REQUIRED_TOOLS = new Set(['initiate_payment', 'check_wallet_balance', 'call_service'])
 
 // =====================================================================
 // MCP Server — JSON-RPC 2.0 compatible
@@ -24,7 +25,7 @@ const SERVER_INFO = {
   name: 'agenthermes',
   version: '0.1.0',
   description:
-    'AgentHermes — AI Business Network. Discover, audit, and transact with agent-ready businesses.',
+    'AgentHermes — AI Business Network. Discover, audit, transact, and call services through the gateway with one API key.',
 }
 
 // --- Tool definitions ---------------------------------------------------
@@ -136,6 +137,45 @@ const TOOLS: ToolDef[] = [
           description: 'Alternative: provide the hermes JSON content directly instead of fetching from domain',
         },
       },
+    },
+  },
+  {
+    name: 'list_gateway_services',
+    description:
+      'List all services available through the AgentHermes gateway. One API key gives you access to all connected business APIs.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        category: { type: 'string', description: 'Filter by category (ai, video, social, database, etc.)' },
+        max_cost: { type: 'number', description: 'Maximum cost per call in USD' },
+      },
+    },
+  },
+  {
+    name: 'call_service',
+    description:
+      'Execute an API call through the AgentHermes gateway. Requires a wallet with sufficient balance. Cost is automatically deducted.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        service_id: { type: 'string', description: 'ID of the gateway service to call' },
+        action: { type: 'string', description: 'Name of the action to execute' },
+        params: { type: 'object', description: 'Parameters to pass to the API' },
+        wallet_id: { type: 'string', description: 'Your AgentHermes wallet ID' },
+      },
+      required: ['service_id', 'action', 'wallet_id'],
+    },
+  },
+  {
+    name: 'get_service_actions',
+    description:
+      'Get available actions for a specific gateway service, including costs and parameter schemas.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        service_id: { type: 'string', description: 'ID of the gateway service' },
+      },
+      required: ['service_id'],
     },
   },
 ]
@@ -649,6 +689,28 @@ async function executeVerifyHermesJson(params: Record<string, unknown>) {
   return result
 }
 
+async function executeListGatewayServices(params: Record<string, unknown>) {
+  return listGatewayServices({
+    category: params.category as string | undefined,
+    max_cost: params.max_cost as number | undefined,
+  })
+}
+
+async function executeCallService(params: Record<string, unknown>) {
+  return callService({
+    service_id: params.service_id as string,
+    action: params.action as string,
+    params: params.params as Record<string, unknown> | undefined,
+    wallet_id: params.wallet_id as string,
+  })
+}
+
+async function executeGetServiceActions(params: Record<string, unknown>) {
+  return getServiceActions({
+    service_id: params.service_id as string,
+  })
+}
+
 // Tool dispatch map
 const TOOL_HANDLERS: Record<
   string,
@@ -661,6 +723,9 @@ const TOOL_HANDLERS: Record<
   check_wallet_balance: executeCheckBalance,
   initiate_payment: executeInitiatePayment,
   verify_hermes_json: executeVerifyHermesJson,
+  list_gateway_services: executeListGatewayServices,
+  call_service: executeCallService,
+  get_service_actions: executeGetServiceActions,
 }
 
 // --- JSON-RPC types -----------------------------------------------------
