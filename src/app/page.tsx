@@ -209,7 +209,7 @@ export default async function HomePage() {
                 icon: BarChart3,
                 title: 'Get Scored 0-100',
                 description:
-                  'We scan 5 categories of agent readiness: machine-readable profiles, API endpoints, onboarding, pricing, and payments.',
+                  'We scan 9 dimensions of agent readiness including machine-readable profiles, API endpoints, onboarding, pricing, and payments.',
               },
               {
                 step: '03',
@@ -255,7 +255,7 @@ export default async function HomePage() {
           </div>
 
           {/* Score meter visualization */}
-          <div className="p-8 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
+          <div className="p-4 sm:p-8 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
             {/* Gradient bar */}
             <div className="relative mb-8">
               <div className="h-4 rounded-full overflow-hidden flex">

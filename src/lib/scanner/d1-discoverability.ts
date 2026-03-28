@@ -6,7 +6,7 @@
 // ---------------------------------------------------------------------------
 
 import type { DimensionResult, Check, Recommendation } from './types'
-import { probeEndpoint, isJsonContentType, hasField } from './types'
+import { probeEndpoint, isJsonContentType, hasField, getApiSubdomains, getInfraSubdomains, endpointExists } from './types'
 
 export async function scanDiscoverability(
   base: string,
@@ -184,8 +184,19 @@ export async function scanDiscoverability(
     '/api-docs',
     '/api/docs',
   ]
+  // Also check API subdomains for OpenAPI specs
+  const apiSubdomains = getApiSubdomains(base)
+  const subdomainOpenApiPaths = apiSubdomains.flatMap((sub) => [
+    `${sub}/openapi.json`,
+    `${sub}/swagger.json`,
+    `${sub}/api-docs`,
+  ])
+  const allOpenApiPaths = [
+    ...openApiPaths.map((p) => `${base}${p}`),
+    ...subdomainOpenApiPaths,
+  ]
   const openApiResults = await Promise.all(
-    openApiPaths.map((p) => probeEndpoint(`${base}${p}`, 'GET', globalSignal))
+    allOpenApiPaths.map((url) => probeEndpoint(url, 'GET', globalSignal))
   )
   const openApiHit = openApiResults.find((r) => r.found)
 
@@ -352,6 +363,52 @@ export async function scanDiscoverability(
       impact: '+10 points',
       difficulty: 'easy',
       auto_fixable: true,
+    })
+  }
+
+  // -----------------------------------------------------------------------
+  // 8. Developer documentation on subdomains (up to 10 pts — bonus)
+  //    Companies like Stripe (docs.stripe.com) and Anthropic (docs.anthropic.com)
+  //    have excellent docs on subdomains that the base-domain checks miss.
+  // -----------------------------------------------------------------------
+  const infraSubdomains = getInfraSubdomains(base)
+  const docsSubdomainUrls = infraSubdomains.filter(
+    (u) => u.includes('docs.') || u.includes('developer')
+  )
+  const docsSubdomainResults = await Promise.all(
+    docsSubdomainUrls.map((url) => probeEndpoint(url, 'GET', globalSignal))
+  )
+  const docsSubdomainHit = docsSubdomainResults.find((r) => r.found)
+
+  // Also check homepage HTML for links to developer docs, API references, OpenAPI specs
+  let hasDevDocsLink = false
+  if (homepageResult.found && typeof homepageResult.body === 'string') {
+    const html = homepageResult.body
+    hasDevDocsLink = /docs\.|developer\.|\/docs|\/api-reference|\/api-docs|openapi|swagger/i.test(html)
+  }
+
+  if (docsSubdomainHit) {
+    rawScore += 10
+    checks.push({
+      name: 'Developer Docs (Subdomain)',
+      passed: true,
+      details: `Developer documentation found at ${docsSubdomainHit.url}`,
+      points: 10,
+    })
+  } else if (hasDevDocsLink) {
+    rawScore += 5
+    checks.push({
+      name: 'Developer Docs (Subdomain)',
+      passed: false,
+      details: 'Homepage links to developer documentation or API reference',
+      points: 5,
+    })
+  } else {
+    checks.push({
+      name: 'Developer Docs (Subdomain)',
+      passed: false,
+      details: 'No developer documentation found on subdomains (docs.*, developer.*) or linked from homepage',
+      points: 0,
     })
   }
 

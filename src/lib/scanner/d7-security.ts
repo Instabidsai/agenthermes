@@ -7,7 +7,7 @@
 // ---------------------------------------------------------------------------
 
 import type { DimensionResult, Check, Recommendation } from './types'
-import { probeEndpoint } from './types'
+import { probeEndpoint, getApiSubdomains } from './types'
 
 export async function scanSecurity(
   base: string,
@@ -74,12 +74,24 @@ export async function scanSecurity(
     })
   }
 
-  // Probe homepage and API for security headers
+  // Probe homepage, API paths, and API subdomains for security headers
   const homepageResult = await probeEndpoint(base, 'GET', globalSignal)
   const apiResult = await probeEndpoint(`${base}/api`, 'GET', globalSignal)
 
-  // Merge headers from both probes
+  // Also probe API subdomains to catch rate-limit and CORS headers
+  const apiSubdomains = getApiSubdomains(base)
+  const subdomainResults = await Promise.all(
+    apiSubdomains.flatMap((sub) => [
+      probeEndpoint(sub, 'GET', globalSignal),
+      probeEndpoint(`${sub}/v1`, 'GET', globalSignal),
+    ])
+  )
+
+  // Merge headers from all probes (subdomain headers override base domain)
   const allHeaders = { ...homepageResult.headers, ...apiResult.headers }
+  for (const r of subdomainResults) {
+    Object.assign(allHeaders, r.headers)
+  }
 
   // -----------------------------------------------------------------------
   // 2. Strict-Transport-Security (HSTS) (up to 15 pts)
@@ -341,6 +353,31 @@ export async function scanSecurity(
       points: 0,
     })
     // Not necessarily a recommendation — no CORS needed if not cross-origin
+  }
+
+  // -----------------------------------------------------------------------
+  // 9. security.txt (up to 5 pts — bonus)
+  // -----------------------------------------------------------------------
+  const securityTxtResult = await probeEndpoint(
+    `${base}/.well-known/security.txt`,
+    'GET',
+    globalSignal
+  )
+  if (securityTxtResult.found) {
+    rawScore += 5
+    checks.push({
+      name: 'security.txt',
+      passed: true,
+      details: 'security.txt found at /.well-known/security.txt',
+      points: 5,
+    })
+  } else {
+    checks.push({
+      name: 'security.txt',
+      passed: false,
+      details: 'No security.txt found at /.well-known/security.txt',
+      points: 0,
+    })
   }
 
   const score = Math.min(rawScore, 100)

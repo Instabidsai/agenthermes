@@ -10,7 +10,6 @@ import {
   ArrowDownLeft,
   BarChart3,
   ExternalLink,
-  Loader2,
   AlertCircle,
 } from 'lucide-react'
 import ScoreGauge from '@/components/ScoreGauge'
@@ -212,17 +211,17 @@ export default function DashboardPage() {
             Manage your registered businesses and monitor agent activity.
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <Link
             href="/audit"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-zinc-700 hover:border-zinc-600 text-zinc-300 hover:text-zinc-100 text-sm font-medium transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-zinc-700 hover:border-zinc-600 text-zinc-300 hover:text-zinc-100 text-sm font-medium transition-colors"
           >
             <BarChart3 className="h-4 w-4" />
             Run Audit
           </Link>
           <Link
             href="/register"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors"
           >
             <Plus className="h-4 w-4" />
             Register New Business

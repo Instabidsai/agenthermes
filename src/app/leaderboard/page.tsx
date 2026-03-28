@@ -175,7 +175,7 @@ export default function LeaderboardPage() {
             Leaderboard
           </h1>
         </div>
-        <p className="text-sm text-zinc-500 ml-[52px]">
+        <p className="text-sm text-zinc-500 sm:ml-[52px]">
           The most agent-ready businesses in every industry. Where does yours rank?
         </p>
       </div>

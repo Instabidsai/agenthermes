@@ -11,8 +11,11 @@ import { NextRequest, NextResponse } from 'next/server'
 export function requireAuth(request: NextRequest): NextResponse | null {
   const apiKey = process.env.AGENTHERMES_API_KEY
 
-  // If no API key is configured, allow all requests (dev mode)
+  // In dev without API key configured, allow all requests
   if (!apiKey) {
+    if (process.env.NODE_ENV === 'production') {
+      return NextResponse.json({ error: 'Service not configured' }, { status: 503 })
+    }
     return null
   }
 

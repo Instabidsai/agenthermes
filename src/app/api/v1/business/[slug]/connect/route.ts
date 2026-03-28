@@ -51,7 +51,7 @@ export async function POST(
     if (business.stripe_connect_id) {
       const link = await createAccountLink(business.stripe_connect_id, business.slug)
       return NextResponse.json({
-        connect_account_id: business.stripe_connect_id,
+        connect_account_id: '***',
         onboarding_url: link.url,
         message: 'Existing Connect account — new onboarding link generated',
       })

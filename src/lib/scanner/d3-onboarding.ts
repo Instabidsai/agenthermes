@@ -6,7 +6,7 @@
 // ---------------------------------------------------------------------------
 
 import type { DimensionResult, Check, Recommendation } from './types'
-import { probeEndpoint, endpointExists } from './types'
+import { probeEndpoint, endpointExists, getApiSubdomains, extractDomain } from './types'
 
 export async function scanOnboarding(
   base: string,
@@ -19,7 +19,7 @@ export async function scanOnboarding(
   // -----------------------------------------------------------------------
   // 1. Programmatic signup / registration (up to 30 pts)
   // -----------------------------------------------------------------------
-  const signupPaths = [
+  const signupApiPaths = [
     '/api/signup',
     '/api/v1/signup',
     '/api/register',
@@ -28,25 +28,55 @@ export async function scanOnboarding(
     '/api/auth/register',
     '/api/auth/sign-up',
   ]
-  const signupResults = await Promise.all(
-    signupPaths.map((p) => probeEndpoint(`${base}${p}`, 'GET', globalSignal))
+  const signupApiResults = await Promise.all(
+    signupApiPaths.map((p) => probeEndpoint(`${base}${p}`, 'GET', globalSignal))
   )
   // A 405 (Method Not Allowed) also counts — it means a POST route exists there
-  const signupHits = signupResults.filter((r) => endpointExists(r))
+  const signupApiHits = signupApiResults.filter((r) => endpointExists(r))
 
-  if (signupHits.length > 0) {
+  // Also check for human-accessible registration pages (partial credit)
+  const signupPagePaths = [
+    '/register',
+    '/signup',
+    '/sign-up',
+    '/join',
+    '/get-started',
+    '/start',
+  ]
+  const signupPageResults = await Promise.all(
+    signupPagePaths.map((p) => probeEndpoint(`${base}${p}`, 'GET', globalSignal))
+  )
+  const signupPageHits = signupPageResults.filter((r) => r.found)
+
+  if (signupApiHits.length > 0) {
     rawScore += 30
     checks.push({
       name: 'Programmatic Signup',
       passed: true,
-      details: `Signup endpoint(s) detected: ${signupHits.map((r) => `${r.url} (${r.status})`).join(', ')}`,
+      details: `Signup endpoint(s) detected: ${signupApiHits.map((r) => `${r.url} (${r.status})`).join(', ')}`,
       points: 30,
+    })
+  } else if (signupPageHits.length > 0) {
+    // Registration page exists but not a JSON API — partial credit
+    rawScore += 12
+    checks.push({
+      name: 'Programmatic Signup',
+      passed: false,
+      details: `Registration page found at ${signupPageHits.map((r) => r.url).join(', ')} but no JSON API endpoint for programmatic signup`,
+      points: 12,
+    })
+    recommendations.push({
+      action:
+        'Create /api/signup or /api/register that accepts JSON POST and returns credentials — upgrading your browser-based signup to agent-friendly.',
+      impact: '+18 points',
+      difficulty: 'hard',
+      auto_fixable: false,
     })
   } else {
     checks.push({
       name: 'Programmatic Signup',
       passed: false,
-      details: `No programmatic signup endpoints found at ${signupPaths.length} common paths`,
+      details: `No signup endpoints or registration pages found`,
       points: 0,
     })
     recommendations.push({
@@ -108,8 +138,22 @@ export async function scanOnboarding(
     '/api/oauth/token',
     '/auth/token',
   ]
+  // Also check common auth subdomains (connect.stripe.com, auth.example.com)
+  const domain = extractDomain(base)
+  const oauthSubdomainPaths = domain ? [
+    `https://connect.${domain}/oauth/authorize`,
+    `https://connect.${domain}/oauth/token`,
+    `https://auth.${domain}/oauth/token`,
+    `https://auth.${domain}/.well-known/openid-configuration`,
+    `https://accounts.${domain}/.well-known/openid-configuration`,
+    `https://login.${domain}/.well-known/openid-configuration`,
+  ] : []
+  const allOauthUrls = [
+    ...oauthPaths.map((p) => `${base}${p}`),
+    ...oauthSubdomainPaths,
+  ]
   const oauthResults = await Promise.all(
-    oauthPaths.map((p) => probeEndpoint(`${base}${p}`, 'GET', globalSignal))
+    allOauthUrls.map((url) => probeEndpoint(url, 'GET', globalSignal))
   )
   const oauthHits = oauthResults.filter((r) => endpointExists(r))
 
@@ -147,9 +191,23 @@ export async function scanOnboarding(
     '/docs/getting-started',
     '/docs/api',
     '/api-docs',
+    '/docs',
+  ]
+  // Also check developer subdomains
+  const devSubdomainUrls = domain ? [
+    `https://docs.${domain}`,
+    `https://docs.${domain}/api`,
+    `https://docs.${domain}/getting-started`,
+    `https://developer.${domain}`,
+    `https://developers.${domain}`,
+    `https://developers.${domain}/docs`,
+  ] : []
+  const allDevUrls = [
+    ...devPaths.map((p) => `${base}${p}`),
+    ...devSubdomainUrls,
   ]
   const devResults = await Promise.all(
-    devPaths.map((p) => probeEndpoint(`${base}${p}`, 'GET', globalSignal))
+    allDevUrls.map((url) => probeEndpoint(url, 'GET', globalSignal))
   )
   const devHits = devResults.filter((r) => r.found)
 
@@ -208,7 +266,8 @@ export async function scanOnboarding(
   const sandboxHits = sandboxResults.filter((r) => endpointExists(r))
 
   // Also check homepage and dev docs for sandbox/test mode references
-  const allBodies = [...devResults, ...sandboxResults].map((r) =>
+  const homepageResult = await probeEndpoint(base, 'GET', globalSignal)
+  const allBodies = [...devResults, ...sandboxResults, homepageResult].map((r) =>
     typeof r.body === 'string' ? r.body : JSON.stringify(r.body ?? '')
   )
   const mentionsSandbox = allBodies.some((text) =>

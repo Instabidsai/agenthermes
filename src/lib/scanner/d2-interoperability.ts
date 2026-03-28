@@ -6,7 +6,7 @@
 // ---------------------------------------------------------------------------
 
 import type { DimensionResult, Check, Recommendation } from './types'
-import { probeEndpoint, isJsonContentType, endpointExists } from './types'
+import { probeEndpoint, isJsonContentType, endpointExists, getApiSubdomains } from './types'
 
 export async function scanInteroperability(
   base: string,
@@ -164,9 +164,23 @@ export async function scanInteroperability(
     '/api/v1/discover',
   ]
 
-  // Test GET
+  // Also probe common API subdomains (api.stripe.com, api.anthropic.com, etc.)
+  const apiSubdomains = getApiSubdomains(base)
+  const subdomainApiPaths = apiSubdomains.flatMap((sub) => [
+    sub,               // e.g. https://api.stripe.com
+    `${sub}/v1`,       // e.g. https://api.stripe.com/v1
+    `${sub}/v2`,
+    `${sub}/health`,
+    `${sub}/status`,
+  ])
+
+  // Test GET on base domain paths + subdomain paths
+  const allApiUrls = [
+    ...apiPaths.map((p) => `${base}${p}`),
+    ...subdomainApiPaths,
+  ]
   const getResults = await Promise.all(
-    apiPaths.map((p) => probeEndpoint(`${base}${p}`, 'GET', globalSignal))
+    allApiUrls.map((url) => probeEndpoint(url, 'GET', globalSignal))
   )
   const getHits = getResults.filter((r) => endpointExists(r))
 

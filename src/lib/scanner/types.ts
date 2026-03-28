@@ -190,3 +190,63 @@ export function endpointExists(probe: ProbeResult): boolean {
     probe.status === 405
   )
 }
+
+// ---------------------------------------------------------------------------
+// Subdomain discovery helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Extract the registrable domain from a URL for subdomain probing.
+ * e.g., "https://stripe.com/foo" -> "stripe.com"
+ *       "https://www.stripe.com" -> "stripe.com"
+ */
+export function extractDomain(base: string): string {
+  try {
+    const hostname = new URL(base).hostname.replace(/^www\./, '')
+    return hostname
+  } catch {
+    return ''
+  }
+}
+
+/**
+ * Generate common API-related subdomain URLs for a given base URL.
+ * Returns array of base URLs to probe (e.g., "https://api.stripe.com").
+ */
+export function getApiSubdomains(base: string): string[] {
+  const domain = extractDomain(base)
+  if (!domain) return []
+  return [
+    `https://api.${domain}`,
+    `https://developer.${domain}`,
+    `https://developers.${domain}`,
+  ]
+}
+
+/**
+ * Generate common infrastructure subdomain URLs.
+ * Returns URLs for status pages, docs, auth, etc.
+ */
+export function getInfraSubdomains(base: string): string[] {
+  const domain = extractDomain(base)
+  if (!domain) return []
+  return [
+    `https://docs.${domain}`,
+    `https://status.${domain}`,
+    `https://connect.${domain}`,
+    `https://auth.${domain}`,
+    `https://dashboard.${domain}`,
+  ]
+}
+
+/**
+ * Probe multiple URLs in parallel and return all results (including failures).
+ * Useful for subdomain discovery where most will fail.
+ */
+export async function probeMultiple(
+  urls: string[],
+  method: 'GET' | 'HEAD' | 'OPTIONS' = 'GET',
+  globalSignal?: AbortSignal
+): Promise<ProbeResult[]> {
+  return Promise.all(urls.map((url) => probeEndpoint(url, method, globalSignal)))
+}

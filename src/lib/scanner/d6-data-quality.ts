@@ -6,7 +6,7 @@
 // ---------------------------------------------------------------------------
 
 import type { DimensionResult, Check, Recommendation } from './types'
-import { probeEndpoint, isJsonContentType } from './types'
+import { probeEndpoint, isJsonContentType, getApiSubdomains } from './types'
 
 /** Recursively collect all keys and values from a JSON object */
 function flattenObject(
@@ -77,8 +77,22 @@ export async function scanDataQuality(
     '/.well-known/mcp.json',
   ]
 
+  // Also probe API subdomains for JSON responses
+  const apiSubdomains = getApiSubdomains(base)
+  const subdomainSamplePaths = apiSubdomains.flatMap((sub) => [
+    sub,
+    `${sub}/v1`,
+    `${sub}/health`,
+    `${sub}/status`,
+  ])
+
+  const allSampleUrls = [
+    ...samplePaths.map((p) => `${base}${p}`),
+    ...subdomainSamplePaths,
+  ]
+
   const sampleResults = await Promise.all(
-    samplePaths.map((p) => probeEndpoint(`${base}${p}`, 'GET', globalSignal))
+    allSampleUrls.map((url) => probeEndpoint(url, 'GET', globalSignal))
   )
 
   const jsonResponses = sampleResults.filter(

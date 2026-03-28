@@ -78,7 +78,7 @@ export default function Navbar() {
           {/* Mobile menu button */}
           <button
             type="button"
-            className="md:hidden p-2 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40"
+            className="md:hidden p-2.5 min-h-[44px] min-w-[44px] rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40 flex items-center justify-center"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={mobileOpen}

@@ -3,14 +3,11 @@ import { getServiceClient } from '@/lib/supabase'
 import {
   BarChart3,
   TrendingUp,
-  TrendingDown,
   Building2,
   ArrowRight,
   AlertTriangle,
   Award,
-  Target,
   Globe,
-  Zap,
   FileText,
 } from 'lucide-react'
 import type { Metadata } from 'next'
@@ -568,7 +565,7 @@ export default async function ReportPage() {
               subtitle="Agent readiness by vertical"
             />
 
-            <div className="mt-8 rounded-xl border border-zinc-800/80 overflow-hidden">
+            <div className="mt-8 rounded-xl border border-zinc-800/80 overflow-hidden overflow-x-auto">
               {/* Table header */}
               <div className="grid grid-cols-[1fr_5rem_6rem] gap-4 px-5 py-3 bg-zinc-900/80 text-[10px] font-medium text-zinc-500 uppercase tracking-wider border-b border-zinc-800/50">
                 <span>Industry</span>

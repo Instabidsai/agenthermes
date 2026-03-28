@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/supabase'
+import { requireAuth } from '@/lib/auth'
 
 /**
  * GET /api/v1/wallet?business_id=...
  * Returns the wallet for a given business.
  */
 export async function GET(request: NextRequest) {
+  const authError = requireAuth(request)
+  if (authError) return authError
+
   try {
     const businessId = request.nextUrl.searchParams.get('business_id')
 
@@ -25,7 +29,8 @@ export async function GET(request: NextRequest) {
       .maybeSingle()
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      console.error('[wallet] Query error:', error.message)
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 
     if (!wallet) {
@@ -37,7 +42,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(wallet)
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Internal server error'
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('[wallet] Unexpected error:', err instanceof Error ? err.message : err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

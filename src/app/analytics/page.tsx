@@ -195,7 +195,7 @@ export default function AnalyticsPage() {
       ) : data ? (
         <>
           {/* Stat Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
             <StatCard
               label="Profile Views"
               value={data.total_views}

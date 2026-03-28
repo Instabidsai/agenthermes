@@ -204,59 +204,61 @@ function DiscoverPageContent() {
 
       {/* Search & Filters */}
       <div className="mb-8 space-y-4">
-        <div className="flex gap-3">
-          {/* Search Input */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
-            <input
-              type="text"
-              placeholder="Search businesses, capabilities, domains..."
-              aria-label="Search businesses"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 rounded-lg bg-zinc-900/80 border border-zinc-800 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-colors"
-            />
-            {query && (
-              <button
-                type="button"
-                onClick={() => setQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded text-zinc-500 hover:text-zinc-300"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
+        <div className="space-y-3 sm:space-y-0">
+          <div className="flex gap-3">
+            {/* Search Input */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+              <input
+                type="text"
+                placeholder="Search businesses, capabilities, domains..."
+                aria-label="Search businesses"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 rounded-lg bg-zinc-900/80 border border-zinc-800 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-colors"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => setQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded text-zinc-500 hover:text-zinc-300"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Semantic Search Toggle */}
+            <button
+              type="button"
+              onClick={() => setSemanticMode(!semanticMode)}
+              className={clsx(
+                'flex items-center gap-2 px-4 py-3 rounded-lg border text-sm font-medium transition-colors',
+                semanticMode
+                  ? 'border-emerald-500/50 text-emerald-400 bg-emerald-500/5'
+                  : 'border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
+              )}
+              title="Toggle semantic search mode for natural language queries"
+            >
+              <Zap className="h-4 w-4" />
+              <span className="hidden sm:inline">Smart Search</span>
+            </button>
+
+            {/* Filter Toggle */}
+            <button
+              type="button"
+              onClick={() => setShowFilters(!showFilters)}
+              className={clsx(
+                'flex items-center gap-2 px-4 py-3 rounded-lg border text-sm font-medium transition-colors',
+                showFilters
+                  ? 'border-emerald-500/50 text-emerald-400 bg-emerald-500/5'
+                  : 'border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
+              )}
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              <span className="hidden sm:inline">Filters</span>
+            </button>
           </div>
-
-          {/* Semantic Search Toggle */}
-          <button
-            type="button"
-            onClick={() => setSemanticMode(!semanticMode)}
-            className={clsx(
-              'flex items-center gap-2 px-4 py-3 rounded-lg border text-sm font-medium transition-colors',
-              semanticMode
-                ? 'border-emerald-500/50 text-emerald-400 bg-emerald-500/5'
-                : 'border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
-            )}
-            title="Toggle semantic search mode for natural language queries"
-          >
-            <Zap className="h-4 w-4" />
-            Smart Search
-          </button>
-
-          {/* Filter Toggle */}
-          <button
-            type="button"
-            onClick={() => setShowFilters(!showFilters)}
-            className={clsx(
-              'flex items-center gap-2 px-4 py-3 rounded-lg border text-sm font-medium transition-colors',
-              showFilters
-                ? 'border-emerald-500/50 text-emerald-400 bg-emerald-500/5'
-                : 'border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
-            )}
-          >
-            <SlidersHorizontal className="h-4 w-4" />
-            Filters
-          </button>
         </div>
 
         {/* Filter Row */}

@@ -683,7 +683,7 @@ function RemediatePageContent() {
 
       {/* Domain Input */}
       <div className="mb-10">
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
             <input
@@ -702,7 +702,7 @@ function RemediatePageContent() {
             type="button"
             onClick={fetchScore}
             disabled={phase === 'loading' || !domainInput.trim()}
-            className="px-6 py-3.5 rounded-lg bg-amber-600 hover:bg-amber-500 disabled:bg-amber-800 disabled:text-amber-400 text-white font-semibold text-sm transition-colors flex items-center gap-2"
+            className="w-full sm:w-auto px-6 py-3.5 rounded-lg bg-amber-600 hover:bg-amber-500 disabled:bg-amber-800 disabled:text-amber-400 text-white font-semibold text-sm transition-colors flex items-center justify-center gap-2"
           >
             {phase === 'loading' ? (
               <>

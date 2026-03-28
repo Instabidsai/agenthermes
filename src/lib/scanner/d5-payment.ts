@@ -6,7 +6,7 @@
 // ---------------------------------------------------------------------------
 
 import type { DimensionResult, Check, Recommendation } from './types'
-import { probeEndpoint, endpointExists } from './types'
+import { probeEndpoint, endpointExists, getApiSubdomains } from './types'
 
 export async function scanPayment(
   base: string,
@@ -31,8 +31,23 @@ export async function scanPayment(
     '/api/subscribe',
     '/api/v1/subscribe',
   ]
+  // Also check API subdomains for payment endpoints
+  const apiSubdomains = getApiSubdomains(base)
+  const subdomainPaymentPaths = apiSubdomains.flatMap((sub) => [
+    sub,
+    `${sub}/v1`,
+    `${sub}/v1/charges`,
+    `${sub}/v1/payment_intents`,
+    `${sub}/v1/checkout/sessions`,
+    `${sub}/v1/billing`,
+    `${sub}/v1/subscriptions`,
+  ])
+  const allPaymentUrls = [
+    ...paymentPaths.map((p) => `${base}${p}`),
+    ...subdomainPaymentPaths,
+  ]
   const paymentResults = await Promise.all(
-    paymentPaths.map((p) => probeEndpoint(`${base}${p}`, 'GET', globalSignal))
+    allPaymentUrls.map((url) => probeEndpoint(url, 'GET', globalSignal))
   )
   const paymentHits = paymentResults.filter((r) => endpointExists(r))
 
@@ -115,8 +130,20 @@ export async function scanPayment(
     '/api/billing/usage',
     '/api/v1/billing/usage',
   ]
+  // Also check API subdomains for programmatic payment endpoints
+  const subdomainProgPaths = apiSubdomains.flatMap((sub) => [
+    `${sub}/v1/payment_intents`,
+    `${sub}/v1/checkout/sessions`,
+    `${sub}/v1/charges`,
+    `${sub}/v1/invoices`,
+    `${sub}/v1/usage_records`,
+  ])
+  const allProgUrls = [
+    ...programmaticPaths.map((p) => `${base}${p}`),
+    ...subdomainProgPaths,
+  ]
   const progResults = await Promise.all(
-    programmaticPaths.map((p) => probeEndpoint(`${base}${p}`, 'GET', globalSignal))
+    allProgUrls.map((url) => probeEndpoint(url, 'GET', globalSignal))
   )
   const progHits = progResults.filter((r) => endpointExists(r))
 

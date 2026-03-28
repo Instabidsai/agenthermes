@@ -237,14 +237,14 @@ function AuditPageContent() {
           Your Agent Readiness Score
         </h1>
         <p className="text-zinc-400 max-w-lg mx-auto">
-          Enter your domain to get scored across 5 categories of AI agent readiness.
+          Enter your domain to get scored across 9 dimensions of AI agent readiness.
           Free. Takes 10-30 seconds.
         </p>
       </div>
 
       {/* Input */}
       <div className="mb-10">
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
             <input
@@ -262,7 +262,7 @@ function AuditPageContent() {
             type="button"
             onClick={runAudit}
             disabled={audit.phase === 'running' || !domainInput.trim()}
-            className="px-6 py-3.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 disabled:text-emerald-400 text-white font-semibold text-sm transition-colors flex items-center gap-2"
+            className="w-full sm:w-auto px-6 py-3.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 disabled:text-emerald-400 text-white font-semibold text-sm transition-colors flex items-center justify-center gap-2"
           >
             {audit.phase === 'running' ? (
               <>
@@ -329,7 +329,7 @@ function AuditPageContent() {
               </div>
 
               {/* Massive numeric score */}
-              <div className={clsx('text-7xl sm:text-8xl font-black tabular-nums tracking-tight mb-2', getScoreColor(audit.totalScore))}>
+              <div className={clsx('text-6xl sm:text-7xl md:text-8xl font-black tabular-nums tracking-tight mb-2', getScoreColor(audit.totalScore))}>
                 {audit.totalScore}
               </div>
               <div className="mb-4" />

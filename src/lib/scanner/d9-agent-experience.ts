@@ -6,7 +6,7 @@
 // ---------------------------------------------------------------------------
 
 import type { DimensionResult, Check, Recommendation } from './types'
-import { probeEndpoint, isJsonContentType, hasField } from './types'
+import { probeEndpoint, isJsonContentType, hasField, getApiSubdomains } from './types'
 
 export async function scanAgentExperience(
   base: string,
@@ -26,8 +26,21 @@ export async function scanAgentExperience(
     '/status',
   ]
 
+  // Also probe API subdomains for headers (X-Request-ID, versioning, etc.)
+  const apiSubdomains = getApiSubdomains(base)
+  const subdomainProbePaths = apiSubdomains.flatMap((sub) => [
+    sub,
+    `${sub}/v1`,
+    `${sub}/health`,
+  ])
+
+  const allProbeUrls = [
+    ...probePaths.map((p) => `${base}${p}`),
+    ...subdomainProbePaths,
+  ]
+
   const probeResults = await Promise.all(
-    probePaths.map((p) => probeEndpoint(`${base}${p}`, 'GET', globalSignal))
+    allProbeUrls.map((url) => probeEndpoint(url, 'GET', globalSignal))
   )
   const successfulProbes = probeResults.filter(
     (r) => r.status !== null
@@ -85,19 +98,15 @@ export async function scanAgentExperience(
   // -----------------------------------------------------------------------
   // 2. Structured error responses (up to 25 pts)
   // -----------------------------------------------------------------------
-  // Deliberately trigger error responses
-  const errorProbes = await Promise.all([
-    probeEndpoint(
-      `${base}/api/nonexistent-endpoint-${Date.now()}`,
-      'GET',
-      globalSignal
-    ),
-    probeEndpoint(
-      `${base}/api/v1/nonexistent-endpoint-${Date.now()}`,
-      'GET',
-      globalSignal
-    ),
-  ])
+  // Deliberately trigger error responses (also on API subdomains)
+  const errorProbeUrls = [
+    `${base}/api/nonexistent-endpoint-${Date.now()}`,
+    `${base}/api/v1/nonexistent-endpoint-${Date.now()}`,
+    ...apiSubdomains.map((sub) => `${sub}/v1/nonexistent-endpoint-${Date.now()}`),
+  ]
+  const errorProbes = await Promise.all(
+    errorProbeUrls.map((url) => probeEndpoint(url, 'GET', globalSignal))
+  )
 
   const errorResponses = errorProbes.filter(
     (r) => r.status !== null && r.status >= 400
@@ -255,9 +264,24 @@ export async function scanAgentExperience(
     '/docs/sdks',
     '/docs/libraries',
     '/developers/sdks',
+    '/docs/api/libraries',
+  ]
+  // Also check docs subdomains for SDK references
+  const sdkSubdomainUrls = apiSubdomains.flatMap((sub) => {
+    const parts = new URL(sub)
+    const domain = parts.hostname.replace(/^api\./, '')
+    return [
+      `https://docs.${domain}/sdks`,
+      `https://docs.${domain}/libraries`,
+      `https://docs.${domain}/api/libraries`,
+    ]
+  })
+  const allSdkUrls = [
+    ...sdkPaths.map((p) => `${base}${p}`),
+    ...sdkSubdomainUrls,
   ]
   const sdkResults = await Promise.all(
-    sdkPaths.map((p) => probeEndpoint(`${base}${p}`, 'GET', globalSignal))
+    allSdkUrls.map((url) => probeEndpoint(url, 'GET', globalSignal))
   )
   const sdkHits = sdkResults.filter((r) => r.found)
 

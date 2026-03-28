@@ -6,7 +6,7 @@
 // ---------------------------------------------------------------------------
 
 import type { DimensionResult, Check, Recommendation } from './types'
-import { probeEndpoint, isJsonContentType, hasField } from './types'
+import { probeEndpoint, isJsonContentType, hasField, getApiSubdomains, extractDomain } from './types'
 
 export async function scanReliability(
   base: string,
@@ -31,8 +31,29 @@ export async function scanReliability(
     '/livez',
   ]
 
+  // Also check API subdomains and status subdomains
+  const apiSubdomains = getApiSubdomains(base)
+  const domain = extractDomain(base)
+  const statusSubdomains = domain ? [
+    `https://status.${domain}`,
+    `https://status.${domain}/api/v2/status.json`,  // Statuspage.io format
+    `https://status.${domain}/api/v2/summary.json`,
+  ] : []
+  const subdomainHealthPaths = apiSubdomains.flatMap((sub) => [
+    `${sub}/health`,
+    `${sub}/v1/health`,
+    `${sub}/status`,
+    `${sub}/healthz`,
+  ])
+
+  const allHealthUrls = [
+    ...healthPaths.map((p) => `${base}${p}`),
+    ...subdomainHealthPaths,
+    ...statusSubdomains,
+  ]
+
   const healthResults = await Promise.all(
-    healthPaths.map((p) => probeEndpoint(`${base}${p}`, 'GET', globalSignal))
+    allHealthUrls.map((url) => probeEndpoint(url, 'GET', globalSignal))
   )
   const healthHit = healthResults.find((r) => r.found)
 
@@ -201,8 +222,16 @@ export async function scanReliability(
     '/api/v1/status',
     '/system-status',
   ]
+  // Also check status subdomain (status.stripe.com, status.anthropic.com, etc.)
+  const slaSubdomainUrls = domain ? [
+    `https://status.${domain}`,
+  ] : []
+  const allSlaUrls = [
+    ...slaPaths.map((p) => `${base}${p}`),
+    ...slaSubdomainUrls,
+  ]
   const slaResults = await Promise.all(
-    slaPaths.map((p) => probeEndpoint(`${base}${p}`, 'GET', globalSignal))
+    allSlaUrls.map((url) => probeEndpoint(url, 'GET', globalSignal))
   )
   const slaHit = slaResults.find((r) => r.found)
 
@@ -258,6 +287,10 @@ export async function scanReliability(
   // -----------------------------------------------------------------------
   const allHeaders = { ...homepageResult.headers }
   for (const r of timingResults) {
+    Object.assign(allHeaders, r.headers)
+  }
+  // Also check API subdomain headers for rate-limit / retry hints
+  for (const r of healthResults) {
     Object.assign(allHeaders, r.headers)
   }
 

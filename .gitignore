@@ -34,3 +34,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# test result files
+TEST-RESULTS.md
+EDGE-CASE-RESULTS.md
+LIVE-TEST-RESULTS.md
+REAL-SCAN-RESULTS.md
+OVERNIGHT-LOG.md

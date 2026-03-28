@@ -121,24 +121,27 @@ export async function scanPricing(
   const humanPricing = humanResults.find((r) => r.found)
 
   if (humanPricing) {
-    rawScore += 10
+    rawScore += 15
     checks.push({
       name: 'Pricing Page',
       passed: true,
       details: `Human-readable pricing page at ${humanPricing.url}`,
-      points: 10,
+      points: 15,
     })
 
     // Bonus: check for structured pricing indicators in the HTML
     const body = typeof humanPricing.body === 'string' ? humanPricing.body : ''
     const hasTableOrCards =
       /pricing-table|pricing-card|plan-card|price-card|<table/i.test(body)
-    if (hasTableOrCards) {
+    // Also check for actual price strings in the content
+    const hasPriceStrings =
+      /\$\d+|\d+%|per.?(call|transaction|month|year|unit|request|api|1k|100k|million)/i.test(body)
+    if (hasTableOrCards || hasPriceStrings) {
       rawScore += 5
       checks.push({
-        name: 'Pricing Comparison Layout',
+        name: 'Pricing Content Quality',
         passed: true,
-        details: 'Pricing page includes comparison table or cards',
+        details: `Pricing page includes ${hasTableOrCards ? 'comparison table/cards' : ''}${hasTableOrCards && hasPriceStrings ? ' and ' : ''}${hasPriceStrings ? 'explicit price figures' : ''}`,
         points: 5,
       })
     }
