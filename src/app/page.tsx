@@ -133,6 +133,21 @@ export default async function HomePage() {
     }
   }
 
+  const speakableJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "AgentHermes — Agent Readiness Score",
+    "url": "https://agenthermes.ai",
+    "speakable": {
+      "@type": "SpeakableSpecification",
+      "cssSelector": [
+        ".hero-headline",
+        ".hero-description",
+        ".faq-section"
+      ]
+    }
+  }
+
   const faqJsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -188,6 +203,10 @@ export default async function HomePage() {
       />
       <script
         type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(speakableJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
       {/* Hero — Score First */}
@@ -204,13 +223,13 @@ export default async function HomePage() {
               The FICO of the Agent Economy
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-5">
+            <h1 className="hero-headline text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-5">
               What&apos;s Your{' '}
               <span className="text-emerald-500">Agent Readiness</span>{' '}
               Score?
             </h1>
 
-            <p className="text-lg sm:text-xl text-zinc-300 leading-relaxed tracking-tight max-w-2xl mx-auto mb-10">
+            <p className="hero-description text-lg sm:text-xl text-zinc-300 leading-relaxed tracking-tight max-w-2xl mx-auto mb-10">
               AI agents are already choosing which businesses to transact with. See if yours makes the cut.
             </p>
 
@@ -372,7 +391,7 @@ export default async function HomePage() {
       </section>
 
       {/* Why Your Score Matters */}
-      <section className="py-20 sm:py-28 border-t border-zinc-800/50">
+      <section className="faq-section py-20 sm:py-28 border-t border-zinc-800/50">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-6">

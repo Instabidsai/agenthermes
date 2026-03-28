@@ -67,9 +67,11 @@ export default async function RecentlyScanned() {
               {/* Score */}
               <div className="text-right flex-shrink-0">
                 <span className="text-sm font-mono font-bold tabular-nums text-zinc-300">
-                  {biz.audit_score}
+                  {biz.audit_score != null ? biz.audit_score : '—'}
                 </span>
-                <span className="text-xs text-zinc-600">/100</span>
+                {biz.audit_score != null && (
+                  <span className="text-xs text-zinc-600">/100</span>
+                )}
               </div>
 
               {/* Tier badge */}
@@ -79,7 +81,7 @@ export default async function RecentlyScanned() {
 
               {/* Time ago */}
               <span className="text-xs text-zinc-600 flex-shrink-0 w-16 text-right tabular-nums">
-                {timeAgo(biz.updated_at)}
+                {biz.updated_at ? timeAgo(biz.updated_at) : '—'}
               </span>
             </Link>
           ))}

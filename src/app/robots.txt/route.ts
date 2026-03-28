@@ -2,9 +2,11 @@ import { NextResponse } from 'next/server'
 
 const robotsTxt = `User-agent: *
 Allow: /
+Allow: /score/
 Allow: /api/v1/score/
 Allow: /api/v1/discover
 Allow: /api/badge/
+Allow: /api/nlweb
 Disallow: /dashboard
 Disallow: /analytics
 Disallow: /api/v1/wallet

@@ -137,7 +137,7 @@ async function routeQuery(query: string): Promise<NLWebResponse> {
   }
 
   // --- Pattern: tier distribution / breakdown ---
-  if (q.includes('distribution') || q.includes('breakdown') || q.includes('tier') && (q.includes('how many') || q.includes('count'))) {
+  if (q.includes('distribution') || q.includes('breakdown') || (q.includes('tier') && (q.includes('how many') || q.includes('count')))) {
     return await tierDistribution(query)
   }
 
@@ -153,11 +153,23 @@ async function routeQuery(query: string): Promise<NLWebResponse> {
 async function lookupBusinessScore(term: string, query: string): Promise<NLWebResponse> {
   const db = getServiceClient()
 
+  // Sanitize term to prevent PostgREST filter injection (commas, dots, parens break .or() syntax)
+  const safeTerm = term.replace(/[^a-zA-Z0-9\s-]/g, '')
+  if (!safeTerm) {
+    return {
+      query,
+      answer: `No valid search term found in "${term}".`,
+      data: null,
+      source: 'agenthermes.ai',
+      timestamp: new Date().toISOString(),
+    }
+  }
+
   // Try domain match first, then name/slug
   let result = await db
     .from('businesses')
     .select('name, domain, slug, audit_score, audit_tier, updated_at')
-    .or(`domain.ilike.%${term}%,name.ilike.%${term}%,slug.ilike.%${term}%`)
+    .or(`domain.ilike.%${safeTerm}%,name.ilike.%${safeTerm}%,slug.ilike.%${safeTerm}%`)
     .order('audit_score', { ascending: false })
     .limit(1)
 
@@ -218,11 +230,11 @@ async function queryByTier(tier: string, query: string): Promise<NLWebResponse> 
 
 async function computeAverageScore(query: string): Promise<NLWebResponse> {
   const db = getServiceClient()
-  const { data } = await db.from('businesses').select('audit_score')
+  const { data } = await db.from('businesses').select('audit_score').not('audit_score', 'is', null)
 
-  const scores = ((data as Record<string, any>[] | null) || []).map(
-    (r) => r.audit_score as number
-  )
+  const scores = ((data as Record<string, any>[] | null) || [])
+    .map((r) => r.audit_score as number)
+    .filter((s) => typeof s === 'number' && !Number.isNaN(s))
   const count = scores.length
 
   if (count === 0) {
@@ -413,8 +425,17 @@ async function fallbackSearch(query: string): Promise<NLWebResponse> {
     }
   }
 
-  // Search by the first meaningful term
-  const searchTerm = terms[0]
+  // Search by the first meaningful term (already sanitized by regex above, but double-check)
+  const searchTerm = terms[0].replace(/[^a-zA-Z0-9\s-]/g, '')
+  if (!searchTerm) {
+    return {
+      query,
+      answer: "I couldn't understand that query. Try asking about a specific business score, tier, or aggregate stat.",
+      data: null,
+      source: 'agenthermes.ai',
+      timestamp: new Date().toISOString(),
+    }
+  }
   const { data } = await db
     .from('businesses')
     .select('name, domain, slug, audit_score, audit_tier')

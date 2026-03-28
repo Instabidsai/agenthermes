@@ -218,17 +218,9 @@ export async function generateMetadata({
       url: `https://agenthermes.ai/score/${encodeURIComponent(decodedDomain)}`,
       siteName: 'AgentHermes',
       type: 'website',
-      images: [
-        {
-          url: `/api/badge/${encodeURIComponent(decodedDomain)}`,
-          width: 190,
-          height: 28,
-          alt: `Agent Readiness badge for ${displayName}`,
-        },
-      ],
     },
     twitter: {
-      card: 'summary',
+      card: 'summary_large_image',
       title: `${displayName} — ${scoreText} | AgentHermes`,
       description: `Agent Readiness Score for ${displayName}. Full 9-dimension breakdown.`,
     },

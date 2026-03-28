@@ -140,12 +140,21 @@ export default function ConnectPage() {
 
   // -- validation per step --
 
+  function isValidUrl(str: string): boolean {
+    try {
+      const url = new URL(str)
+      return url.protocol === 'http:' || url.protocol === 'https:'
+    } catch {
+      return false
+    }
+  }
+
   function canAdvance(): boolean {
     switch (step) {
       case 1:
         return form.name.trim().length > 0
       case 2:
-        return form.api_base_url.trim().length > 0
+        return form.api_base_url.trim().length > 0 && isValidUrl(form.api_base_url.trim())
       case 3:
         return form.actions.length > 0 && form.actions.every(
           (a) => a.name.trim().length > 0 && a.path.trim().length > 0
