@@ -21,17 +21,17 @@ export async function GET() {
     { loc: '/changelog', priority: '0.5', changefreq: 'weekly' },
   ]
 
-  // Dynamic business profile pages
-  let businessSlugs: { slug: string; updated_at: string }[] = []
+  // Dynamic business profile pages + score pages
+  let businessSlugs: { slug: string; domain: string | null; updated_at: string }[] = []
   try {
     const db = getServiceClient()
     const { data } = await db
       .from('businesses')
-      .select('slug, updated_at')
+      .select('slug, domain, updated_at')
       .order('audit_score', { ascending: false })
       .limit(5000)
 
-    businessSlugs = (data || []) as { slug: string; updated_at: string }[]
+    businessSlugs = (data || []) as { slug: string; domain: string | null; updated_at: string }[]
   } catch (err) {
     console.error('[sitemap] Failed to fetch businesses:', err instanceof Error ? err.message : err)
   }
@@ -58,10 +58,23 @@ export async function GET() {
     )
     .join('\n')
 
+  const scoreEntries = businessSlugs
+    .filter((b) => b.domain)
+    .map(
+      (b) => `  <url>
+    <loc>${baseUrl}/score/${encodeURIComponent(b.domain!)}</loc>
+    <lastmod>${b.updated_at || now}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>`
+    )
+    .join('\n')
+
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${staticEntries}
 ${businessEntries}
+${scoreEntries}
 </urlset>`
 
   return new NextResponse(xml, {

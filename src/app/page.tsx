@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { getServiceClient } from '@/lib/supabase'
 import HeroScanForm from '@/components/HeroScanForm'
+import RecentlyScanned from '@/components/RecentlyScanned'
 import { FadeIn } from '@/components/FadeIn'
 
 export const revalidate = 60
@@ -243,6 +244,11 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Recently Scanned — social proof */}
+      <Suspense fallback={null}>
+        <RecentlyScanned />
+      </Suspense>
 
       {/* How It Works */}
       <section className="py-20 sm:py-28">
