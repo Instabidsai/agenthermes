@@ -325,6 +325,34 @@ function scoreBarColor(score: number): string {
 // Page Component
 // ---------------------------------------------------------------------------
 
+const datasetJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Dataset",
+  "name": "State of Agent Readiness Q1 2026",
+  "description": "Agent readiness scores for 45+ businesses across multiple industries. Covers 9 dimensions of AI agent readiness including discoverability, interoperability, onboarding, pricing, payment acceptance, data quality, security, reliability, and agent experience.",
+  "url": "https://agenthermes.ai/report",
+  "creator": {
+    "@type": "Organization",
+    "name": "AgentHermes",
+    "url": "https://agenthermes.ai"
+  },
+  "temporalCoverage": "2026-01/2026-03",
+  "license": "https://agenthermes.ai/terms",
+  "distribution": {
+    "@type": "DataDownload",
+    "encodingFormat": "application/json",
+    "contentUrl": "https://agenthermes.ai/api/v1/report"
+  },
+  "variableMeasured": [
+    { "@type": "PropertyValue", "name": "Agent Readiness Score", "minValue": 0, "maxValue": 100 },
+    { "@type": "PropertyValue", "name": "Machine-Readable Profile Score", "minValue": 0, "maxValue": 20 },
+    { "@type": "PropertyValue", "name": "MCP & API Endpoints Score", "minValue": 0, "maxValue": 20 },
+    { "@type": "PropertyValue", "name": "Agent-Native Onboarding Score", "minValue": 0, "maxValue": 20 },
+    { "@type": "PropertyValue", "name": "Structured Pricing Score", "minValue": 0, "maxValue": 20 },
+    { "@type": "PropertyValue", "name": "Agent Payment Acceptance Score", "minValue": 0, "maxValue": 20 }
+  ]
+}
+
 export default async function ReportPage() {
   let report: ReportData
 
@@ -360,6 +388,10 @@ export default async function ReportPage() {
 
   return (
     <div className="relative">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(datasetJsonLd) }}
+      />
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.03)_1px,transparent_1px)] bg-[size:64px_64px]" />

@@ -13,6 +13,11 @@ import {
   Activity,
   Layers,
   Quote,
+  Clock,
+  CreditCard,
+  Zap,
+  Compass,
+  Code2,
 } from 'lucide-react'
 import { getServiceClient } from '@/lib/supabase'
 import HeroScanForm from '@/components/HeroScanForm'
@@ -127,11 +132,62 @@ export default async function HomePage() {
     }
   }
 
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is an Agent Readiness Score?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "An Agent Readiness Score is a 0-100 rating that measures how well a business can be discovered, used, and paid by AI agents. It evaluates machine-readable profiles, API endpoints, onboarding flows, structured pricing, payment acceptance, data quality, security posture, reliability, and overall agent experience."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How is the Agent Readiness Score calculated?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "We scan 9 dimensions: Discoverability, Interoperability, Onboarding, Pricing, Payment, Data Quality, Security, Reliability, and Agent Experience. Each dimension is scored individually and combined into a weighted overall score from 0 to 100."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What are the Agent Readiness tiers?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Platinum (90-100): Certified, battle-tested, zero-friction. Gold (75-89): Fully agent-native. Silver (60-74): Agent-usable with friction. Bronze (40-59): Partially discoverable. Not Scored (0-39): Invisible to AI agents."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is the Agent Readiness Score free?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, scanning is completely free. Enter any URL and get your score in seconds. No signup or credit card required."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How can I improve my Agent Readiness Score?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Add an A2A Agent Card, publish llms.txt, expose MCP endpoints, add structured pricing with machine-readable formats, enable programmatic payment flows, and implement API-based onboarding. AgentHermes provides specific recommendations and auto-remediation tools to help you improve each dimension."
+        }
+      }
+    ]
+  }
+
   return (
     <div className="relative">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
       {/* Hero — Score First */}
       <section className="relative overflow-hidden">

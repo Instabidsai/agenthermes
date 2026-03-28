@@ -152,9 +152,64 @@ function FeatureCell({ value }: { value: boolean | string }) {
   return <span className="text-zinc-700 text-sm">&mdash;</span>
 }
 
+const pricingJsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "AgentHermes Free",
+    "description": "Get started instantly with unlimited scans, public score page, and basic SVG badge. No credit card required.",
+    "brand": { "@type": "Brand", "name": "AgentHermes" },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+      "priceValidUntil": "2027-01-01",
+      "availability": "https://schema.org/InStock",
+      "url": "https://agenthermes.ai/pricing"
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "AgentHermes Pro",
+    "description": "Continuous monitoring for growing businesses. Daily re-scans, premium badge, improvement recommendations, email alerts, and analytics dashboard for up to 5 businesses.",
+    "brand": { "@type": "Brand", "name": "AgentHermes" },
+    "offers": {
+      "@type": "Offer",
+      "price": "49",
+      "priceCurrency": "USD",
+      "priceValidUntil": "2027-01-01",
+      "availability": "https://schema.org/InStock",
+      "url": "https://agenthermes.ai/pricing"
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "AgentHermes Business",
+    "description": "Auto-remediation and scale for agencies and teams. Includes auto-remediation tools, mystery shopper testing, priority support, and batch scan API for up to 25 businesses.",
+    "brand": { "@type": "Brand", "name": "AgentHermes" },
+    "offers": {
+      "@type": "Offer",
+      "price": "199",
+      "priceCurrency": "USD",
+      "priceValidUntil": "2027-01-01",
+      "availability": "https://schema.org/InStock",
+      "url": "https://agenthermes.ai/pricing"
+    }
+  }
+]
+
 export default function PricingPage() {
   return (
     <div className="relative">
+      {pricingJsonLd.map((product, i) => (
+        <script
+          key={i}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(product) }}
+        />
+      ))}
       {/* Header */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.03)_1px,transparent_1px)] bg-[size:64px_64px]" />

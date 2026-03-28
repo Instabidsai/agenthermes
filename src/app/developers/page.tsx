@@ -148,9 +148,37 @@ const tocItems = [
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 
+const softwareAppJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "AgentHermes API",
+  "description": "REST API and MCP server for AI agent-to-business discovery, scoring, and transactions. Scan businesses for agent readiness, query the network, and initiate payments programmatically.",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Web",
+  "url": "https://agenthermes.ai/developers",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD",
+    "description": "Free tier with unlimited scans, score API, and MCP access. Paid plans available for monitoring, remediation, and enterprise features."
+  },
+  "featureList": [
+    "Agent Readiness Score API",
+    "MCP Server with 7 tools",
+    "Business discovery and search",
+    "Wallet-to-wallet payments",
+    ".well-known/agent-hermes.json verification",
+    "OpenAPI specification"
+  ]
+}
+
 export default function DevelopersPage() {
   return (
     <div className="relative">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareAppJsonLd) }}
+      />
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.03)_1px,transparent_1px)] bg-[size:64px_64px]" />
