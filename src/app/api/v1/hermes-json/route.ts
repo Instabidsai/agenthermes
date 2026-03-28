@@ -106,7 +106,7 @@ function computeDimensions(
 }
 
 // ---------------------------------------------------------------------------
-// Tier from score (matches audit-engine.ts)
+// Tier from score (matches scanner/index.ts)
 // ---------------------------------------------------------------------------
 
 function tierFromScore(score: number): string {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { runAudit, tierFromScore, normalizeUrl } from '@/lib/audit-engine'
+import { runScan, normalizeUrl } from '@/lib/scanner'
 import { getServiceClient } from '@/lib/supabase'
 import { notifyTierPromotion } from '@/lib/hive-brain'
 import { rateLimit, getRateLimitHeaders } from '@/lib/auth'
@@ -28,9 +28,9 @@ export async function POST(req: NextRequest) {
     const rawUrl: string = body.url.trim()
 
     // -----------------------------------------------------------------------
-    // 1. Run the audit
+    // 1. Run the 9-dimension scan (replaces old 5-category runAudit)
     // -----------------------------------------------------------------------
-    const scorecard = await runAudit(rawUrl)
+    const scanResult = await runScan(rawUrl)
 
     // -----------------------------------------------------------------------
     // 2. Persist to Supabase
@@ -40,29 +40,32 @@ export async function POST(req: NextRequest) {
       .replace(/^https?:\/\//, '')
       .replace(/^www\./, '')
 
+    // Derive business name from domain
+    let businessName = domain.split('.')[0] ?? domain
+    businessName = businessName.charAt(0).toUpperCase() + businessName.slice(1)
+
+    // Find dimension results for backward-compatible fields
+    const d1 = scanResult.dimensions.find((d) => d.dimension === 'D1')
+    const d2 = scanResult.dimensions.find((d) => d.dimension === 'D2')
+    const d4 = scanResult.dimensions.find((d) => d.dimension === 'D4')
+
     // Upsert the business — create if not exists, update scores if exists
     const { data: businessRaw, error: bizError } = await db
       .from('businesses')
       .upsert(
         {
           domain,
-          name: scorecard.business_name,
+          name: businessName,
           slug: domain.replace(/[^a-z0-9]+/gi, '-').toLowerCase(),
-          audit_score: scorecard.total_score,
-          audit_tier: scorecard.tier,
-          pricing_visible: scorecard.categories.some(
-            (c) => c.category === 'structured_pricing' && c.score > 0
-          ),
-          agent_onboarding: scorecard.categories.some(
-            (c) => c.category === 'agent_native_onboarding' && c.score > 0
-          ),
-          a2a_agent_card: (scorecard.categories.find(
-            (c) => c.category === 'machine_readable_profile'
-          )?.details.agent_card_body as Record<string, unknown>) ?? null,
+          audit_score: scanResult.total_score,
+          audit_tier: scanResult.tier,
+          pricing_visible: (d4?.score ?? 0) > 0,
+          agent_onboarding: (d2?.score ?? 0) > 0,
+          a2a_agent_card: null,
           mcp_endpoints:
-            (scorecard.categories.find(
-              (c) => c.category === 'mcp_api_endpoints'
-            )?.details.mcp_endpoints_found as string[]) ?? [],
+            d2?.checks.find((c) => c.name === 'MCP Tools List')?.passed
+              ? [d2.checks.find((c) => c.name === 'MCP Tools List')!.details]
+              : [] as string[],
           updated_at: new Date().toISOString(),
         } as any,
         { onConflict: 'domain' }
@@ -75,27 +78,63 @@ export async function POST(req: NextRequest) {
       console.error('Business upsert error:', bizError)
       // Still return the scorecard even if DB write fails
       return NextResponse.json({
-        ...scorecard,
+        ...scanResult,
+        business_name: businessName,
         _db_error: 'Failed to save audit results. Scorecard is still valid.',
       })
     }
 
     const businessId = business.id
 
-    // Save individual category results
+    // Map 9 dimensions to 5 legacy audit_results categories for DB storage
     const now = new Date()
     const nextAudit = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) // 7 days
 
-    const auditRows = scorecard.categories.map((cat) => ({
-      business_id: businessId,
-      category: cat.category,
-      score: cat.score,
-      max_score: cat.max_score,
-      details: cat.details,
-      recommendations: cat.recommendations,
-      audited_at: now.toISOString(),
-      next_audit_at: nextAudit.toISOString(),
-    }))
+    const categoryMapping: Record<string, { category: string; dims: string[] }> = {
+      machine_readable_profile: { category: 'machine_readable_profile', dims: ['D1'] },
+      mcp_api_endpoints: { category: 'mcp_api_endpoints', dims: ['D2'] },
+      agent_native_onboarding: { category: 'agent_native_onboarding', dims: ['D3'] },
+      structured_pricing: { category: 'structured_pricing', dims: ['D4', 'D5'] },
+      agent_payment_acceptance: { category: 'agent_payment_acceptance', dims: ['D6', 'D7', 'D8', 'D9'] },
+    }
+
+    const auditRows = Object.entries(categoryMapping).map(([category, mapping]) => {
+      const dims = mapping.dims
+        .map((id) => scanResult.dimensions.find((d) => d.dimension === id))
+        .filter(Boolean) as typeof scanResult.dimensions
+
+      const avgDimScore =
+        dims.length > 0
+          ? dims.reduce((sum, d) => sum + d.score, 0) / dims.length
+          : 0
+      const scaledScore = Math.round((avgDimScore / 100) * 20)
+
+      const details: Record<string, unknown> = {
+        scanner_version: '2.0',
+        dimensions: dims.map((d) => ({
+          dimension: d.dimension,
+          label: d.label,
+          score: d.score,
+          weight: d.weight,
+          checks: d.checks,
+        })),
+      }
+
+      const recommendations = dims.flatMap((d) =>
+        d.recommendations.map((r) => `[${d.label}] ${r.action}`)
+      )
+
+      return {
+        business_id: businessId,
+        category,
+        score: scaledScore,
+        max_score: 20,
+        details,
+        recommendations,
+        audited_at: now.toISOString(),
+        next_audit_at: nextAudit.toISOString(),
+      }
+    })
 
     // Delete previous audit results for this business, then insert new ones
     const { error: deleteError } = await db
@@ -117,25 +156,26 @@ export async function POST(req: NextRequest) {
 
     // Fire webhook for score change (fire-and-forget)
     fireWebhook('score_change', {
-      business: { id: businessId, name: scorecard.business_name, domain },
-      score: scorecard.total_score,
-      tier: scorecard.tier,
+      business: { id: businessId, name: businessName, domain },
+      score: scanResult.total_score,
+      tier: scanResult.tier,
     })
 
     // Notify Hive Brain + fire webhook for Gold+ tier promotions
-    if (scorecard.tier === 'gold' || scorecard.tier === 'platinum') {
-      notifyTierPromotion(scorecard.business_name, scorecard.tier, scorecard.total_score).catch(
+    if (scanResult.tier === 'gold' || scanResult.tier === 'platinum') {
+      notifyTierPromotion(businessName, scanResult.tier, scanResult.total_score).catch(
         (err) => console.error('Tier promotion notification failed:', err)
       )
       fireWebhook('tier_promotion', {
-        business: { id: businessId, name: scorecard.business_name, domain },
-        tier: scorecard.tier,
-        score: scorecard.total_score,
+        business: { id: businessId, name: businessName, domain },
+        tier: scanResult.tier,
+        score: scanResult.total_score,
       })
     }
 
     return NextResponse.json({
-      ...scorecard,
+      ...scanResult,
+      business_name: businessName,
       business_id: businessId,
     }, { headers: rateLimitHeaders })
   } catch (err: unknown) {

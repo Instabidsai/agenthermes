@@ -10,7 +10,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'fs'
 import { resolve } from 'path'
-import { tierFromScore } from '../lib/audit-engine'
+import { tierFromScore } from '../lib/scanner'
 
 // ---------- Load .env.local manually (no dotenv dependency) ----------
 

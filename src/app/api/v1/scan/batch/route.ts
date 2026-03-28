@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/supabase'
 import { requireAuth, rateLimit } from '@/lib/auth'
 import { runScan } from '@/lib/scanner'
-import { tierFromScore, normalizeUrl } from '@/lib/audit-engine'
+import { tierFromScore, normalizeUrl } from '@/lib/scanner'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60

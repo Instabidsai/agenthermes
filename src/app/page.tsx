@@ -9,6 +9,10 @@ import {
   Search,
   BarChart3,
   Wrench,
+  CheckCircle,
+  Activity,
+  Layers,
+  Quote,
 } from 'lucide-react'
 import { getServiceClient } from '@/lib/supabase'
 import HeroScanForm from '@/components/HeroScanForm'
@@ -339,6 +343,48 @@ export default async function HomePage() {
                   Embed your score badge on your website. Share it with partners. Agents query the AgentHermes network
                   to verify scores before initiating transactions. A high score builds trust at machine speed.
                 </p>
+              </div>
+            </div>
+
+            {/* Social Proof / Credibility Indicators */}
+            <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="flex items-start gap-3 p-4 rounded-lg border border-zinc-800/50">
+                <Building2 className="h-4 w-4 text-zinc-500 mt-0.5 flex-shrink-0" />
+                <div>
+                  <div className="text-sm font-bold text-zinc-300 tabular-nums">
+                    {formatNumber(stats.businessCount)} businesses scanned
+                  </div>
+                  <div className="text-xs text-zinc-600 mt-0.5">and counting</div>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-4 rounded-lg border border-zinc-800/50">
+                <Layers className="h-4 w-4 text-zinc-500 mt-0.5 flex-shrink-0" />
+                <div>
+                  <div className="text-sm font-bold text-zinc-300">9 dimensions analyzed</div>
+                  <div className="text-xs text-zinc-600 mt-0.5">per scan</div>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-4 rounded-lg border border-zinc-800/50">
+                <Activity className="h-4 w-4 text-zinc-500 mt-0.5 flex-shrink-0" />
+                <div>
+                  <div className="text-sm font-bold text-zinc-300">Real-time scoring</div>
+                  <div className="text-xs text-zinc-600 mt-0.5">no fake data, ever</div>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-4 rounded-lg border border-zinc-800/50">
+                <CheckCircle className="h-4 w-4 text-zinc-500 mt-0.5 flex-shrink-0" />
+                <div>
+                  <div className="text-sm font-bold text-zinc-300">Verifiable on-chain</div>
+                  <div className="text-xs text-zinc-600 mt-0.5">scores agents can trust</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Tagline quote */}
+            <div className="mt-8 text-center">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-900/50 border border-zinc-800/50">
+                <Quote className="h-3 w-3 text-zinc-600" />
+                <span className="text-xs text-zinc-500 italic">&ldquo;The FICO of the agent economy&rdquo;</span>
               </div>
             </div>
           </div>
