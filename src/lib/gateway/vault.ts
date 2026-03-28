@@ -2,8 +2,15 @@ import crypto from 'crypto'
 
 const VAULT_SECRET = process.env.GATEWAY_VAULT_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 
+function assertVaultSecret(): void {
+  if (!VAULT_SECRET) {
+    throw new Error('Gateway vault secret is not configured. Set GATEWAY_VAULT_SECRET or SUPABASE_SERVICE_ROLE_KEY.')
+  }
+}
+
 // Encrypt credentials before storing in DB
 export function encryptCredentials(credentials: Record<string, string>): string {
+  assertVaultSecret()
   const iv = crypto.randomBytes(16)
   const key = crypto.scryptSync(VAULT_SECRET, 'agenthermes-vault', 32)
   const cipher = crypto.createCipheriv('aes-256-gcm', key, iv)
@@ -15,7 +22,12 @@ export function encryptCredentials(credentials: Record<string, string>): string 
 
 // Decrypt credentials for use in proxy calls
 export function decryptCredentials(encrypted: string): Record<string, string> {
-  const [ivHex, tagHex, data] = encrypted.split(':')
+  assertVaultSecret()
+  const parts = encrypted.split(':')
+  if (parts.length !== 3) {
+    throw new Error('Invalid encrypted credentials format')
+  }
+  const [ivHex, tagHex, data] = parts
   const iv = Buffer.from(ivHex, 'hex')
   const tag = Buffer.from(tagHex, 'hex')
   const key = crypto.scryptSync(VAULT_SECRET, 'agenthermes-vault', 32)

@@ -3,6 +3,7 @@ import { getServiceClient } from '@/lib/supabase'
 import { isStripeConfigured, transferFunds } from '@/lib/stripe'
 import { runScan } from '@/lib/scanner'
 import { listGatewayServices, callService, getServiceActions } from '@/lib/gateway/proxy'
+import { logError } from '@/lib/error-logger'
 
 // Payment tools that require authentication
 const AUTH_REQUIRED_TOOLS = new Set(['initiate_payment', 'check_wallet_balance', 'call_service'])
@@ -1002,6 +1003,10 @@ export async function POST(request: NextRequest) {
     }
   } catch (err) {
     console.error('[mcp] Internal error:', err instanceof Error ? err.message : err)
+
+    // Log to error_log table (fire-and-forget)
+    logError('/api/mcp', 'POST', err instanceof Error ? err : new Error(String(err)), request.headers.get('x-request-id') || undefined)
+
     return NextResponse.json(
       jsonRpcError(requestId, -32603, 'Internal server error'),
       { status: 500, headers: corsHeaders }

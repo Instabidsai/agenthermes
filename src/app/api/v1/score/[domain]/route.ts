@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/supabase'
 import { trackEvent } from '@/lib/analytics'
+import { logError } from '@/lib/error-logger'
 
 const TIER_LABELS: Record<string, string> = {
   platinum: 'Agent-Native Leader',
@@ -169,6 +170,10 @@ export async function GET(
       '[score/domain] Unexpected error:',
       err instanceof Error ? err.message : err
     )
+
+    // Log to error_log table (fire-and-forget)
+    logError('/api/v1/score/[domain]', 'GET', err instanceof Error ? err : new Error(String(err)), _request.headers.get('x-request-id') || undefined)
+
     return NextResponse.json(
       { error: 'Internal server error', code: 'INTERNAL_ERROR', request_id: requestId },
       { status: 500, headers: corsHeaders() }

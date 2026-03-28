@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, rateLimit, getRateLimitHeaders } from '@/lib/auth'
 import { callService } from '@/lib/gateway/proxy'
+import { logError } from '@/lib/error-logger'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -122,8 +123,15 @@ export async function POST(request: NextRequest) {
     if (message.includes('not active')) {
       return NextResponse.json({ error: message }, { status: 403 })
     }
+    if (message.includes('timed out')) {
+      return NextResponse.json({ error: message }, { status: 504 })
+    }
 
     console.error('[gateway/call] Error:', message)
+
+    // Log to error_log table (fire-and-forget)
+    logError('/api/v1/gateway/call', 'POST', err instanceof Error ? err : new Error(String(err)), request.headers.get('x-request-id') || undefined)
+
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -196,13 +196,21 @@ export async function callService(params: {
     credentials = decryptCredentials(service.encrypted_credentials)
   }
 
-  const url = service.api_base_url + action.path
+  let url = service.api_base_url + action.path
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   }
   applyAuth(headers, credentials, service.auth_type, service.auth_header)
 
-  // 6. Execute the proxied request
+  // Handle query_param auth by appending API key to URL
+  if (service.auth_type === 'query_param' && credentials.api_key) {
+    const separator = url.includes('?') ? '&' : '?'
+    const paramName = service.auth_header || 'api_key'
+    url = `${url}${separator}${encodeURIComponent(paramName)}=${encodeURIComponent(credentials.api_key)}`
+  }
+
+  // 6. Execute the proxied request (30s timeout to prevent hanging)
   let responseData: unknown
   let statusCode: number
 
@@ -210,6 +218,7 @@ export async function callService(params: {
     const fetchOptions: RequestInit = {
       method: action.method,
       headers,
+      signal: AbortSignal.timeout(30_000),
     }
     if (action.method !== 'GET' && action.method !== 'HEAD' && params.params) {
       fetchOptions.body = JSON.stringify(params.params)
@@ -236,7 +245,11 @@ export async function callService(params: {
       status_code: 0,
       success: false,
     })
-    throw new Error('API call failed: ' + (fetchErr instanceof Error ? fetchErr.message : 'Unknown error'))
+    const isTimeout = fetchErr instanceof DOMException && fetchErr.name === 'TimeoutError'
+    const errMsg = isTimeout
+      ? 'API call timed out after 30s'
+      : 'API call failed: ' + (fetchErr instanceof Error ? fetchErr.message : 'Unknown error')
+    throw new Error(errMsg)
   }
 
   const responseMs = Date.now() - startMs
@@ -250,12 +263,32 @@ export async function callService(params: {
       p_amount: totalCost,
     })
 
-    // Fallback: direct update if RPC does not exist
+    // Fallback: atomic decrement via raw SQL if RPC does not exist.
+    // IMPORTANT: Do NOT use stale wallet.balance here — another request
+    // may have changed the balance between our read and this write.
     if (deductError) {
-      await (supabase
-        .from('agent_wallets') as any)
-        .update({ balance: (wallet.balance as number) - totalCost })
-        .eq('id', params.wallet_id)
+      const { error: fallbackError } = await (supabase.rpc as any)('exec_sql', {
+        query: `UPDATE agent_wallets SET balance = balance - $1 WHERE id = $2 AND balance >= $1`,
+        params: [totalCost, params.wallet_id],
+      })
+
+      // Last-resort fallback: non-atomic update (only if exec_sql RPC is also missing)
+      if (fallbackError) {
+        // Re-read current balance to avoid using stale value
+        const { data: freshWallet } = await supabase
+          .from('agent_wallets')
+          .select('balance')
+          .eq('id', params.wallet_id)
+          .single()
+
+        if (freshWallet) {
+          const currentBalance = (freshWallet as Record<string, unknown>).balance as number
+          await (supabase
+            .from('agent_wallets') as any)
+            .update({ balance: currentBalance - totalCost })
+            .eq('id', params.wallet_id)
+        }
+      }
     }
   }
 

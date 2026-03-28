@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/supabase'
 import { trackEvent } from '@/lib/analytics'
+import { logError } from '@/lib/error-logger'
 
 export async function GET(request: NextRequest) {
   const requestId = request.headers.get('x-request-id') || ''
@@ -121,6 +122,10 @@ export async function GET(request: NextRequest) {
     })
   } catch (err) {
     console.error('[discover] Unexpected error:', err instanceof Error ? err.message : err)
+
+    // Log to error_log table (fire-and-forget)
+    logError('/api/v1/discover', 'GET', err instanceof Error ? err : new Error(String(err)), request.headers.get('x-request-id') || undefined)
+
     return NextResponse.json(
       { error: 'Internal server error', code: 'INTERNAL_ERROR', request_id: requestId },
       { status: 500 }

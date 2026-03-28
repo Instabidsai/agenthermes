@@ -4,6 +4,7 @@ import { getServiceClient } from '@/lib/supabase'
 import { notifyTierPromotion } from '@/lib/hive-brain'
 import { rateLimit, getRateLimitHeaders } from '@/lib/auth'
 import { fireWebhook } from '@/lib/webhooks'
+import { logError } from '@/lib/error-logger'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60 // allow up to 60s for a full audit
@@ -180,6 +181,10 @@ export async function POST(req: NextRequest) {
     }, { headers: rateLimitHeaders })
   } catch (err: unknown) {
     console.error('Audit route error:', err instanceof Error ? err.message : err)
+
+    // Log to error_log table (fire-and-forget)
+    logError('/api/v1/audit', 'POST', err instanceof Error ? err : new Error(String(err)), req.headers.get('x-request-id') || undefined)
+
     // Allow SSRF validation errors to surface as 400 (user input error)
     if (err instanceof Error && (err.message.includes('private or internal') || err.message.includes('Only HTTP') || err.message.includes('Invalid URL'))) {
       return NextResponse.json({ error: err.message }, { status: 400 })
