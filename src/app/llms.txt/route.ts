@@ -112,11 +112,11 @@ Cap rules: No TLS = max 39 | No agent card + no llms.txt + no MCP = max 59 | No 
 - POST /api/v1/remediate/openapi-to-mcp — Convert an OpenAPI spec to MCP tool definitions
 
 ### MCP Server
-- POST /api/mcp — JSON-RPC 2.0 MCP server (7 tools, 4 resources, 3 prompts)
+- POST /api/mcp — JSON-RPC 2.0 MCP server (10 tools, 4 resources, 3 prompts)
 - GET /api/mcp — Server info and tool listing
 - GET /api/mcp/sse — Server-Sent Events transport
 
-## MCP Tools (7)
+## MCP Tools (10)
 - discover_businesses — Search by capability, vertical, tier, price
 - get_business_profile — Full business profile by slug
 - get_business_manifest — Machine-readable manifest (services, pricing, auth, readiness)
@@ -124,6 +124,9 @@ Cap rules: No TLS = max 39 | No agent card + no llms.txt + no MCP = max 59 | No 
 - check_wallet_balance — Check business wallet balance (auth required)
 - initiate_payment — Wallet-to-wallet payment between businesses (auth required)
 - verify_hermes_json — Verify a .well-known/agent-hermes.json signature and score
+- list_gateway_services — Browse available services in the gateway
+- call_service — Execute an API call through the gateway
+- get_service_actions — View available actions + costs for a gateway service
 
 ## MCP Resources (4)
 - agenthermes://businesses — All businesses in the network
@@ -135,6 +138,30 @@ Cap rules: No TLS = max 39 | No agent card + no llms.txt + no MCP = max 59 | No 
 - audit-url — Run an Agent Readiness Score audit (args: url)
 - find-service — Find a service by capability or description (args: query, max_price)
 - check-readiness — Check if a business is agent-ready (args: domain)
+
+## Gateway — One API Key, Every Service
+AgentHermes Gateway lets agents access any connected business service through a single API key.
+Instead of managing separate API keys for OpenAI, Creatify, ElevenLabs, etc., agents connect
+to AgentHermes and access everything through MCP or REST.
+
+### Gateway Endpoints
+- GET /api/v1/gateway — List connected services
+- POST /api/v1/gateway — Connect a new service (auth)
+- GET /api/v1/gateway/{id} — Get service details + actions
+- POST /api/v1/gateway/call — Execute a service call through gateway (auth)
+- GET /api/v1/gateway/usage — View usage history (auth)
+- GET/POST /api/v1/gateway/budget — View/set spending limits (auth)
+
+### MCP Gateway Tools
+- list_gateway_services — Browse available services
+- call_service — Execute API call through gateway
+- get_service_actions — View actions + costs for a service
+
+### How it works
+1. Agent connects to AgentHermes MCP with one API key
+2. Discovers available services via list_gateway_services
+3. Calls services via call_service (cost deducted from wallet)
+4. Budget controls prevent overspending
 
 ## Integration
 Connect via MCP at https://agenthermes.ai/api/mcp (JSON-RPC 2.0)

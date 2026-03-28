@@ -8,9 +8,10 @@
 ## Architecture
 - Next.js 16 App Router + TypeScript + Tailwind
 - Supabase for DB (service client at src/lib/supabase.ts)
-- 64 routes (11 pages + 47 API endpoints + 6 dogfood files)
+- 68 routes (14 pages + 48 API endpoints + 6 dogfood files)
 - 9-dimension scanner system at src/lib/scanner/
-- MCP server at /api/mcp (7 tools, 4 resources, 3 prompts)
+- Gateway system at src/lib/gateway/ (vault, proxy, types)
+- MCP server at /api/mcp (10 tools, 4 resources, 3 prompts)
 
 ## Key Patterns
 - `getServiceClient()` for server-side Supabase

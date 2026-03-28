@@ -106,13 +106,13 @@ interface SeedService {
   cost_per_call: number
   cost_model: string
   our_margin: number
-  credentials: Record<string, string>
+  credentials: Record<string, string> | null
   actions: {
     name: string
     method: string
     path: string
     description: string
-    params_schema: Record<string, unknown>
+    params_schema?: Record<string, unknown>
     cost_override?: number
   }[]
 }
@@ -220,6 +220,158 @@ function buildServices(): SeedService[] {
     ],
   })
 
+  // --- Creatify (Video Ad Generation) --- no credentials yet
+  services.push({
+    name: 'Creatify',
+    description: 'AI video ad generation from URLs. 1,364 avatars, multiple styles.',
+    api_base_url: 'https://api.creatify.ai/api',
+    auth_type: 'api_key_header',
+    auth_header: 'X-API-ID',
+    category: 'video',
+    cost_per_call: 0.50,
+    cost_model: 'per_call',
+    our_margin: 0.20,
+    credentials: null,
+    actions: [
+      {
+        name: 'create_video',
+        method: 'POST',
+        path: '/ads',
+        description: 'Create a video ad from a URL or script',
+        params_schema: {
+          type: 'object',
+          properties: {
+            url: { type: 'string' },
+            script: { type: 'string' },
+            avatar_id: { type: 'string' },
+          },
+        },
+        cost_override: 2.00,
+      },
+      {
+        name: 'list_avatars',
+        method: 'GET',
+        path: '/avatars',
+        description: 'List available AI avatars',
+        cost_override: 0.01,
+      },
+      {
+        name: 'check_status',
+        method: 'GET',
+        path: '/ads/{id}',
+        description: 'Check video generation status',
+        cost_override: 0.01,
+      },
+    ],
+  })
+
+  // --- ElevenLabs (Voice/TTS) --- no credentials yet
+  services.push({
+    name: 'ElevenLabs',
+    description: 'Text-to-speech with natural voices. Voice cloning, multilingual.',
+    api_base_url: 'https://api.elevenlabs.io/v1',
+    auth_type: 'api_key_header',
+    auth_header: 'xi-api-key',
+    category: 'voice',
+    cost_per_call: 0.05,
+    cost_model: 'per_call',
+    our_margin: 0.20,
+    credentials: null,
+    actions: [
+      {
+        name: 'text_to_speech',
+        method: 'POST',
+        path: '/text-to-speech/{voice_id}',
+        description: 'Convert text to speech',
+        params_schema: {
+          type: 'object',
+          properties: {
+            text: { type: 'string' },
+            voice_id: { type: 'string' },
+            model_id: { type: 'string' },
+          },
+          required: ['text'],
+        },
+        cost_override: 0.10,
+      },
+      {
+        name: 'list_voices',
+        method: 'GET',
+        path: '/voices',
+        description: 'List available voices',
+        cost_override: 0.001,
+      },
+    ],
+  })
+
+  // --- Anthropic (Claude API) --- no credentials yet
+  services.push({
+    name: 'Anthropic',
+    description: 'Claude AI models — chat, analysis, coding assistance',
+    api_base_url: 'https://api.anthropic.com/v1',
+    auth_type: 'api_key_header',
+    auth_header: 'x-api-key',
+    category: 'ai',
+    cost_per_call: 0.03,
+    cost_model: 'per_call',
+    our_margin: 0.20,
+    credentials: null,
+    actions: [
+      {
+        name: 'create_message',
+        method: 'POST',
+        path: '/messages',
+        description: 'Chat with Claude',
+        params_schema: {
+          type: 'object',
+          properties: {
+            model: { type: 'string', default: 'claude-sonnet-4-20250514' },
+            messages: { type: 'array' },
+            max_tokens: { type: 'number', default: 1024 },
+          },
+          required: ['messages'],
+        },
+        cost_override: 0.05,
+      },
+    ],
+  })
+
+  // --- Pexels (Stock Photos/Video) --- no credentials yet
+  services.push({
+    name: 'Pexels',
+    description: 'Free stock photos and videos. No attribution required.',
+    api_base_url: 'https://api.pexels.com',
+    auth_type: 'api_key_header',
+    auth_header: 'Authorization',
+    category: 'media',
+    cost_per_call: 0.001,
+    cost_model: 'per_call',
+    our_margin: 0.20,
+    credentials: null,
+    actions: [
+      {
+        name: 'search_photos',
+        method: 'GET',
+        path: '/v1/search',
+        description: 'Search stock photos',
+        params_schema: {
+          type: 'object',
+          properties: {
+            query: { type: 'string' },
+            per_page: { type: 'number', default: 10 },
+          },
+          required: ['query'],
+        },
+      },
+      {
+        name: 'search_videos',
+        method: 'GET',
+        path: '/videos/search',
+        description: 'Search stock videos',
+      },
+    ],
+  })
+
   return services
 }
 
@@ -246,8 +398,10 @@ async function seed() {
       continue
     }
 
-    // Encrypt credentials
-    const encryptedCreds = encryptCredentials(svc.credentials)
+    // Encrypt credentials (null = not yet connected, skip encryption)
+    const encryptedCreds = svc.credentials
+      ? encryptCredentials(svc.credentials)
+      : null
 
     const { data: inserted, error } = await supabase
       .from('gateway_services')
@@ -263,7 +417,7 @@ async function seed() {
         cost_model: svc.cost_model,
         our_margin: svc.our_margin,
         category: svc.category,
-        status: 'active',
+        status: svc.credentials ? 'active' : 'pending',
       } as Record<string, unknown>)
       .select('id, name, category, status')
       .single()
@@ -274,7 +428,8 @@ async function seed() {
     }
 
     const row = inserted as Record<string, unknown>
-    console.log(`  OK    ${svc.name} (category=${svc.category}, actions=${svc.actions.length}, id=${row.id})`)
+    const status = svc.credentials ? 'active' : 'pending'
+    console.log(`  OK    ${svc.name} (category=${svc.category}, actions=${svc.actions.length}, status=${status}, id=${row.id})`)
     created++
   }
 

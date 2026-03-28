@@ -64,6 +64,21 @@ const agentCard = {
         required: ['slug'],
       },
     },
+    {
+      id: 'gateway-call',
+      name: 'Call Service Through Gateway',
+      description:
+        'Execute API calls to any connected business service through the AgentHermes gateway with automatic billing',
+      input: {
+        type: 'object',
+        properties: {
+          service_id: { type: 'string' },
+          action: { type: 'string' },
+          params: { type: 'object' },
+        },
+        required: ['service_id', 'action'],
+      },
+    },
   ],
   authentication: {
     public_endpoints: [
