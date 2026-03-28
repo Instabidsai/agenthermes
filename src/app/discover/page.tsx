@@ -436,7 +436,7 @@ function DiscoverPageContent() {
               <Link
                 key={biz.id}
                 href={`/business/${biz.slug}`}
-                className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700/80 transition-colors group"
+                className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700/80 hover:-translate-y-1 transition-all duration-200 group"
               >
                 <div className="flex items-start justify-between gap-3 mb-4">
                   <div className="min-w-0">

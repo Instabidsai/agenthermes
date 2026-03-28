@@ -505,26 +505,26 @@ export async function scanOnboarding(
   )
 
   if (sandboxHits.length > 0) {
-    rawScore += 15
+    rawScore += 20
     checks.push({
       name: 'Sandbox / Test Mode',
       passed: true,
       details: `Sandbox endpoint(s) detected: ${sandboxHits.map((r) => r.url).join(', ')}`,
-      points: 15,
+      points: 20,
     })
   } else if (mentionsSandbox) {
-    rawScore += 6
+    rawScore += 8
     checks.push({
       name: 'Sandbox / Test Mode',
       passed: false,
       details:
         'References to sandbox/test mode found in docs but no dedicated sandbox endpoint detected',
-      points: 6,
+      points: 8,
     })
     recommendations.push({
       action:
         'Expose a dedicated /api/sandbox endpoint so agents can test integrations without side effects.',
-      impact: '+9 points',
+      impact: '+12 points',
       difficulty: 'medium',
       auto_fixable: false,
     })
@@ -538,7 +538,7 @@ export async function scanOnboarding(
     recommendations.push({
       action:
         'Offer a sandbox or test mode so agents can validate their integration before committing to paid usage.',
-      impact: '+15 points',
+      impact: '+20 points',
       difficulty: 'medium',
       auto_fixable: false,
     })

@@ -283,10 +283,15 @@ export async function callService(params: {
 
         if (freshWallet) {
           const currentBalance = (freshWallet as Record<string, unknown>).balance as number
-          await (supabase
-            .from('agent_wallets') as any)
-            .update({ balance: currentBalance - totalCost })
-            .eq('id', params.wallet_id)
+          if (currentBalance >= totalCost) {
+            await (supabase
+              .from('agent_wallets') as any)
+              .update({ balance: currentBalance - totalCost })
+              .eq('id', params.wallet_id)
+          }
+          // If balance < totalCost, skip deduction to prevent negative balance.
+          // The API call already succeeded, so this is a cost we absorb rather
+          // than risk corrupting the wallet.
         }
       }
     }

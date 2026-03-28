@@ -16,6 +16,7 @@ import {
 import clsx from 'clsx'
 import ScoreGauge from '@/components/ScoreGauge'
 import TierBadge from '@/components/TierBadge'
+import { FadeIn } from '@/components/FadeIn'
 
 interface LeaderboardEntry {
   rank: number
@@ -267,9 +268,9 @@ export default function LeaderboardPage() {
           </div>
 
           <div className="space-y-1">
-            {entries.map((entry) => (
+            {entries.map((entry, i) => (
+              <FadeIn key={entry.id} delay={i * 50}>
               <Link
-                key={entry.id}
                 href={`/business/${entry.slug}`}
                 className={clsx(
                   'flex items-center gap-4 px-4 py-3.5 rounded-xl border transition-colors group',
@@ -340,6 +341,7 @@ export default function LeaderboardPage() {
                   )}
                 </div>
               </Link>
+              </FadeIn>
             ))}
           </div>
 

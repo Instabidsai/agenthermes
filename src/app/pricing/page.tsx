@@ -187,10 +187,10 @@ export default function PricingPage() {
             {tiers.map((tier) => (
               <div
                 key={tier.name}
-                className={`relative flex flex-col rounded-xl border p-6 lg:p-8 transition-colors ${
+                className={`relative flex flex-col rounded-xl border p-6 lg:p-8 transition-all duration-200 ${
                   tier.highlighted
-                    ? 'border-emerald-500/50 bg-emerald-500/[0.04] shadow-[0_0_40px_-12px_rgba(16,185,129,0.15)]'
-                    : 'border-zinc-800/80 bg-zinc-900/50 hover:border-zinc-700/80'
+                    ? 'border-emerald-500/50 bg-emerald-500/[0.04] shadow-[0_0_40px_-12px_rgba(16,185,129,0.15)] hover:shadow-lg hover:shadow-emerald-500/5'
+                    : 'border-zinc-800/80 bg-zinc-900/50 hover:border-zinc-700/80 hover:shadow-lg hover:shadow-zinc-500/5'
                 }`}
               >
                 {/* Most Popular badge */}

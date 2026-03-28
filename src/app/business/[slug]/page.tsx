@@ -24,6 +24,7 @@ import {
   Minus,
   RotateCw,
 } from 'lucide-react'
+import { CountUp } from '@/components/CountUp'
 
 export const revalidate = 60
 
@@ -168,7 +169,7 @@ function StatCard({
   icon: Icon,
   accent,
 }: {
-  value: string | number
+  value: React.ReactNode
   label: string
   icon: typeof Shield
   accent?: boolean
@@ -279,7 +280,7 @@ export default async function BusinessProfilePage({
       {/* Stats */}
       <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <StatCard
-          value={business.audit_score}
+          value={<CountUp target={business.audit_score} />}
           label="Agent Readiness Score"
           icon={Shield}
           accent
