@@ -372,6 +372,184 @@ function buildServices(): SeedService[] {
     ],
   })
 
+  // --- HeyGen (Avatar Video Generation) --- no credentials yet
+  services.push({
+    name: 'HeyGen',
+    description: 'AI avatar video generation. Create talking head videos from text scripts.',
+    api_base_url: 'https://api.heygen.com/v2',
+    auth_type: 'api_key_header',
+    auth_header: 'X-Api-Key',
+    category: 'video',
+    cost_per_call: 1.00,
+    cost_model: 'per_call',
+    our_margin: 0.20,
+    credentials: null,
+    actions: [
+      {
+        name: 'create_video',
+        method: 'POST',
+        path: '/video/generate',
+        description: 'Create an avatar video from a script',
+        cost_override: 2.50,
+      },
+      {
+        name: 'list_avatars',
+        method: 'GET',
+        path: '/avatars',
+        description: 'List available AI avatars',
+        cost_override: 0.01,
+      },
+      {
+        name: 'get_video_status',
+        method: 'GET',
+        path: '/video/{id}',
+        description: 'Check video generation status',
+        cost_override: 0.01,
+      },
+      {
+        name: 'list_voices',
+        method: 'GET',
+        path: '/voices',
+        description: 'List available voices',
+        cost_override: 0.01,
+      },
+    ],
+  })
+
+  // --- Stripe (Payment Processing) --- no credentials yet
+  services.push({
+    name: 'Stripe',
+    description: 'Payment processing. Create charges, customers, subscriptions, invoices.',
+    api_base_url: 'https://api.stripe.com/v1',
+    auth_type: 'bearer',
+    auth_header: 'Authorization',
+    category: 'payments',
+    cost_per_call: 0.01,
+    cost_model: 'per_call',
+    our_margin: 0.20,
+    credentials: null,
+    actions: [
+      {
+        name: 'create_customer',
+        method: 'POST',
+        path: '/customers',
+        description: 'Create a Stripe customer',
+        cost_override: 0.02,
+      },
+      {
+        name: 'create_payment_link',
+        method: 'POST',
+        path: '/payment_links',
+        description: 'Create a payment link',
+        cost_override: 0.02,
+      },
+      {
+        name: 'list_products',
+        method: 'GET',
+        path: '/products',
+        description: 'List products',
+        cost_override: 0.01,
+      },
+      {
+        name: 'create_invoice',
+        method: 'POST',
+        path: '/invoices',
+        description: 'Create an invoice',
+        cost_override: 0.05,
+      },
+    ],
+  })
+
+  // --- SendGrid (Email Delivery) --- no credentials yet
+  services.push({
+    name: 'SendGrid',
+    description: 'Email delivery service. Send transactional and marketing emails.',
+    api_base_url: 'https://api.sendgrid.com/v3',
+    auth_type: 'bearer',
+    auth_header: 'Authorization',
+    category: 'communication',
+    cost_per_call: 0.005,
+    cost_model: 'per_call',
+    our_margin: 0.20,
+    credentials: null,
+    actions: [
+      {
+        name: 'send_email',
+        method: 'POST',
+        path: '/mail/send',
+        description: 'Send an email',
+        cost_override: 0.01,
+      },
+      {
+        name: 'list_contacts',
+        method: 'GET',
+        path: '/marketing/contacts',
+        description: 'List marketing contacts',
+        cost_override: 0.005,
+      },
+    ],
+  })
+
+  // --- Twilio (Voice/SMS) --- no credentials yet
+  services.push({
+    name: 'Twilio',
+    description: 'Voice calls and SMS messaging. Communication APIs.',
+    api_base_url: 'https://api.twilio.com/2010-04-01',
+    auth_type: 'basic',
+    auth_header: 'Authorization',
+    category: 'communication',
+    cost_per_call: 0.02,
+    cost_model: 'per_call',
+    our_margin: 0.20,
+    credentials: null,
+    actions: [
+      {
+        name: 'send_sms',
+        method: 'POST',
+        path: '/Accounts/{account_sid}/Messages.json',
+        description: 'Send an SMS message',
+        cost_override: 0.05,
+      },
+      {
+        name: 'make_call',
+        method: 'POST',
+        path: '/Accounts/{account_sid}/Calls.json',
+        description: 'Initiate a phone call',
+        cost_override: 0.10,
+      },
+    ],
+  })
+
+  // --- Resend (Modern Email) --- no credentials yet
+  services.push({
+    name: 'Resend',
+    description: 'Modern email API for developers. Simple, reliable email delivery.',
+    api_base_url: 'https://api.resend.com',
+    auth_type: 'bearer',
+    auth_header: 'Authorization',
+    category: 'communication',
+    cost_per_call: 0.005,
+    cost_model: 'per_call',
+    our_margin: 0.20,
+    credentials: null,
+    actions: [
+      {
+        name: 'send_email',
+        method: 'POST',
+        path: '/emails',
+        description: 'Send an email',
+        cost_override: 0.01,
+      },
+      {
+        name: 'list_emails',
+        method: 'GET',
+        path: '/emails',
+        description: 'List sent emails',
+        cost_override: 0.005,
+      },
+    ],
+  })
+
   return services
 }
 

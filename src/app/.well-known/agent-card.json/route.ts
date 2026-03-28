@@ -11,6 +11,13 @@ const agentCard = {
       endpoint: 'https://agenthermes.ai/api/mcp',
       transport: 'http',
     },
+    a2a: {
+      endpoint: 'https://agenthermes.ai/api/a2a',
+      discovery: 'https://agenthermes.ai/api/a2a/discover',
+      protocol_version: '1.0',
+      transport: 'json-rpc',
+      methods: ['tasks/send', 'tasks/get', 'tasks/cancel'],
+    },
     rest_api: {
       base_url: 'https://agenthermes.ai/api/v1',
       documentation: 'https://agenthermes.ai/openapi.json',

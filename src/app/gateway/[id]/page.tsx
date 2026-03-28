@@ -593,35 +593,107 @@ print(f"Latency: ${'{'}result.meta.response_ms{'}'}ms")`
         </section>
 
         {/* =============================================================== */}
-        {/* Connect Credentials CTA                                         */}
+        {/* How To Use — Dual Payment Path                                  */}
         {/* =============================================================== */}
         <section className="mb-12">
-          <div className="rounded-xl border border-zinc-800/80 bg-gradient-to-br from-zinc-900/80 to-zinc-900/40 p-8 sm:p-10">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-6">
-              <div className="flex-shrink-0">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
-                  <Key className="h-7 w-7 text-emerald-500" />
+          <h2 className="text-xl font-bold tracking-tight mb-5 flex items-center gap-2">
+            <Key className="h-5 w-5 text-zinc-500" />
+            How to Use This Service
+          </h2>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Path 1: Through AgentHermes */}
+            <div className="rounded-xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-transparent p-6 relative">
+              <div className="absolute top-4 right-4">
+                <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20">
+                  Recommended
+                </span>
+              </div>
+
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-500/20 mb-4">
+                <Shield className="h-5 w-5 text-emerald-500" />
+              </div>
+
+              <h3 className="text-base font-bold tracking-tight mb-2">
+                Through AgentHermes Gateway
+              </h3>
+              <p className="text-sm text-zinc-400 leading-relaxed mb-4">
+                Use our MCP server or REST API. We handle authentication, billing, and logging for every call.
+              </p>
+
+              <div className="space-y-2 mb-5">
+                <div className="flex items-center gap-2 text-sm">
+                  <CheckCircle className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
+                  <span className="text-zinc-300">
+                    Cost: <span className="font-mono font-semibold">{formatCost(totalCostWithMargin)}</span>/call
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <CheckCircle className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
+                  <span className="text-zinc-300">One API key for all services</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <CheckCircle className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
+                  <span className="text-zinc-300">Built-in usage tracking & budgets</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <CheckCircle className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
+                  <span className="text-zinc-300">Encrypted credential vault</span>
                 </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-bold tracking-tight mb-1">
-                  Connect Your Credentials
-                </h3>
-                <p className="text-sm text-zinc-500 leading-relaxed">
-                  Already have a {service.name} account? Connect your API credentials to the
-                  AgentHermes vault. We encrypt them at rest and inject them per-call so your agents
-                  never touch raw secrets.
-                </p>
+
+              <Link
+                href="/register"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors"
+              >
+                <Key className="h-4 w-4" />
+                Get Started
+              </Link>
+            </div>
+
+            {/* Path 2: Direct Connection */}
+            <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-6">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-zinc-800 border border-zinc-700 mb-4">
+                <ExternalLink className="h-5 w-5 text-zinc-400" />
               </div>
-              <div className="flex-shrink-0">
-                <Link
-                  href="/register"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors whitespace-nowrap"
-                >
-                  <Key className="h-4 w-4" />
-                  Connect Keys
-                </Link>
+
+              <h3 className="text-base font-bold tracking-tight mb-2">
+                Direct Connection
+              </h3>
+              <p className="text-sm text-zinc-400 leading-relaxed mb-4">
+                Visit {service.name} directly to get your own API key. Use their API without the gateway.
+              </p>
+
+              <div className="space-y-2 mb-5">
+                <div className="flex items-center gap-2 text-sm">
+                  <AlertCircle className="h-3.5 w-3.5 text-zinc-500 flex-shrink-0" />
+                  <span className="text-zinc-400">
+                    Cost: <span className="font-mono">{formatCost(service.cost_per_call)}</span>/call (base rate)
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <AlertCircle className="h-3.5 w-3.5 text-zinc-500 flex-shrink-0" />
+                  <span className="text-zinc-400">You manage your own API keys</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <AlertCircle className="h-3.5 w-3.5 text-zinc-500 flex-shrink-0" />
+                  <span className="text-zinc-400">You handle auth and billing</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <AlertCircle className="h-3.5 w-3.5 text-zinc-500 flex-shrink-0" />
+                  <span className="text-zinc-400">No unified agent dashboard</span>
+                </div>
               </div>
+
+              <a
+                href={service.api_base_url.replace(/\/+$/, '').replace(/\/api.*$/, '')}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-zinc-700 hover:border-zinc-600 text-zinc-300 text-sm font-medium transition-colors"
+              >
+                Visit {service.name}
+                <ExternalLink className="h-4 w-4" />
+              </a>
             </div>
           </div>
         </section>

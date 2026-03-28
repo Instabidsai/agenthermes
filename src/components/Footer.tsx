@@ -57,6 +57,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/connect" className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
+                  Connect Your Service
+                </Link>
+              </li>
+              <li>
                 <Link href="/dashboard" className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
                   Dashboard
                 </Link>

@@ -4,6 +4,7 @@ import { isStripeConfigured, transferFunds } from '@/lib/stripe'
 import { runScan } from '@/lib/scanner'
 import { listGatewayServices, callService, getServiceActions } from '@/lib/gateway/proxy'
 import { logError } from '@/lib/error-logger'
+import type { ServiceAction } from '@/lib/gateway/types'
 
 // Payment tools that require authentication
 const AUTH_REQUIRED_TOOLS = new Set(['initiate_payment', 'check_wallet_balance', 'call_service'])
@@ -180,6 +181,107 @@ const TOOLS: ToolDef[] = [
     },
   },
 ]
+
+// --- Dynamic gateway tool generation --------------------------------------
+// When a new service connects to the gateway, its actions automatically
+// appear as MCP tools without code changes.
+
+interface GatewayToolMapping {
+  service_id: string
+  service_name: string
+  action_name: string
+}
+
+let gatewayToolsCache: {
+  tools: ToolDef[]
+  mappings: Map<string, GatewayToolMapping>
+  cachedAt: number
+} | null = null
+
+const GATEWAY_CACHE_TTL = 60_000 // 60 seconds
+
+function sanitizeToolName(serviceName: string, actionName: string): string {
+  return `gateway_${serviceName.toLowerCase().replace(/[^a-z0-9]+/g, '_')}_${actionName.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`
+}
+
+async function getGatewayTools(): Promise<{
+  tools: ToolDef[]
+  mappings: Map<string, GatewayToolMapping>
+}> {
+  // Return cached if still fresh
+  if (gatewayToolsCache && Date.now() - gatewayToolsCache.cachedAt < GATEWAY_CACHE_TTL) {
+    return { tools: gatewayToolsCache.tools, mappings: gatewayToolsCache.mappings }
+  }
+
+  const supabase = getServiceClient()
+  const { data: gatewayServices, error } = await supabase
+    .from('gateway_services')
+    .select('id, name, description, actions, cost_per_call, our_margin, category')
+    .eq('status', 'active')
+
+  if (error) {
+    console.error('[mcp] Failed to fetch gateway services for dynamic tools:', error.message)
+    // Return empty on error — static tools still work
+    return { tools: [], mappings: new Map() }
+  }
+
+  const tools: ToolDef[] = []
+  const mappings = new Map<string, GatewayToolMapping>()
+
+  for (const service of (gatewayServices || []) as Array<Record<string, unknown>>) {
+    const actions = (service.actions as ServiceAction[]) || []
+    const baseCost = service.cost_per_call as number
+    const margin = service.our_margin as number
+    const serviceName = service.name as string
+
+    for (const action of actions) {
+      const toolName = sanitizeToolName(serviceName, action.name)
+      const actionCost = action.cost_override ?? baseCost
+      const totalCost = actionCost * (1 + margin)
+
+      // Build input schema from action's params_schema
+      const properties: Record<string, unknown> = {
+        wallet_id: { type: 'string', description: 'Your AgentHermes wallet ID for billing' },
+      }
+      const required: string[] = ['wallet_id']
+
+      if (action.params_schema) {
+        const schema = action.params_schema as Record<string, unknown>
+        if (schema.properties && typeof schema.properties === 'object') {
+          Object.assign(properties, schema.properties)
+        }
+        if (Array.isArray(schema.required)) {
+          for (const r of schema.required) {
+            if (typeof r === 'string' && !required.includes(r)) {
+              required.push(r)
+            }
+          }
+        }
+      }
+
+      tools.push({
+        name: toolName,
+        description: `[Gateway] ${serviceName}: ${action.description}. Cost: $${totalCost.toFixed(4)}/call`,
+        inputSchema: {
+          type: 'object',
+          properties,
+          required,
+        },
+      })
+
+      mappings.set(toolName, {
+        service_id: service.id as string,
+        service_name: serviceName,
+        action_name: action.name,
+      })
+    }
+  }
+
+  // Update cache
+  gatewayToolsCache = { tools, mappings, cachedAt: Date.now() }
+
+  return { tools, mappings }
+}
 
 // --- Resource definitions -------------------------------------------------
 
@@ -840,29 +942,105 @@ export async function POST(request: NextRequest) {
       }
 
       // ---------------------------------------------------------------
-      // tools/list — return available tools
+      // tools/list — return available tools (static + dynamic gateway)
       // ---------------------------------------------------------------
       case 'tools/list': {
+        const { tools: gatewayTools } = await getGatewayTools()
         return NextResponse.json(
           jsonRpcSuccess(requestId, {
-            tools: TOOLS,
+            tools: [...TOOLS, ...gatewayTools],
           }),
           { headers: corsHeaders }
         )
       }
 
       // ---------------------------------------------------------------
-      // tools/call — execute a tool
+      // tools/call — execute a tool (static or dynamic gateway)
       // ---------------------------------------------------------------
       case 'tools/call': {
         const toolName = (params?.name as string) || ''
         const toolArgs = (params?.arguments as Record<string, unknown>) || {}
 
+        // --- Dynamic gateway tool dispatch ---
+        if (toolName.startsWith('gateway_')) {
+          // Auth check — gateway calls touch wallets
+          const authError = checkToolAuth(request)
+          if (authError) {
+            return NextResponse.json(
+              jsonRpcSuccess(requestId, {
+                content: [{ type: 'text', text: authError }],
+                isError: true,
+              }),
+              { headers: corsHeaders }
+            )
+          }
+
+          const { mappings } = await getGatewayTools()
+          const mapping = mappings.get(toolName)
+          if (!mapping) {
+            return NextResponse.json(
+              jsonRpcError(requestId, -32602, `Unknown gateway tool: "${toolName}". The service may have been deactivated.`),
+              { headers: corsHeaders }
+            )
+          }
+
+          const walletId = toolArgs.wallet_id as string
+          if (!walletId) {
+            return NextResponse.json(
+              jsonRpcSuccess(requestId, {
+                content: [{ type: 'text', text: 'wallet_id is required for gateway calls' }],
+                isError: true,
+              }),
+              { headers: corsHeaders }
+            )
+          }
+
+          // Build params: everything except wallet_id goes to the service
+          const serviceParams: Record<string, unknown> = {}
+          for (const [key, value] of Object.entries(toolArgs)) {
+            if (key !== 'wallet_id') {
+              serviceParams[key] = value
+            }
+          }
+
+          try {
+            const result = await callService({
+              service_id: mapping.service_id,
+              action: mapping.action_name,
+              params: Object.keys(serviceParams).length > 0 ? serviceParams : undefined,
+              wallet_id: walletId,
+            })
+            return NextResponse.json(
+              jsonRpcSuccess(requestId, {
+                content: [
+                  {
+                    type: 'text',
+                    text: JSON.stringify(result, null, 2),
+                  },
+                ],
+              }),
+              { headers: corsHeaders }
+            )
+          } catch (toolErr) {
+            const message =
+              toolErr instanceof Error ? toolErr.message : 'Gateway call failed'
+            return NextResponse.json(
+              jsonRpcSuccess(requestId, {
+                content: [{ type: 'text', text: message }],
+                isError: true,
+              }),
+              { headers: corsHeaders }
+            )
+          }
+        }
+
+        // --- Static tool dispatch ---
         const handler = TOOL_HANDLERS[toolName]
         if (!handler) {
+          const { tools: gatewayTools } = await getGatewayTools()
           return NextResponse.json(
             jsonRpcError(requestId, -32602, `Unknown tool: "${toolName}"`, {
-              available_tools: TOOLS.map((t) => t.name),
+              available_tools: [...TOOLS.map((t) => t.name), ...gatewayTools.map((t) => t.name)],
             }),
             { headers: corsHeaders }
           )
@@ -1016,13 +1194,25 @@ export async function POST(request: NextRequest) {
 
 // GET handler for discovery — agents can GET /api/mcp to see the server info
 export async function GET() {
+  let gatewayTools: ToolDef[] = []
+  try {
+    const result = await getGatewayTools()
+    gatewayTools = result.tools
+  } catch {
+    // Non-critical — static tools still visible
+  }
+
+  const allTools = [...TOOLS, ...gatewayTools]
+
   return NextResponse.json(
     {
       ...SERVER_INFO,
       protocol: 'JSON-RPC 2.0 (MCP)',
       endpoint: '/api/mcp',
       method: 'POST',
-      tools: TOOLS.map((t) => ({ name: t.name, description: t.description })),
+      tools: allTools.map((t) => ({ name: t.name, description: t.description })),
+      static_tool_count: TOOLS.length,
+      gateway_tool_count: gatewayTools.length,
     },
     { headers: corsHeaders }
   )

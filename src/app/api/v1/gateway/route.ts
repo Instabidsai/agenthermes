@@ -7,23 +7,63 @@ import type { ServiceAction } from '@/lib/gateway/types'
 /**
  * GET /api/v1/gateway
  * List all active gateway services. Public endpoint.
- * Query params: ?category=ai&status=active
+ * Query params:
+ *   ?category=ai          — filter by category
+ *   ?status=active         — filter by status (default: active)
+ *   ?business_id=uuid      — filter services belonging to a specific business
+ *   ?slug=heygen           — filter services by business slug (resolves to business_id)
  */
 export async function GET(request: NextRequest) {
   try {
     const category = request.nextUrl.searchParams.get('category')
     const status = request.nextUrl.searchParams.get('status') || 'active'
+    const businessId = request.nextUrl.searchParams.get('business_id')
+    const slug = request.nextUrl.searchParams.get('slug')
 
     const supabase = getServiceClient()
 
+    // If filtering by slug, resolve to business_id first
+    let resolvedBusinessId: string | null = businessId || null
+
+    if (slug && !resolvedBusinessId) {
+      if (!/^[a-z0-9-]{1,100}$/.test(slug)) {
+        return NextResponse.json({ error: 'Invalid slug format' }, { status: 400 })
+      }
+
+      const { data: biz, error: bizError } = await supabase
+        .from('businesses')
+        .select('id')
+        .eq('slug', slug)
+        .maybeSingle()
+
+      if (bizError) {
+        console.error('[gateway] Business lookup error:', bizError.message)
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+      }
+
+      if (!biz) {
+        return NextResponse.json({ error: `Business not found with slug: ${slug}` }, { status: 404 })
+      }
+
+      resolvedBusinessId = (biz as Record<string, any>).id
+    }
+
+    if (resolvedBusinessId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(resolvedBusinessId)) {
+      return NextResponse.json({ error: 'business_id must be a valid UUID' }, { status: 400 })
+    }
+
     let query = supabase
       .from('gateway_services')
-      .select('id, name, description, api_base_url, auth_type, actions, cost_per_call, cost_model, our_margin, rate_limit_per_min, category, status, uptime_pct, last_health_check, created_at')
+      .select('id, name, description, api_base_url, auth_type, actions, cost_per_call, cost_model, our_margin, rate_limit_per_min, category, business_id, status, uptime_pct, last_health_check, created_at')
       .eq('status', status)
       .order('created_at', { ascending: false })
 
     if (category) {
       query = query.eq('category', category)
+    }
+
+    if (resolvedBusinessId) {
+      query = query.eq('business_id', resolvedBusinessId)
     }
 
     const { data, error } = await query
@@ -36,6 +76,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       services: data || [],
       count: (data || []).length,
+      ...(resolvedBusinessId ? { business_id: resolvedBusinessId } : {}),
     }, {
       headers: {
         'Cache-Control': 'public, max-age=30, s-maxage=60',
