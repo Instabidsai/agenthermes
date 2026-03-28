@@ -165,6 +165,13 @@ export async function POST(request: NextRequest) {
     }
 
     if (!apiVerified) {
+      // Save the new credentials even though verification failed —
+      // the user may fix the API and retry activation later.
+      await (supabase
+        .from('gateway_services') as any)
+        .update({ encrypted_credentials: encryptedCredentials })
+        .eq('id', service_id)
+
       return NextResponse.json({
         service_id: service.id,
         name: service.name,

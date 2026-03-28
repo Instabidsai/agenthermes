@@ -168,7 +168,7 @@ export default async function GatewayMarketplacePage() {
             and pay for your service automatically.
           </p>
           <Link
-            href="/register"
+            href="/connect"
             className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors"
           >
             Connect Your Service
