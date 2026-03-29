@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import clsx from 'clsx'
-import { Shield, Search, BarChart3, LayoutDashboard, Menu, X, UserPlus, Trophy, FileText, Wrench, Code2, CreditCard, Scale, Plug, Terminal } from 'lucide-react'
+import { Shield, Search, BarChart3, LayoutDashboard, Menu, X, UserPlus, LogIn, Trophy, FileText, Wrench, Code2, CreditCard, Scale, Plug, Terminal } from 'lucide-react'
 import { useState, useEffect, useCallback } from 'react'
 
 const navLinks = [
@@ -71,8 +71,15 @@ export default function Navbar() {
               )
             })}
             <Link
+              href="/login"
+              className="flex items-center gap-2 ml-2 px-3.5 py-2 rounded-lg border border-zinc-700 hover:border-zinc-600 text-zinc-300 hover:text-zinc-100 text-sm font-medium transition-colors"
+            >
+              <LogIn className="h-4 w-4" />
+              Sign In
+            </Link>
+            <Link
               href="/register"
-              className="flex items-center gap-2 ml-2 px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors"
+              className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors"
             >
               <UserPlus className="h-4 w-4" />
               Register
@@ -116,6 +123,14 @@ export default function Navbar() {
                 </Link>
               )
             })}
+            <Link
+              href="/login"
+              onClick={closeMobile}
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg border border-zinc-700 hover:border-zinc-600 text-zinc-300 hover:text-zinc-100 text-sm font-medium transition-colors"
+            >
+              <LogIn className="h-4 w-4" />
+              Sign In
+            </Link>
             <Link
               href="/register"
               onClick={closeMobile}
