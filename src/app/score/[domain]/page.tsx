@@ -461,6 +461,17 @@ export default async function ScorePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://agenthermes.ai' },
+            { '@type': 'ListItem', position: 2, name: 'Score', item: `https://agenthermes.ai/score/${encodeURIComponent(domain)}` },
+          ],
+        }) }}
+      />
 
       {/* ---- Hero: Score + Tier ---- */}
       <div className="flex flex-col items-center text-center mb-12">

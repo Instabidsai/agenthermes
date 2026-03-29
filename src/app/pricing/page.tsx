@@ -210,6 +210,17 @@ export default function PricingPage() {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(product) }}
         />
       ))}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://agenthermes.ai' },
+            { '@type': 'ListItem', position: 2, name: 'Pricing', item: 'https://agenthermes.ai/pricing' },
+          ],
+        }) }}
+      />
       {/* Header */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.03)_1px,transparent_1px)] bg-[size:64px_64px]" />

@@ -27,6 +27,7 @@ import {
 import clsx from 'clsx'
 import ScoreGauge from '@/components/ScoreGauge'
 import TierBadge from '@/components/TierBadge'
+import { BreadcrumbJsonLd } from '@/components/Breadcrumbs'
 
 type AuditTier = 'unaudited' | 'bronze' | 'silver' | 'gold' | 'platinum'
 
@@ -1455,14 +1456,20 @@ function RemediatePageContent() {
 
 export default function RemediatePage() {
   return (
-    <Suspense
-      fallback={
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10 sm:py-14 text-center">
-          <Loader2 className="h-8 w-8 text-amber-500 animate-spin mx-auto" />
-        </div>
-      }
-    >
-      <RemediatePageContent />
-    </Suspense>
+    <>
+      <BreadcrumbJsonLd items={[
+        { name: 'Home', url: 'https://agenthermes.ai' },
+        { name: 'Remediate', url: 'https://agenthermes.ai/remediate' },
+      ]} />
+      <Suspense
+        fallback={
+          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10 sm:py-14 text-center">
+            <Loader2 className="h-8 w-8 text-amber-500 animate-spin mx-auto" />
+          </div>
+        }
+      >
+        <RemediatePageContent />
+      </Suspense>
+    </>
   )
 }

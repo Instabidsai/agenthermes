@@ -17,6 +17,7 @@ import clsx from 'clsx'
 import ScoreGauge from '@/components/ScoreGauge'
 import TierBadge from '@/components/TierBadge'
 import { FadeIn } from '@/components/FadeIn'
+import { BreadcrumbJsonLd } from '@/components/Breadcrumbs'
 
 interface LeaderboardEntry {
   rank: number
@@ -166,6 +167,10 @@ export default function LeaderboardPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+      <BreadcrumbJsonLd items={[
+        { name: 'Home', url: 'https://agenthermes.ai' },
+        { name: 'Leaderboard', url: 'https://agenthermes.ai/leaderboard' },
+      ]} />
       {/* Header */}
       <div className="mb-10">
         <div className="flex items-center gap-3 mb-2">

@@ -43,6 +43,7 @@ export const metadata: Metadata = {
       'The verified commerce network for agent-ready businesses. Machine-readable trust, real transactions, no black boxes.',
     images: ['/og-image.png'],
   },
+  authors: [{ name: 'AgentHermes Team', url: 'https://agenthermes.ai' }],
   robots: {
     index: true,
     follow: true,
@@ -85,6 +86,9 @@ const jsonLd = {
     name: 'AgentHermes',
     url: 'https://agenthermes.ai',
     email: 'support@agenthermes.ai',
+    sameAs: [
+      'https://github.com/agenthermes',
+    ],
   },
 };
 

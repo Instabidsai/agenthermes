@@ -17,6 +17,7 @@ import {
   AlertCircle,
 } from 'lucide-react'
 import clsx from 'clsx'
+import { BreadcrumbJsonLd } from '@/components/Breadcrumbs'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -291,6 +292,10 @@ export default function ConnectPage() {
 
   return (
     <div className="relative">
+      <BreadcrumbJsonLd items={[
+        { name: 'Home', url: 'https://agenthermes.ai' },
+        { name: 'Connect', url: 'https://agenthermes.ai/connect' },
+      ]} />
       {/* Grid background */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.02)_1px,transparent_1px),linear_gradient(90deg,rgba(16,185,129,0.02)_1px,transparent_1px)] bg-[size:64px_64px] pointer-events-none" />
 
