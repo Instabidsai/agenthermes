@@ -55,6 +55,39 @@ export const metadata: Metadata = {
   },
 };
 
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'AgentHermes',
+  url: 'https://agenthermes.ai',
+  applicationCategory: 'BusinessApplication',
+  operatingSystem: 'Web',
+  description:
+    'The verified commerce network for the agent economy. Scores businesses 0-100 on AI agent readiness across 9 dimensions including discoverability, interoperability, security, and agent experience.',
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'USD',
+    description: 'Free agent readiness scan',
+  },
+  featureList: [
+    '9-dimension AI agent readiness scoring (0-100)',
+    'Business discovery network with semantic search',
+    'MCP server with 10 tools, 4 resources, 3 prompts',
+    'Automated remediation (agent cards, llms.txt, Schema.org)',
+    'Gateway — one API key for every connected service',
+    'Wallet-to-wallet payments for agent transactions',
+    'Certification and embeddable trust badges',
+    'Endpoint health monitoring and mystery shopping',
+  ],
+  provider: {
+    '@type': 'Organization',
+    name: 'AgentHermes',
+    url: 'https://agenthermes.ai',
+    email: 'support@agenthermes.ai',
+  },
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -65,6 +98,12 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className="min-h-full flex flex-col bg-[#09090b] text-zinc-100">
         <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:left-2 focus:px-4 focus:py-2 focus:bg-emerald-600 focus:text-white focus:rounded-lg focus:outline-none">
           Skip to main content
