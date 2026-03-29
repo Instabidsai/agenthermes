@@ -1,0 +1,1083 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AgentHermes API",
+    "description": "The agent readiness infrastructure for the internet. AgentHermes scans, scores, certifies, and connects businesses for AI agent commerce. 9-dimension readiness scoring, business directory, service gateway, trust scores, monitoring, and mystery shopping.",
+    "version": "1.0.0",
+    "contact": {
+      "email": "support@agenthermes.ai"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://agenthermes.ai"
+    }
+  ],
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "summary": "Health check",
+        "description": "Returns service health status. No auth required.",
+        "operationId": "getHealth",
+        "tags": ["System"],
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "healthy" },
+                    "version": { "type": "string", "example": "1.0.0" },
+                    "timestamp": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/scan": {
+      "post": {
+        "summary": "9-Dimension Agent Readiness Scan",
+        "description": "Scan a domain across 9 dimensions of agent readiness (D1-D9). Returns a full scorecard with per-dimension breakdowns, cap rules, and prioritized recommendations. Rate limited to 5 scans per minute.",
+        "operationId": "scanDomain",
+        "tags": ["Scanning"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["url"],
+                "properties": {
+                  "url": { "type": "string", "description": "Domain or URL to scan", "example": "example.com" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Scan results with 9-dimension scorecard",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "total_score": { "type": "number" },
+                    "tier": { "type": "string", "enum": ["platinum", "gold", "silver", "bronze", "unaudited"] },
+                    "dimensions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "dimension": { "type": "string" },
+                          "label": { "type": "string" },
+                          "score": { "type": "number" },
+                          "weight": { "type": "number" },
+                          "checks": { "type": "array", "items": { "type": "object" } },
+                          "recommendations": { "type": "array", "items": { "type": "object" } }
+                        }
+                      }
+                    },
+                    "business_id": { "type": "string", "format": "uuid" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Invalid or missing URL" },
+          "429": { "description": "Rate limit exceeded" }
+        }
+      }
+    },
+    "/api/v1/scan/batch": {
+      "post": {
+        "summary": "Batch domain scanning",
+        "description": "Scan up to 100 domains at once. Domains scanned within the last 24 hours return cached results. Batches of 5 or fewer are scanned synchronously; larger batches are queued. Auth required.",
+        "operationId": "batchScan",
+        "tags": ["Scanning"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["domains"],
+                "properties": {
+                  "domains": { "type": "array", "items": { "type": "string" }, "maxItems": 100, "description": "Array of domain strings to scan" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Batch scan results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "domain": { "type": "string" },
+                          "score": { "type": "number", "nullable": true },
+                          "tier": { "type": "string" },
+                          "hermes_id": { "type": "string", "nullable": true },
+                          "status": { "type": "string", "enum": ["cached", "scanned", "queued", "error"] }
+                        }
+                      }
+                    },
+                    "summary": { "type": "object" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "429": { "description": "Rate limit exceeded" }
+        }
+      }
+    },
+    "/api/v1/audit": {
+      "post": {
+        "summary": "Run agent readiness audit (legacy)",
+        "description": "Run a full 9-dimension agent readiness audit on a URL. Similar to /scan but includes backward-compatible fields. Rate limited to 5 per minute.",
+        "operationId": "auditDomain",
+        "tags": ["Scanning"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["url"],
+                "properties": {
+                  "url": { "type": "string", "description": "Domain or URL to audit" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Audit scorecard with dimension breakdown" },
+          "400": { "description": "Invalid URL" },
+          "429": { "description": "Rate limit exceeded" }
+        }
+      }
+    },
+    "/api/v1/audit/{id}": {
+      "get": {
+        "summary": "Get audit results for a business",
+        "description": "Returns detailed audit results and category breakdown for a specific business by ID.",
+        "operationId": "getAuditById",
+        "tags": ["Scanning"],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" }, "description": "Business ID" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Audit results with categories and next steps",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "business_id": { "type": "string" },
+                    "business_name": { "type": "string" },
+                    "domain": { "type": "string" },
+                    "total_score": { "type": "number" },
+                    "tier": { "type": "string" },
+                    "categories": { "type": "array", "items": { "type": "object" } },
+                    "next_steps": { "type": "array", "items": { "type": "string" } }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Business not found" }
+        }
+      }
+    },
+    "/api/v1/score/{domain}": {
+      "get": {
+        "summary": "Get score for a domain",
+        "description": "Returns the agent readiness score, tier, and category breakdown for a domain. CORS-enabled for cross-origin access.",
+        "operationId": "getScoreByDomain",
+        "tags": ["Scoring"],
+        "parameters": [
+          { "name": "domain", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Domain to look up (e.g. example.com)" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Domain score and tier info",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "domain": { "type": "string" },
+                    "score": { "type": "number", "nullable": true },
+                    "tier": { "type": "string" },
+                    "tier_label": { "type": "string" },
+                    "last_audited": { "type": "string", "format": "date-time", "nullable": true },
+                    "categories": { "type": "object" },
+                    "profile_url": { "type": "string" },
+                    "badge_url": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Invalid domain format" }
+        }
+      }
+    },
+    "/api/v1/trust-score/{slug}": {
+      "get": {
+        "summary": "Compute trust score for a business",
+        "description": "Calculates a composite trust score based on audit score, uptime, transaction history, and other signals.",
+        "operationId": "getTrustScore",
+        "tags": ["Scoring"],
+        "parameters": [
+          { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Business slug" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Trust score with breakdown",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "business_id": { "type": "string" },
+                    "slug": { "type": "string" },
+                    "name": { "type": "string" },
+                    "trust_score": { "type": "number" },
+                    "breakdown": { "type": "object" },
+                    "computed_at": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Business not found" }
+        }
+      }
+    },
+    "/api/v1/discover": {
+      "get": {
+        "summary": "Discover agent-ready businesses",
+        "description": "Search and filter the directory of agent-ready businesses. Supports text search, vertical filtering, capability matching, tier filtering, MCP compatibility, and price limits.",
+        "operationId": "discoverBusinesses",
+        "tags": ["Discovery"],
+        "parameters": [
+          { "name": "q", "in": "query", "schema": { "type": "string" }, "description": "Text search query" },
+          { "name": "vertical", "in": "query", "schema": { "type": "string" }, "description": "Filter by business vertical" },
+          { "name": "capability", "in": "query", "schema": { "type": "string" }, "description": "Filter by capability" },
+          { "name": "min_score", "in": "query", "schema": { "type": "number" }, "description": "Minimum audit score" },
+          { "name": "tier", "in": "query", "schema": { "type": "string", "enum": ["bronze", "silver", "gold", "platinum"] }, "description": "Minimum tier" },
+          { "name": "mcp_compatible", "in": "query", "schema": { "type": "string", "enum": ["true"] }, "description": "Only MCP-compatible businesses" },
+          { "name": "max_price", "in": "query", "schema": { "type": "number" }, "description": "Maximum price per call" },
+          { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["audit_score", "trust_score", "name"] }, "description": "Sort field" },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20, "maximum": 100 } },
+          { "name": "offset", "in": "query", "schema": { "type": "integer", "default": 0 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of businesses with pagination",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "businesses": { "type": "array", "items": { "type": "object" } },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "total": { "type": "integer" },
+                        "limit": { "type": "integer" },
+                        "offset": { "type": "integer" },
+                        "has_more": { "type": "boolean" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/discover/semantic": {
+      "get": {
+        "summary": "Semantic search for businesses",
+        "description": "Vector similarity search with full-text fallback. Finds businesses by meaning rather than exact keywords.",
+        "operationId": "semanticSearch",
+        "tags": ["Discovery"],
+        "parameters": [
+          { "name": "q", "in": "query", "required": true, "schema": { "type": "string" }, "description": "Search query" },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20, "maximum": 100 } },
+          { "name": "threshold", "in": "query", "schema": { "type": "number", "default": 0.3 }, "description": "Similarity threshold (0-1)" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Semantically matched businesses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "businesses": { "type": "array", "items": { "type": "object" } },
+                    "search_type": { "type": "string", "enum": ["semantic", "fulltext_ranked"] },
+                    "query": { "type": "string" },
+                    "result_count": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Missing query parameter" }
+        }
+      }
+    },
+    "/api/v1/discover/services": {
+      "get": {
+        "summary": "Search across all services",
+        "description": "Search all services across all businesses with filtering by vertical, price, pricing model, auth type, and uptime.",
+        "operationId": "discoverServices",
+        "tags": ["Discovery"],
+        "parameters": [
+          { "name": "q", "in": "query", "schema": { "type": "string" }, "description": "Text search" },
+          { "name": "vertical", "in": "query", "schema": { "type": "string" }, "description": "Filter by parent business vertical" },
+          { "name": "max_price", "in": "query", "schema": { "type": "number" } },
+          { "name": "pricing_model", "in": "query", "schema": { "type": "string", "enum": ["per_call", "monthly", "per_unit", "custom"] } },
+          { "name": "auth_type", "in": "query", "schema": { "type": "string", "enum": ["api_key", "oauth", "jwt", "none"] } },
+          { "name": "min_uptime", "in": "query", "schema": { "type": "number" }, "description": "Minimum uptime % (0-100)" },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20, "maximum": 100 } },
+          { "name": "offset", "in": "query", "schema": { "type": "integer", "default": 0 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of services with parent business info",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "services": { "type": "array", "items": { "type": "object" } },
+                    "pagination": { "type": "object" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/business": {
+      "post": {
+        "summary": "Register a new business",
+        "description": "Register a business in the AgentHermes directory. Returns the created business record.",
+        "operationId": "createBusiness",
+        "tags": ["Businesses"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": { "type": "string", "maxLength": 200 },
+                  "domain": { "type": "string", "description": "Domain (e.g. example.com)" },
+                  "description": { "type": "string" },
+                  "owner_email": { "type": "string", "format": "email" },
+                  "vertical": { "type": "string" },
+                  "capabilities": { "type": "array", "items": { "type": "string" } }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Business created" },
+          "400": { "description": "Invalid input" },
+          "409": { "description": "Business slug already exists" }
+        }
+      }
+    },
+    "/api/v1/business/{slug}": {
+      "get": {
+        "summary": "Get business profile",
+        "description": "Returns full business profile including services, audit results, connection count, and transaction volume.",
+        "operationId": "getBusinessBySlug",
+        "tags": ["Businesses"],
+        "parameters": [
+          { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Business profile with services and audit data" },
+          "404": { "description": "Business not found" }
+        }
+      },
+      "patch": {
+        "summary": "Update business profile",
+        "description": "Update business fields (name, description, domain, vertical, capabilities, logo_url). Auth required.",
+        "operationId": "updateBusiness",
+        "tags": ["Businesses"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Updated business" },
+          "401": { "description": "Unauthorized" },
+          "404": { "description": "Business not found" }
+        }
+      }
+    },
+    "/api/v1/business/{slug}/services": {
+      "get": {
+        "summary": "List services for a business",
+        "operationId": "listBusinessServices",
+        "tags": ["Services"],
+        "parameters": [
+          { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "List of services" },
+          "404": { "description": "Business not found" }
+        }
+      },
+      "post": {
+        "summary": "Add a service to a business",
+        "operationId": "createService",
+        "tags": ["Services"],
+        "parameters": [
+          { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "description": { "type": "string" },
+                  "pricing_model": { "type": "string", "enum": ["per_call", "monthly", "per_unit", "custom"] },
+                  "price_per_call": { "type": "number" },
+                  "mcp_endpoint": { "type": "string" },
+                  "auth_type": { "type": "string", "enum": ["api_key", "oauth", "jwt", "none"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Service created" },
+          "404": { "description": "Business not found" }
+        }
+      }
+    },
+    "/api/v1/business/{slug}/manifest": {
+      "get": {
+        "summary": "Get business manifest",
+        "description": "Returns a structured manifest of a business's agent readiness profile, services, MCP endpoints, and payment capabilities.",
+        "operationId": "getBusinessManifest",
+        "tags": ["Businesses"],
+        "parameters": [
+          { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Business manifest",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "schema_version": { "type": "string" },
+                    "business": { "type": "object" },
+                    "agent_readiness": { "type": "object" },
+                    "mcp_endpoints": { "type": "array", "items": { "type": "string" } },
+                    "services": { "type": "array", "items": { "type": "object" } },
+                    "payment": { "type": "object" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Business not found" }
+        }
+      }
+    },
+    "/api/v1/leaderboard": {
+      "get": {
+        "summary": "Agent readiness leaderboard",
+        "description": "Ranked list of all scored businesses. CORS-enabled. Filterable by vertical with pagination.",
+        "operationId": "getLeaderboard",
+        "tags": ["Discovery"],
+        "parameters": [
+          { "name": "vertical", "in": "query", "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 50, "maximum": 100 } },
+          { "name": "offset", "in": "query", "schema": { "type": "integer", "default": 0 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ranked leaderboard with filter options",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "leaderboard": { "type": "array", "items": { "type": "object" } },
+                    "pagination": { "type": "object" },
+                    "filters": { "type": "object" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/benchmarks": {
+      "get": {
+        "summary": "Industry benchmarks",
+        "description": "Returns aggregate statistics, tier distribution, category averages, and top businesses. Optionally filtered by vertical.",
+        "operationId": "getBenchmarks",
+        "tags": ["Reports"],
+        "parameters": [
+          { "name": "vertical", "in": "query", "schema": { "type": "string" }, "description": "Filter by vertical" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Benchmark statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "vertical": { "type": "string" },
+                    "total_businesses": { "type": "integer" },
+                    "avg_score": { "type": "number" },
+                    "median_score": { "type": "number" },
+                    "top_quartile_score": { "type": "number" },
+                    "tier_distribution": { "type": "object" },
+                    "top_businesses": { "type": "array", "items": { "type": "object" } },
+                    "category_averages": { "type": "object" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/report": {
+      "get": {
+        "summary": "State of Agent Readiness report",
+        "description": "Comprehensive report with summary statistics, dimension averages, industry breakdown, top 10 businesses, 30-day trends, and AI-generated key findings.",
+        "operationId": "getReport",
+        "tags": ["Reports"],
+        "responses": {
+          "200": {
+            "description": "Full report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "report_title": { "type": "string" },
+                    "generated_at": { "type": "string", "format": "date-time" },
+                    "summary": { "type": "object" },
+                    "dimension_averages": { "type": "object" },
+                    "industry_breakdown": { "type": "array", "items": { "type": "object" } },
+                    "top_10_businesses": { "type": "array", "items": { "type": "object" } },
+                    "trends": { "type": "object" },
+                    "key_findings": { "type": "array", "items": { "type": "string" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/digest": {
+      "get": {
+        "summary": "Weekly agent readiness digest",
+        "description": "Weekly summary of new scans, score changes, network stats, top search queries, and industry breakdown. CORS-enabled.",
+        "operationId": "getDigest",
+        "tags": ["Reports"],
+        "responses": {
+          "200": { "description": "Weekly digest data" }
+        }
+      }
+    },
+    "/api/v1/certify": {
+      "post": {
+        "summary": "Apply for certification",
+        "description": "Apply for Gold or Platinum certification. Runs a fresh audit and issues a 90-day certification if the score meets the threshold (75+ for Gold, 90+ for Platinum). Auth required.",
+        "operationId": "certifyBusiness",
+        "tags": ["Certification"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "slug": { "type": "string" },
+                  "business_id": { "type": "string", "format": "uuid" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Certification issued with badge URL" },
+          "400": { "description": "Score too low for certification" },
+          "401": { "description": "Unauthorized" },
+          "404": { "description": "Business not found" }
+        }
+      },
+      "get": {
+        "summary": "Check certification status",
+        "description": "Check whether a business is certified and get certification details.",
+        "operationId": "getCertification",
+        "tags": ["Certification"],
+        "parameters": [
+          { "name": "slug", "in": "query", "schema": { "type": "string" } },
+          { "name": "business_id", "in": "query", "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Certification status" },
+          "404": { "description": "Business not found" }
+        }
+      }
+    },
+    "/api/v1/hermes-json": {
+      "post": {
+        "summary": "Generate agent-hermes.json",
+        "description": "Generate a signed .well-known/agent-hermes.json file for a business domain. Includes HMAC-SHA256 signature for tamper-proof verification. Auth required.",
+        "operationId": "generateHermesJson",
+        "tags": ["Certification"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "domain": { "type": "string" },
+                  "slug": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Generated hermes.json with deployment instructions" },
+          "404": { "description": "Business not found" }
+        }
+      }
+    },
+    "/api/v1/hermes-json/verify": {
+      "post": {
+        "summary": "Verify agent-hermes.json",
+        "description": "Verify the signature and score accuracy of an agent-hermes.json file. Can fetch from a domain or verify a provided JSON object. CORS-enabled.",
+        "operationId": "verifyHermesJson",
+        "tags": ["Certification"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "domain": { "type": "string", "description": "Domain to fetch .well-known/agent-hermes.json from" },
+                  "hermes_json": { "type": "object", "description": "Agent-hermes.json content to verify directly" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verification result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "valid": { "type": "boolean" },
+                    "domain": { "type": "string" },
+                    "score": { "type": "number" },
+                    "tier": { "type": "string" },
+                    "signature_verified": { "type": "boolean" },
+                    "score_matches_db": { "type": "boolean" },
+                    "reason": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/gateway": {
+      "get": {
+        "summary": "List gateway services",
+        "description": "List all active gateway services with optional filtering by category, status, business, or slug.",
+        "operationId": "listGatewayServices",
+        "tags": ["Gateway"],
+        "parameters": [
+          { "name": "category", "in": "query", "schema": { "type": "string" } },
+          { "name": "status", "in": "query", "schema": { "type": "string" }, "description": "Default: active" },
+          { "name": "business_id", "in": "query", "schema": { "type": "string", "format": "uuid" } },
+          { "name": "slug", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of gateway services",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "services": { "type": "array", "items": { "type": "object" } },
+                    "count": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Connect a service to the gateway",
+        "description": "Register a new service on the AgentHermes gateway. Credentials are encrypted at rest. Auth required.",
+        "operationId": "createGatewayService",
+        "tags": ["Gateway"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "api_base_url", "auth_type"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "description": { "type": "string" },
+                  "api_base_url": { "type": "string" },
+                  "auth_type": { "type": "string", "enum": ["bearer", "api_key_header", "basic", "oauth", "query_param", "none"] },
+                  "credentials": { "type": "object", "description": "Credentials (encrypted at rest)" },
+                  "actions": { "type": "array", "items": { "type": "object" } },
+                  "cost_per_call": { "type": "number" },
+                  "category": { "type": "string" },
+                  "business_id": { "type": "string", "format": "uuid" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Gateway service created" },
+          "401": { "description": "Unauthorized" },
+          "409": { "description": "Service name already exists" }
+        }
+      }
+    },
+    "/api/v1/gateway/call": {
+      "post": {
+        "summary": "Call a service through the gateway",
+        "description": "Proxy an API call through the AgentHermes gateway. Handles auth injection, billing, and usage logging. Requires Bearer token and wallet balance. Rate limited to 30 req/min.",
+        "operationId": "callGatewayService",
+        "tags": ["Gateway"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["service_id", "action", "wallet_id"],
+                "properties": {
+                  "service_id": { "type": "string", "format": "uuid" },
+                  "action": { "type": "string", "description": "Action name to invoke" },
+                  "params": { "type": "object", "description": "Parameters forwarded to upstream API" },
+                  "wallet_id": { "type": "string", "format": "uuid", "description": "Wallet to charge" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Proxied response with billing metadata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "type": "object" },
+                    "billing": { "type": "object" },
+                    "meta": { "type": "object" }
+                  }
+                }
+              }
+            }
+          },
+          "402": { "description": "Insufficient balance" },
+          "404": { "description": "Service not found" },
+          "429": { "description": "Rate limit exceeded" }
+        }
+      }
+    },
+    "/api/v1/wallet": {
+      "get": {
+        "summary": "Get wallet for a business",
+        "description": "Returns the agent wallet balance and settings for a business. Auth required.",
+        "operationId": "getWallet",
+        "tags": ["Wallet"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "business_id", "in": "query", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Wallet details" },
+          "404": { "description": "No wallet found" }
+        }
+      }
+    },
+    "/api/v1/health/check": {
+      "post": {
+        "summary": "Trigger health check on a service",
+        "description": "Performs an HTTP health check on a service endpoint. Records response time and status. Auth required.",
+        "operationId": "healthCheck",
+        "tags": ["Monitoring"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "service_id": { "type": "string", "format": "uuid", "description": "Service to check (looks up endpoint from DB)" },
+                  "url": { "type": "string", "description": "Direct URL to check" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Health check result with status and response time" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/api/v1/health/status": {
+      "get": {
+        "summary": "Get health status for a business",
+        "description": "Returns all services for a business with their latest health check, average response time, and uptime percentage.",
+        "operationId": "getHealthStatus",
+        "tags": ["Monitoring"],
+        "parameters": [
+          { "name": "business_id", "in": "query", "schema": { "type": "string", "format": "uuid" } },
+          { "name": "slug", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Service health summary" },
+          "400": { "description": "Missing business_id or slug" },
+          "404": { "description": "Business not found" }
+        }
+      }
+    },
+    "/api/v1/monitoring": {
+      "get": {
+        "summary": "Get monitoring events",
+        "description": "Query monitoring events with optional filtering by business, severity, and event type.",
+        "operationId": "getMonitoringEvents",
+        "tags": ["Monitoring"],
+        "parameters": [
+          { "name": "business_id", "in": "query", "schema": { "type": "string", "format": "uuid" } },
+          { "name": "severity", "in": "query", "schema": { "type": "string" } },
+          { "name": "event_type", "in": "query", "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 50, "maximum": 100 } },
+          { "name": "offset", "in": "query", "schema": { "type": "integer", "default": 0 } }
+        ],
+        "responses": {
+          "200": { "description": "Monitoring events with pagination" }
+        }
+      },
+      "post": {
+        "summary": "Trigger monitoring cycle",
+        "description": "Re-scan businesses that have not been checked in over 24 hours. Auth required. Rate limited to 1 per 5 minutes.",
+        "operationId": "triggerMonitoring",
+        "tags": ["Monitoring"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Monitoring cycle results" },
+          "401": { "description": "Unauthorized" },
+          "429": { "description": "Rate limit exceeded" }
+        }
+      }
+    },
+    "/api/v1/mystery-shop": {
+      "post": {
+        "summary": "Trigger mystery shop",
+        "description": "Run a mystery shop test on a business's agent-facing services. Auth required.",
+        "operationId": "runMysteryShop",
+        "tags": ["Monitoring"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "business_id": { "type": "string", "format": "uuid" },
+                  "slug": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Mystery shop results" },
+          "401": { "description": "Unauthorized" },
+          "404": { "description": "Business not found" }
+        }
+      },
+      "get": {
+        "summary": "Get mystery shop history",
+        "description": "Retrieve past mystery shop results for a business.",
+        "operationId": "getMysteryShopHistory",
+        "tags": ["Monitoring"],
+        "parameters": [
+          { "name": "business_id", "in": "query", "schema": { "type": "string", "format": "uuid" } },
+          { "name": "slug", "in": "query", "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 50 } },
+          { "name": "offset", "in": "query", "schema": { "type": "integer", "default": 0 } }
+        ],
+        "responses": {
+          "200": { "description": "Mystery shop history with pagination" }
+        }
+      }
+    },
+    "/api/v1/analytics": {
+      "get": {
+        "summary": "Get business analytics",
+        "description": "Returns analytics for a business including views, searches, transactions, search queries, top agents, and gateway usage. Auth required.",
+        "operationId": "getAnalytics",
+        "tags": ["Analytics"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "business_id", "in": "query", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "period", "in": "query", "schema": { "type": "string", "enum": ["7d", "30d", "90d"], "default": "30d" } },
+          { "name": "group_by", "in": "query", "schema": { "type": "string", "enum": ["day", "week"], "default": "day" } }
+        ],
+        "responses": {
+          "200": { "description": "Business analytics data" },
+          "401": { "description": "Unauthorized" },
+          "404": { "description": "Business not found" }
+        }
+      }
+    },
+    "/api/v1/subscribe": {
+      "post": {
+        "summary": "Subscribe to score change alerts",
+        "description": "Subscribe an email address to receive notifications when a domain's agent readiness score changes.",
+        "operationId": "subscribeAlerts",
+        "tags": ["Notifications"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "domain": { "type": "string" },
+                  "score": { "type": "number" },
+                  "tier": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Subscription created" },
+          "400": { "description": "Invalid email" }
+        }
+      }
+    },
+    "/api/badge/{domain}": {
+      "get": {
+        "summary": "Get badge SVG for a domain",
+        "description": "Returns an SVG badge showing the agent readiness score and tier for a domain.",
+        "operationId": "getBadge",
+        "tags": ["Badges"],
+        "parameters": [
+          { "name": "domain", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "SVG badge image", "content": { "image/svg+xml": {} } }
+        }
+      }
+    },
+    "/api/badge/{domain}/embed": {
+      "get": {
+        "summary": "Get embeddable badge HTML",
+        "description": "Returns an HTML snippet with an embeddable agent readiness badge.",
+        "operationId": "getBadgeEmbed",
+        "tags": ["Badges"],
+        "parameters": [
+          { "name": "domain", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Embeddable HTML badge" }
+        }
+      }
+    },
+    "/api/mcp": {
+      "post": {
+        "summary": "MCP SSE endpoint",
+        "description": "Model Context Protocol endpoint for AI agent tool integration.",
+        "operationId": "mcpEndpoint",
+        "tags": ["MCP"],
+        "responses": {
+          "200": { "description": "MCP response" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Bearer token authentication for protected endpoints"
+      }
+    }
+  }
+}
