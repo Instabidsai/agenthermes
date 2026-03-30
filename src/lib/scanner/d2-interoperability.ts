@@ -1,8 +1,13 @@
 // ---------------------------------------------------------------------------
-// D2 — Interoperability (weight: 0.20)
+// D2 — API Quality (weight: 0.15, renamed from Interoperability in v2)
 // Can an agent actually call this business's endpoints and get structured data?
-// Checks: MCP tools/list, REST API endpoints, OPTIONS support, response
-//         schema validation, response times, HTTP status codes
+//
+// v2 rebalance: REST API quality is now the PRIMARY driver (up to 40pts).
+// MCP tools reduced to 10pts (bonus, not core). The best APIs in the world
+// (Stripe, GitHub, Twilio) should score 70+ here based on REST alone.
+//
+// Checks: REST API endpoints, OPTIONS support, JSON responses, response
+//         times, HTTP status codes, MCP tools/list (bonus)
 // ---------------------------------------------------------------------------
 
 import type { DimensionResult, Check, Recommendation } from './types'
@@ -17,7 +22,8 @@ export async function scanInteroperability(
   let rawScore = 0
 
   // -----------------------------------------------------------------------
-  // 1. MCP endpoint — tools/list capability (up to 25 pts)
+  // 1. MCP endpoint — tools/list capability (up to 10 pts — reduced from 25)
+  // Agent-native feature: main value now in Agent-Native Bonus (7% total)
   // -----------------------------------------------------------------------
   const mcpPaths = [
     '/.well-known/mcp.json',
@@ -93,41 +99,41 @@ export async function scanInteroperability(
       }
 
       if (mcpToolsFound) {
-        rawScore += 25
+        rawScore += 10
         checks.push({
           name: 'MCP Tools List',
           passed: true,
           details: `MCP server${mcpEndpointUrl ? ` at ${mcpEndpointUrl}` : ` at ${mcpHit.url}`} responds with callable tools`,
-          points: 25,
+          points: 10,
         })
       } else {
-        rawScore += 12
+        rawScore += 5
         checks.push({
           name: 'MCP Tools List',
           passed: false,
           details: `MCP discovery at ${mcpHit.url} but could not verify callable tools via JSON-RPC tools/list`,
-          points: 12,
+          points: 5,
         })
         recommendations.push({
           action:
             'Ensure your MCP endpoint supports JSON-RPC 2.0 tools/list method and returns a tools array.',
-          impact: '+13 points',
+          impact: '+5 points',
           difficulty: 'medium',
           auto_fixable: false,
         })
       }
     } else {
-      rawScore += 5
+      rawScore += 3
       checks.push({
         name: 'MCP Tools List',
         passed: false,
         details: `MCP endpoint found at ${mcpHit.url} but response is not valid JSON`,
-        points: 5,
+        points: 3,
       })
       recommendations.push({
         action:
           'Ensure your MCP endpoint returns a JSON manifest with tools array following the MCP specification.',
-        impact: '+20 points',
+        impact: '+7 points',
         difficulty: 'medium',
         auto_fixable: false,
       })
@@ -142,14 +148,17 @@ export async function scanInteroperability(
     recommendations.push({
       action:
         'Expose an MCP server at /.well-known/mcp.json or /api/mcp so AI agents can discover and call your tools.',
-      impact: '+25 points',
+      impact: '+10 points',
       difficulty: 'hard',
       auto_fixable: false,
     })
   }
 
   // -----------------------------------------------------------------------
-  // 2. REST API endpoints — test OPTIONS + GET (up to 25 pts)
+  // 2. REST API endpoints — test OPTIONS + GET (up to 40 pts — increased from 25)
+  //    This is the CORE of API quality. A company with multiple responding
+  //    API endpoints, JSON responses, and CORS support is genuinely useful
+  //    to agents regardless of whether they support MCP.
   // -----------------------------------------------------------------------
   const apiPaths = [
     '/api',
@@ -165,6 +174,7 @@ export async function scanInteroperability(
   ]
 
   // Also probe common API subdomains (api.stripe.com, api.anthropic.com, etc.)
+  // Include auth-protected resource paths that return 401/403 (still counts as existing)
   const apiSubdomains = getApiSubdomains(base)
   const subdomainApiPaths = apiSubdomains.flatMap((sub) => [
     sub,               // e.g. https://api.stripe.com
@@ -172,6 +182,14 @@ export async function scanInteroperability(
     `${sub}/v2`,
     `${sub}/health`,
     `${sub}/status`,
+    // Common resource endpoints for auth-protected APIs
+    `${sub}/v1/users`,
+    `${sub}/v1/accounts`,
+    `${sub}/v1/charges`,
+    `${sub}/v1/customers`,
+    `${sub}/v1/me`,
+    `${sub}/v1/organizations`,
+    `${sub}/v1/models`,
   ])
 
   // Test GET on base domain paths + subdomain paths
@@ -195,7 +213,8 @@ export async function scanInteroperability(
   const optionsHits = optionsResults.filter((r) => r.found || r.status === 204)
 
   if (getHits.length > 0) {
-    const pts = Math.min(getHits.length * 5, 25)
+    // Scale: 1 endpoint = 10pts, 2 = 18pts, 3 = 25pts, 4 = 30pts, 5+ = 35pts
+    const pts = Math.min(getHits.length <= 1 ? 10 : getHits.length <= 2 ? 18 : getHits.length <= 3 ? 25 : getHits.length <= 4 ? 30 : 35, 35)
     rawScore += pts
     checks.push({
       name: 'REST API Endpoints',
@@ -204,15 +223,16 @@ export async function scanInteroperability(
       points: pts,
     })
 
-    // Bonus for JSON responses
+    // Bonus for JSON responses (up to 10 pts)
     const jsonHits = getHits.filter((r) => isJsonContentType(r.contentType))
     if (jsonHits.length > 0) {
-      rawScore += 5
+      const jsonPts = Math.min(jsonHits.length * 3, 10)
+      rawScore += jsonPts
       checks.push({
         name: 'JSON API Responses',
         passed: true,
         details: `${jsonHits.length}/${getHits.length} endpoints return JSON`,
-        points: 5,
+        points: jsonPts,
       })
     } else {
       checks.push({
@@ -223,13 +243,13 @@ export async function scanInteroperability(
       })
       recommendations.push({
         action: 'Ensure your API endpoints return application/json content-type for agent compatibility.',
-        impact: '+5 points',
+        impact: '+10 points',
         difficulty: 'easy',
         auto_fixable: true,
       })
     }
 
-    // Bonus for OPTIONS support (CORS)
+    // Bonus for OPTIONS support (CORS, up to 5 pts)
     if (optionsHits.length > 0) {
       rawScore += 5
       checks.push({
@@ -263,7 +283,7 @@ export async function scanInteroperability(
     recommendations.push({
       action:
         'Expose a REST API at /api or /api/v1 returning JSON. This is fundamental for agent interoperability.',
-      impact: '+25 points',
+      impact: '+40 points',
       difficulty: 'hard',
       auto_fixable: false,
     })
@@ -358,9 +378,9 @@ export async function scanInteroperability(
 
   return {
     dimension: 'D2',
-    label: 'Interoperability',
+    label: 'API Quality',
     score,
-    weight: 0.2,
+    weight: 0.15,
     checks,
     recommendations: recommendations.sort(
       (a, b) => parseInt(b.impact) - parseInt(a.impact)

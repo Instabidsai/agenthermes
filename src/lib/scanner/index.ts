@@ -1,24 +1,38 @@
 // ---------------------------------------------------------------------------
 // Scanner Orchestrator — 9-Dimension Agent Readiness Scanner
 // ---------------------------------------------------------------------------
-// Replaces the old 5-category audit engine with a comprehensive 9-dimension
-// scoring system. Each dimension runs in parallel with a 50s global timeout.
+// Scoring philosophy (v2 — recalibrated 2026-03-30):
 //
-// Weights:
-//   D1 Discoverability      × 0.20
-//   D2 Interoperability     × 0.20
-//   D3 Onboarding           × 0.10
-//   D4 Pricing Transparency × 0.10
-//   D5 Payment              × 0.10
-//   D6 Data Quality         × 0.10
-//   D7 Security             × 0.10
-//   D8 Reliability          × 0.05
-//   D9 Agent Experience     × 0.05
+// The score is the FICO of the Agent Economy. Like FICO, the BASE score
+// reflects fundamental service quality (API maturity, documentation, security,
+// reliability). Agent-native features (MCP, agent cards, llms.txt) are a
+// BONUS that pushes good scores higher — not the primary driver.
+//
+// A world-class API like Stripe should score ~75 based on quality alone.
+// A garage project with only llms.txt should score ~35.
+//
+// Weight tiers:
+//   Tier 1 — Service Foundation (60%):
+//     D2 API Quality          × 0.15  (REST endpoints, response quality, CORS)
+//     D6 Data Quality         × 0.10  (JSON structure, naming, dates)
+//     D7 Security             × 0.12  (TLS, headers, rate limiting)
+//     D8 Reliability          × 0.13  (uptime, response times, SLA)
+//     D9 Agent Experience     × 0.10  (error handling, SDKs, tracing)
+//
+//   Tier 2 — Accessibility (25%):
+//     D1 Discoverability      × 0.12  (docs, OpenAPI, structured data)
+//     D3 Onboarding           × 0.08  (signup, OAuth, developer portal)
+//     D4 Pricing Transparency × 0.05  (pricing pages, free tier)
+//
+//   Tier 3 — Agent Commerce (15%):
+//     D5 Payment              × 0.08  (payment APIs, programmatic billing)
+//     Agent-Native Bonus      × 0.07  (MCP, agent cards, llms.txt, A2A)
 //
 // Cap rules:
 //   - No TLS → total capped at 39 (max Bronze)
-//   - No Agent Card AND no llms.txt AND no MCP → capped at 59 (max Bronze)
 //   - No callable endpoints at all → capped at 29
+//   NOTE: The old "no agent discovery = cap 59" rule was REMOVED.
+//   Companies should not be punished for lacking protocols that barely exist.
 // ---------------------------------------------------------------------------
 
 import { randomBytes } from 'crypto'
@@ -151,30 +165,11 @@ function applyCaps(
     }
   }
 
-  // Cap 2: No Agent Card AND no llms.txt AND no MCP → capped at 59
-  if (d1) {
-    const hasAgentCard = d1.checks.some(
-      (c) => c.name === 'Agent Card' && c.passed
-    )
-    const hasLlmsTxt = d1.checks.some(
-      (c) => c.name === 'llms.txt' && c.passed
-    )
-    const hasMcp = d1.checks.some(
-      (c) => c.name === 'MCP Discovery' && c.passed
-    )
+  // NOTE: The old "no agent discovery = cap 59" rule was REMOVED in v2.
+  // Companies should not be capped for lacking protocols that barely exist yet.
+  // Agent-native features now contribute via the bonus multiplier instead.
 
-    if (!hasAgentCard && !hasLlmsTxt && !hasMcp) {
-      if (finalScore > 59) {
-        finalScore = 59
-        caps.push({
-          rule: 'No Agent Card, no llms.txt, and no MCP — requires at least one discovery mechanism',
-          capped_to: 59,
-        })
-      }
-    }
-  }
-
-  // Cap 3: No callable endpoints at all → capped at 29
+  // Cap 2: No callable endpoints at all → capped at 29
   if (d2) {
     const hasRestEndpoints = d2.checks.some(
       (c) => c.name === 'REST API Endpoints' && c.passed
@@ -198,6 +193,54 @@ function applyCaps(
 }
 
 // ---------------------------------------------------------------------------
+// Agent-Native Bonus Calculator (7% of total score)
+// ---------------------------------------------------------------------------
+// This extracts agent-native signals from D1 and D2 dimension results and
+// converts them into a bonus score worth up to 7 points (0.07 * 100).
+// The bonus rewards adoption of emerging protocols without penalizing
+// companies that haven't adopted them yet.
+
+function calculateAgentNativeBonus(dimensions: DimensionResult[]): number {
+  const d1 = dimensions.find((d) => d.dimension === 'D1')
+  const d2 = dimensions.find((d) => d.dimension === 'D2')
+
+  let bonusRaw = 0
+
+  if (d1) {
+    // Agent Card (up to 30 pts of bonus)
+    const agentCardCheck = d1.checks.find((c) => c.name === 'Agent Card')
+    if (agentCardCheck?.passed) bonusRaw += 30
+    else if (agentCardCheck && agentCardCheck.points > 0) bonusRaw += 10
+
+    // llms.txt (up to 25 pts of bonus)
+    const llmsCheck = d1.checks.find((c) => c.name === 'llms.txt')
+    if (llmsCheck?.passed) bonusRaw += 25
+    else if (llmsCheck && llmsCheck.points > 0) bonusRaw += 8
+
+    // MCP Discovery (up to 15 pts of bonus)
+    const mcpCheck = d1.checks.find((c) => c.name === 'MCP Discovery')
+    if (mcpCheck?.passed) bonusRaw += 15
+    else if (mcpCheck && mcpCheck.points > 0) bonusRaw += 5
+
+    // AGENTS.md (up to 15 pts of bonus)
+    const agentsCheck = d1.checks.find((c) => c.name === 'AGENTS.md')
+    if (agentsCheck?.passed) bonusRaw += 15
+    else if (agentsCheck && agentsCheck.points > 0) bonusRaw += 5
+  }
+
+  if (d2) {
+    // MCP Tools callable (up to 15 pts of bonus)
+    const mcpToolsCheck = d2.checks.find((c) => c.name === 'MCP Tools List')
+    if (mcpToolsCheck?.passed) bonusRaw += 15
+    else if (mcpToolsCheck && mcpToolsCheck.points > 0) bonusRaw += 5
+  }
+
+  // Scale: bonusRaw is 0-100, weight is 0.07, so max bonus = 7 points
+  const bonusScore = Math.min(bonusRaw, 100) * 0.07
+  return bonusScore
+}
+
+// ---------------------------------------------------------------------------
 // Main Scanner
 // ---------------------------------------------------------------------------
 
@@ -211,9 +254,12 @@ export async function runScan(rawUrl: string): Promise<ScanResult> {
 
   try {
     // Run all 9 dimension scanners in parallel with graceful degradation
-    const LABELS = ['Discoverability', 'Interoperability', 'Onboarding', 'Pricing', 'Payment', 'Data Quality', 'Security', 'Reliability', 'Agent Experience']
+    const LABELS = ['Discoverability', 'API Quality', 'Onboarding', 'Pricing', 'Payment', 'Data Quality', 'Security', 'Reliability', 'Agent Experience']
     const DIMS = ['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9']
-    const WEIGHTS = [0.20, 0.20, 0.10, 0.10, 0.10, 0.10, 0.10, 0.05, 0.05]
+    // v2 weights: Foundation (60%) + Accessibility (25%) + Commerce (15%)
+    // D1:0.12  D2:0.15  D3:0.08  D4:0.05  D5:0.08  D6:0.10  D7:0.12  D8:0.13  D9:0.10
+    // Remaining 0.07 goes to agent-native bonus (calculated separately)
+    const WEIGHTS = [0.12, 0.15, 0.08, 0.05, 0.08, 0.10, 0.12, 0.13, 0.10]
 
     const results = await Promise.allSettled([
       scanDiscoverability(base, globalController.signal),
@@ -240,14 +286,21 @@ export async function runScan(rawUrl: string): Promise<ScanResult> {
           }
     )
 
-    // Calculate weighted total
+    // Calculate weighted total (93% from dimensions)
     const weightedRaw = dimensions.reduce(
       (sum, d) => sum + d.score * d.weight,
       0
     )
 
+    // Agent-Native Bonus (7% of total score)
+    // This rewards companies that have adopted agent-native protocols
+    // (MCP, agent cards, llms.txt, A2A) as a BONUS on top of base quality.
+    const agentNativeBonus = calculateAgentNativeBonus(dimensions)
+
+    const combinedRaw = weightedRaw + agentNativeBonus
+
     // Apply cap rules
-    const { score: totalScore, caps } = applyCaps(dimensions, weightedRaw)
+    const { score: totalScore, caps } = applyCaps(dimensions, combinedRaw)
     const tier = tierFromScore(totalScore)
 
     // Extract domain for display

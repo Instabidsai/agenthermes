@@ -16,57 +16,73 @@ Evaluates whether AI agents can find and understand the business.
 - Scoring: Each discoverable artifact adds points proportional to its importance
 - Key signals: Machine-readable business descriptions, agent metadata files, semantic markup
 
-#### 2. Interoperability (20% weight)
+#### Tier 1 — Service Foundation (60% of total score)
+
+#### 2. API Quality (15% weight)
 Evaluates whether AI agents can programmatically interact with the business.
-- Checks for: MCP endpoints, OpenAPI/Swagger specs, A2A agent cards, webhook support, REST/GraphQL APIs, function calling schemas
-- Scoring: Working MCP server = highest points, OpenAPI spec = high, basic REST = moderate
-- Key signals: Standardized protocols, documented endpoints, tool definitions
-
-#### 3. Onboarding (10% weight)
-Evaluates how easily an AI agent can get started.
-- Checks for: Self-service signup, API key provisioning, sandbox/test mode, developer documentation, quickstart guides, SDKs
-- Scoring: Automated key provisioning = highest, manual approval = lower
-- Key signals: Time-to-first-API-call, documentation quality, test environments
-
-#### 4. Pricing Transparency (10% weight)
-Evaluates whether pricing is machine-readable and predictable.
-- Checks for: Machine-readable pricing pages, free tier availability, usage limits, cost calculators, pricing API endpoints
-- Scoring: Structured pricing data = highest, human-readable only = lower
-- Key signals: JSON pricing, clear rate limits, predictable cost models
-
-#### 5. Payment (10% weight)
-Evaluates whether AI agents can initiate and complete payments.
-- Checks for: Stripe Connect integration, wallet support, agent-initiated payment flows, invoicing APIs
-- Scoring: Wallet-to-wallet = highest, Stripe Connect = high, manual invoicing = low
-- Key signals: Programmatic payment initiation, settlement speed, refund support
+- Checks for: REST API endpoints, JSON responses, CORS support, response times, HTTP status codes, MCP endpoints (bonus)
+- Scoring: Multiple responding REST endpoints + JSON = highest. MCP is a bonus, not required.
+- Key signals: API endpoint count, response structure, status code correctness
 
 #### 6. Data Quality (10% weight)
 Evaluates the quality and consistency of API responses.
-- Checks for: Consistent JSON schemas, proper error formats (RFC 7807), pagination, filtering, versioning, content negotiation
-- Scoring: Consistent schemas + proper errors = highest, inconsistent formats = lower
+- Checks for: Consistent JSON schemas, proper error formats, naming conventions, ISO 8601 dates, content-type headers
+- Scoring: Consistent schemas + proper errors = highest. Auth-protected APIs (401/403 with structured JSON) score up to 70/100.
 - Key signals: Schema validation pass rate, error message quality, response structure consistency
 
-#### 7. Security (10% weight)
+#### 7. Security (12% weight)
 Evaluates security posture for agent interactions.
 - Checks for: TLS/HTTPS, API key authentication, OAuth2/JWT, rate limiting, CORS configuration, security headers (CSP, HSTS, X-Frame-Options)
 - Scoring: Full security stack = highest, missing TLS = automatic cap at 39
 - Key signals: Certificate validity, auth mechanism strength, rate limit headers
 
-#### 8. Reliability (5% weight)
+#### 8. Reliability (13% weight)
 Evaluates operational reliability.
-- Checks for: Uptime percentage, response times (p50/p95/p99), health check endpoints, status pages, SLA documentation
-- Scoring: 99.9%+ uptime + fast responses = highest
-- Key signals: Health endpoint presence, historical uptime, latency distribution
+- Checks for: Uptime, response times (p95), health check endpoints, status pages, SLA documentation, retry hints
+- Scoring: Fast responses + health endpoints + status page = highest
+- Key signals: Health endpoint presence, response latency, error rate
 
-#### 9. Agent Experience (5% weight)
-Evaluates the end-to-end agent workflow quality.
-- Checks for: Tool chaining support, context handling, multi-step workflows, idempotency, retry-friendly design
-- Scoring: Full workflow support = highest, single-call only = lower
-- Key signals: Workflow completeness, error recovery, state management
+#### 9. Agent Experience (10% weight)
+Evaluates the developer/agent experience quality.
+- Checks for: Request tracing (X-Request-ID), structured error responses, SDKs, support pages, API versioning
+- Scoring: Full developer experience = highest, missing basics = lower
+- Key signals: Error structure quality, SDK availability, deprecation notices
+
+#### Tier 2 — Accessibility (25% of total score)
+
+#### 1. Discoverability (12% weight)
+Evaluates whether AI agents can find and understand the business.
+- Checks for: OpenAPI/Swagger specs, Schema.org JSON-LD, robots.txt, developer docs (subdomains), agent cards (bonus), llms.txt (bonus), MCP discovery (bonus)
+- Scoring: OpenAPI spec + docs subdomain = highest. Agent-native features (agent cards, llms.txt) are bonuses.
+- Key signals: OpenAPI presence, documentation depth, structured data
+
+#### 3. Onboarding (8% weight)
+Evaluates how easily an AI agent can get started.
+- Checks for: Self-service signup, API key provisioning, sandbox/test mode, developer documentation, quickstart guides, SDKs
+- Scoring: Automated key provisioning = highest, manual approval = lower
+- Key signals: Time-to-first-API-call, documentation quality, test environments
+
+#### 4. Pricing Transparency (5% weight)
+Evaluates whether pricing is machine-readable and predictable.
+- Checks for: Pricing pages, free tier availability, usage limits, machine-readable pricing API
+- Scoring: Structured pricing data = highest, human-readable only = lower
+- Key signals: Pricing page presence, clear rate limits, free tier
+
+#### Tier 3 — Agent Commerce (15% of total score)
+
+#### 5. Payment (8% weight)
+Evaluates whether AI agents can initiate and complete payments.
+- Checks for: Stripe Connect integration, wallet support, agent-initiated payment flows, invoicing APIs
+- Scoring: Programmatic payment APIs = highest, Stripe detection = moderate
+- Key signals: Payment endpoint presence, billing APIs
+
+#### Agent-Native Bonus (7% weight)
+Bonus points for adopting emerging agent-native protocols. Does NOT penalize for absence.
+- Checks: Agent card, llms.txt, MCP discovery, AGENTS.md, MCP tools callable
+- This is the FUTURE indicator — pushes good scores from Silver to Gold/Platinum
 
 ### Cap Rules
 - No TLS/HTTPS: Maximum score capped at 39 (Failing tier)
-- No agent card + no llms.txt + no MCP: Maximum score capped at 59 (Bronze tier)
 - No callable API endpoints: Maximum score capped at 29 (Failing tier)
 
 ### Score Tiers

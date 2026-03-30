@@ -29,7 +29,7 @@ const a2aCapabilities = {
       id: 'score-business',
       name: 'Score Business Agent Readiness',
       description:
-        'Scan any URL and return an Agent Readiness Score (0-100) across 9 weighted dimensions: Discoverability, Interoperability, Onboarding, Pricing Transparency, Payment Readiness, Data Quality, Security, Reliability, and Agent Experience.',
+        'Scan any URL and return an Agent Readiness Score (0-100) across 9 weighted dimensions: Discoverability, API Quality, Onboarding, Pricing Transparency, Payment Readiness, Data Quality, Security, Reliability, and Agent Experience.',
       input_schema: {
         type: 'object',
         properties: {

@@ -64,7 +64,7 @@ const jsonLd = {
   applicationCategory: 'BusinessApplication',
   operatingSystem: 'Web',
   description:
-    'The verified commerce network for the agent economy. Scores businesses 0-100 on AI agent readiness across 9 dimensions including discoverability, interoperability, security, and agent experience.',
+    'The verified commerce network for the agent economy. Scores businesses 0-100 on AI agent readiness across 9 dimensions including API quality, security, reliability, and discoverability.',
   offers: {
     '@type': 'Offer',
     price: '0',

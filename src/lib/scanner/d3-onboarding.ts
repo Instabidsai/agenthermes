@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// D3 — Onboarding (weight: 0.10)
+// D3 — Onboarding (weight: 0.08)
 // Can an agent create an account and get credentials without human help?
 // Checks: /signup, /register, /api/auth endpoints, programmatic signup,
 //         API key availability, developer portal, sandbox mode,
@@ -550,7 +550,7 @@ export async function scanOnboarding(
     dimension: 'D3',
     label: 'Onboarding',
     score,
-    weight: 0.1,
+    weight: 0.08,
     checks,
     recommendations: recommendations.sort(
       (a, b) => parseInt(b.impact) - parseInt(a.impact)

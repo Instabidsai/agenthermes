@@ -1,6 +1,8 @@
 // ---------------------------------------------------------------------------
-// D9 — Agent Experience (weight: 0.05)
+// D9 — Agent Experience (weight: 0.10)
 // How pleasant/efficient is it for an agent to interact with this service?
+// v2: Weight increased from 0.05 to 0.10. Good error handling, SDKs, and
+// request tracing are fundamental API quality signals — not just nice-to-haves.
 // Checks: X-Request-ID headers, error response structure, escalation paths,
 //         SDK links, deprecation notices
 // ---------------------------------------------------------------------------
@@ -437,7 +439,7 @@ export async function scanAgentExperience(
     dimension: 'D9',
     label: 'Agent Experience',
     score,
-    weight: 0.05,
+    weight: 0.10,
     checks,
     recommendations: recommendations.sort(
       (a, b) => parseInt(b.impact) - parseInt(a.impact)

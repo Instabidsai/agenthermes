@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// D5 — Payment (weight: 0.10)
+// D5 — Payment (weight: 0.08)
 // Can an agent pay for services programmatically without a browser?
 // Checks: Stripe integration, ACP/MPP/x402 support, programmatic payment
 //         initiation, multi-currency
@@ -311,7 +311,7 @@ export async function scanPayment(
     dimension: 'D5',
     label: 'Payment',
     score,
-    weight: 0.1,
+    weight: 0.08,
     checks,
     recommendations: recommendations.sort(
       (a, b) => parseInt(b.impact) - parseInt(a.impact)

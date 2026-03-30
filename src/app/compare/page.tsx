@@ -40,7 +40,7 @@ interface ScoreResponse {
 // The 9 dimensions in canonical order
 const DIMENSIONS = [
   { key: 'Discoverability', label: 'Discoverability', short: 'D1' },
-  { key: 'Interoperability', label: 'Interoperability', short: 'D2' },
+  { key: 'API Quality', label: 'API Quality', short: 'D2' },
   { key: 'Onboarding', label: 'Onboarding', short: 'D3' },
   { key: 'Pricing', label: 'Pricing Transparency', short: 'D4' },
   { key: 'Payment', label: 'Payment', short: 'D5' },

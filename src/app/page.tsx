@@ -165,7 +165,7 @@ export default async function HomePage() {
         "name": "How is the Agent Readiness Score calculated?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "We scan 9 dimensions: Discoverability, Interoperability, Onboarding, Pricing, Payment, Data Quality, Security, Reliability, and Agent Experience. Each dimension is scored individually and combined into a weighted overall score from 0 to 100."
+          "text": "We scan 9 dimensions: Discoverability, API Quality, Onboarding, Pricing, Payment, Data Quality, Security, Reliability, and Agent Experience. Each dimension is scored individually and combined into a weighted overall score from 0 to 100. Service foundation (API quality, security, reliability) accounts for 60% of the score, accessibility (docs, onboarding, pricing) adds 25%, and agent-native features (MCP, agent cards) provide a 15% bonus."
         }
       },
       {

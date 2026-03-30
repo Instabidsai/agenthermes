@@ -53,7 +53,7 @@ const TIER_LABELS: Record<string, string> = {
 const TIER_DESCRIPTIONS: Record<string, string> = {
   platinum:
     'This business is fully optimized for AI agent commerce with machine-readable profiles, live endpoints, and structured pricing.',
-  gold: 'This business is agent-ready with strong discoverability and interoperability, with minor gaps remaining.',
+  gold: 'This business is agent-ready with strong API quality, security, and documentation, with minor gaps remaining.',
   silver:
     'AI agents can interact with this business but may encounter friction in onboarding or payments.',
   bronze:
@@ -64,7 +64,7 @@ const TIER_DESCRIPTIONS: Record<string, string> = {
 
 const DIMENSION_LABELS: Record<string, string> = {
   D1: 'Discoverability',
-  D2: 'Interoperability',
+  D2: 'API Quality',
   D3: 'Onboarding',
   D4: 'Pricing Transparency',
   D5: 'Payment',
@@ -214,7 +214,7 @@ export async function generateMetadata({
     description: `${displayName} has an Agent Readiness Score of ${scoreText}. See the full breakdown across 9 dimensions of AI agent compatibility.`,
     openGraph: {
       title: `${displayName} — ${scoreText} | AgentHermes`,
-      description: `See how agent-ready ${displayName} is. Full breakdown across discoverability, interoperability, security, and more.`,
+      description: `See how agent-ready ${displayName} is. Full breakdown across API quality, security, reliability, and more.`,
       url: `https://agenthermes.ai/score/${encodeURIComponent(decodedDomain)}`,
       siteName: 'AgentHermes',
       type: 'website',

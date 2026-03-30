@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// D4 — Pricing Transparency (weight: 0.10)
+// D4 — Pricing Transparency (weight: 0.05)
 // Can an agent understand what things cost before buying?
 // Checks: /api/pricing, pricing pages, structured pricing data, currency
 //         codes, plan comparison, usage tiers
@@ -281,7 +281,7 @@ export async function scanPricing(
     dimension: 'D4',
     label: 'Pricing Transparency',
     score,
-    weight: 0.1,
+    weight: 0.05,
     checks,
     recommendations: recommendations.sort(
       (a, b) => parseInt(b.impact) - parseInt(a.impact)

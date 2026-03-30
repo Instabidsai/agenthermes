@@ -23,7 +23,7 @@ const howToJsonLd = {
       "@type": "HowToStep",
       "position": 2,
       "name": "Get scored",
-      "text": "We scan 9 dimensions in real-time: Discoverability, Interoperability, Onboarding, Pricing, Payment, Data Quality, Security, Reliability, and Agent Experience."
+      "text": "We scan 9 dimensions in real-time: Discoverability, API Quality, Onboarding, Pricing, Payment, Data Quality, Security, Reliability, and Agent Experience."
     },
     {
       "@type": "HowToStep",

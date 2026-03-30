@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// D7 — Security (weight: 0.10)
+// D7 — Security (weight: 0.12)
 // Is the site secure enough for agent-to-business transactions?
 // Checks: TLS version + certificate, rate limiting, error detail exposure,
 //         CORS configuration, security headers (CSP, HSTS, X-Frame-Options,
@@ -386,7 +386,7 @@ export async function scanSecurity(
     dimension: 'D7',
     label: 'Security',
     score,
-    weight: 0.1,
+    weight: 0.12,
     checks,
     recommendations: recommendations.sort(
       (a, b) => parseInt(b.impact) - parseInt(a.impact)

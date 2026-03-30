@@ -13,18 +13,26 @@ const llmsTxt = `# AgentHermes — The Agent Readiness Score Platform
 - Certifies businesses with embeddable trust badges
 - Monitors endpoint health, runs mystery shops, and tracks score changes over time
 
-## 9-Dimension Scoring System
-1. Discoverability (20%) — llms.txt, agent cards, Schema.org, robots.txt, .well-known
-2. Interoperability (20%) — MCP endpoints, OpenAPI specs, A2A agent cards, webhooks
-3. Onboarding (10%) — Signup flow, API key provisioning, sandbox/test mode, docs
-4. Pricing Transparency (10%) — Machine-readable pricing, free tiers, usage limits
-5. Payment (10%) — Stripe Connect, wallet support, agent-initiated payments
-6. Data Quality (10%) — Structured responses, consistent schemas, error formats
-7. Security (10%) — TLS, auth mechanisms, rate limiting, CORS, security headers
-8. Reliability (5%) — Uptime, response times, health check endpoints, status pages
-9. Agent Experience (5%) — End-to-end agent workflow, tool chaining, context handling
+## 9-Dimension Scoring System (v2 — recalibrated)
+Base score reflects API/service maturity. Agent-native features are a bonus.
 
-Cap rules: No TLS = max 39 | No agent card + no llms.txt + no MCP = max 59 | No callable endpoints = max 29
+Tier 1 — Service Foundation (60%):
+2. API Quality (15%) — REST endpoints, JSON responses, CORS, response times
+6. Data Quality (10%) — Structured responses, consistent schemas, error formats
+7. Security (12%) — TLS, auth mechanisms, rate limiting, CORS, security headers
+8. Reliability (13%) — Uptime, response times, health check endpoints, status pages
+9. Agent Experience (10%) — Error handling, SDKs, request tracing, versioning
+
+Tier 2 — Accessibility (25%):
+1. Discoverability (12%) — OpenAPI, Schema.org, docs, robots.txt
+3. Onboarding (8%) — Signup flow, API key provisioning, sandbox/test mode, docs
+4. Pricing Transparency (5%) — Machine-readable pricing, free tiers, usage limits
+
+Tier 3 — Agent Commerce (15%):
+5. Payment (8%) — Stripe Connect, wallet support, agent-initiated payments
+Agent-Native Bonus (7%) — MCP, agent cards, llms.txt, A2A protocols
+
+Cap rules: No TLS = max 39 | No callable endpoints = max 29
 
 ## Score Tiers
 - 0-39: Failing — Invisible to AI agents

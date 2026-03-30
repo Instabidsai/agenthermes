@@ -1,6 +1,9 @@
 // ---------------------------------------------------------------------------
-// D8 — Reliability (weight: 0.05)
+// D8 — Reliability (weight: 0.13)
 // Can agents depend on this service being available and responsive?
+// v2: Weight increased from 0.05 to 0.13. Reliability is one of the MOST
+// important qualities for agent workflows. An unreliable API breaks agent
+// chains regardless of how many protocols it supports.
 // Checks: /health or /status endpoint, response time p95, 5xx rates,
 //         published SLA
 // ---------------------------------------------------------------------------
@@ -332,7 +335,7 @@ export async function scanReliability(
     dimension: 'D8',
     label: 'Reliability',
     score,
-    weight: 0.05,
+    weight: 0.13,
     checks,
     recommendations: recommendations.sort(
       (a, b) => parseInt(b.impact) - parseInt(a.impact)

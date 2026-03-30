@@ -4,8 +4,10 @@
 // Checks: sample API responses, null rates, schema compliance, date formats
 //         (ISO 8601), field naming consistency
 //
-// Auth-aware: 401/403 JSON responses (e.g., Stripe's API) get partial credit
-// for well-structured error objects. Full credit requires 200 responses.
+// Auth-aware: 401/403 JSON responses (e.g., Stripe's API) get substantial
+// credit for well-structured error objects. A company that returns beautiful
+// JSON error responses demonstrates API maturity even without public
+// endpoints. Auth-only ceiling raised from 40 to 70 in v2.
 // ---------------------------------------------------------------------------
 
 import type { DimensionResult, Check, Recommendation, ProbeResult } from './types'
@@ -256,12 +258,22 @@ export async function scanDataQuality(
   ]
 
   // Also probe API subdomains for JSON responses
+  // Include common auth-protected resource paths that return structured
+  // 401/403 JSON (e.g., Stripe's api.stripe.com/v1/charges returns 401 JSON)
   const apiSubdomains = getApiSubdomains(base)
   const subdomainSamplePaths = apiSubdomains.flatMap((sub) => [
     sub,
     `${sub}/v1`,
     `${sub}/health`,
     `${sub}/status`,
+    // Common resource endpoints that trigger 401/403 for auth-protected APIs
+    `${sub}/v1/users`,
+    `${sub}/v1/accounts`,
+    `${sub}/v1/charges`,
+    `${sub}/v1/customers`,
+    `${sub}/v1/me`,
+    `${sub}/v2`,
+    `${sub}/v1/organizations`,
   ])
 
   const allSampleUrls = [
@@ -323,9 +335,12 @@ export async function scanDataQuality(
   if (!hasOkResponses && hasAuthResponses) {
     const errorQuality = scoreErrorResponseQuality(authJsonResponses)
 
-    // Scale: error quality 0-100 maps to D6 score 0-40
-    // A perfect error response structure earns 40/100 on D6
-    const AUTH_CEILING = 40
+    // Scale: error quality 0-100 maps to D6 score 0-70
+    // v2: Raised from 40 to 70. A company like Stripe that returns
+    // beautifully structured JSON error responses demonstrates genuine
+    // API maturity. Penalizing them for not having public endpoints
+    // was destroying score credibility.
+    const AUTH_CEILING = 70
     const scaledScore = Math.round((errorQuality.score / 100) * AUTH_CEILING)
 
     checks.push({
@@ -399,7 +414,7 @@ export async function scanDataQuality(
     // Recommendation to expose public endpoints for full score
     recommendations.push({
       action:
-        'Expose at least one public endpoint (e.g., /api/health, /api/status) that returns JSON without authentication. Auth-protected APIs are capped at 40/100 for data quality.',
+        'Expose at least one public endpoint (e.g., /api/health, /api/status) that returns JSON without authentication. Auth-protected APIs are capped at 70/100 for data quality.',
       impact: `+${100 - scaledScore} points`,
       difficulty: 'easy',
       auto_fixable: false,

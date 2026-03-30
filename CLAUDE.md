@@ -26,16 +26,23 @@
 - Error responses: `{ error: "msg", code: "CODE", request_id: "..." }`
 - All routes get CORS + X-Request-ID via src/middleware.ts
 
+## Scoring Philosophy (v2 — 2026-03-30)
+- BASE score reflects API/service maturity (60%): API quality, data quality, security, reliability, agent experience
+- Accessibility (25%): discoverability, onboarding, pricing
+- Agent-native BONUS (15%): MCP, agent cards, llms.txt, A2A — pushes good scores higher
+- Old "no agent discovery = cap 59" rule REMOVED. Only caps: no TLS (39), no endpoints (29)
+- Auth-protected APIs (401/403 with JSON) score up to 70 on D6 (was 40)
+
 ## Data
-- 108 businesses scanned, average 36/100
-- Top 5: JarvisSDK 82 Gold, ThePeptideAI 62 Silver, Slack 60 Silver, Vercel 58, GitHub 56
+- 108 businesses scanned (pre-recalibration avg 36/100)
+- Post-recalibration: JarvisSDK dropped from 82 Gold to 29 Unaudited, Stripe rose from 40 to 56
 - 45 git commits on master
 
 ## Testing
 - Build must pass: `npx next build` (0 TypeScript errors, 126+ pages)
 - Live API: https://agenthermes.ai
 - Health: GET /api/v1/health
-- Self-scan score: 50 (Bronze) — D1:55, D2:75, D3:22, D4:15, D5:20, D6:80, D7:60, D8:75, D9:20
+- Self-scan score: ~54 (Bronze) — weighted toward service foundation, agent-native features are bonus
 - Verify: 19 pages return 200, 32/33 APIs return 200, MCP ping works
 
 ## Hard Rules
