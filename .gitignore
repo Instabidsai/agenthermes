@@ -42,3 +42,7 @@ EDGE-CASE-RESULTS.md
 LIVE-TEST-RESULTS.md
 REAL-SCAN-RESULTS.md
 OVERNIGHT-LOG.md
+
+# Environment files with secrets
+.env.local
+.env*.local
