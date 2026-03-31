@@ -11,7 +11,7 @@ Make any business discoverable, usable, and payable by AI agents.
 
 ### Score It (free) — /audit, /score/{domain}
 - 9-dimension scanner → 6-step journey: FIND, UNDERSTAND, SIGN UP, CONNECT, USE, PAY
-- 12 vertical scoring profiles (src/lib/scanner/vertical-weights.ts)
+- 27 vertical scoring profiles (src/lib/scanner/vertical-weights.ts)
 - Detects: MCP, A2A, agent-card.json, llms.txt, AGENTS.md, UCP, ACP, x402, OpenAPI
 - Detects platforms: Shopify, WooCommerce, Square (src/lib/adapters/)
 - AgentJourneyScore component: "X of 6 steps ready" with pass/partial/fail
@@ -43,7 +43,7 @@ Make any business discoverable, usable, and payable by AI agents.
 - Tier 2 (25%): D1 Discovery ×0.12, D3 Onboarding ×0.08, D4 Pricing ×0.05
 - Tier 3 (15%): D5 Payment ×0.08, Agent-Native Bonus ×0.07
 - Auth-aware: 401+JSON = 87% of 200 score. Caps: no TLS→39, no endpoints→29
-- 12 vertical profiles adjust weights per business type
+- 27 vertical profiles adjust weights per business type
 - Tiers: Platinum 90+, Gold 75+, Silver 60+, Bronze 40+, Not Scored <40
 
 ## Key Patterns
@@ -61,7 +61,7 @@ Make any business discoverable, usable, and payable by AI agents.
 
 ## Stats
 - 243 pages | 204 TS files | 104 routes | 139 businesses | 61 commits
-- 6 research docs | 15 verticals | 3 e-commerce adapters | 12 scoring profiles
+- 6 research docs | 15 verticals | 3 e-commerce adapters | 27 scoring profiles
 
 ## Hard Rules
 1. verify_jwt = false on all Supabase functions

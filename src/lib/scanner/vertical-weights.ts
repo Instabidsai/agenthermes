@@ -211,6 +211,251 @@ const VERTICAL_REGISTRY: VerticalWeights[] = [
       d9_agent_experience: 1.2,  // Marketing agents need good DX
     },
   },
+
+  // -----------------------------------------------------------------------
+  // Healthcare verticals
+  // -----------------------------------------------------------------------
+  {
+    vertical: 'telehealth',
+    description: 'Telehealth — signup flow is critical, HIPAA security and uptime required',
+    adjustments: {
+      d1_discoverability: 1.0,
+      d2_interoperability: 1.0,
+      d3_onboarding: 1.4,        // Signup/patient intake is critical
+      d4_pricing: 1.0,
+      d5_payment: 1.0,
+      d6_data_quality: 1.0,
+      d7_security: 1.3,          // HIPAA compliance
+      d8_reliability: 1.3,       // Must be available for appointments
+      d9_agent_experience: 1.0,
+    },
+  },
+  {
+    vertical: 'pharmacy',
+    description: 'Pharmacy — drug pricing transparency, HIPAA, and easy onboarding',
+    adjustments: {
+      d1_discoverability: 1.0,
+      d2_interoperability: 1.0,
+      d3_onboarding: 1.2,        // Prescription/account setup
+      d4_pricing: 1.3,           // Drug pricing transparency is key
+      d5_payment: 1.0,
+      d6_data_quality: 1.0,
+      d7_security: 1.3,          // HIPAA compliance
+      d8_reliability: 1.0,
+      d9_agent_experience: 1.0,
+    },
+  },
+  {
+    vertical: 'mental-health',
+    description: 'Mental health — privacy is paramount, smooth onboarding, reliable access',
+    adjustments: {
+      d1_discoverability: 1.0,
+      d2_interoperability: 1.0,
+      d3_onboarding: 1.3,        // Low-friction intake reduces dropout
+      d4_pricing: 1.0,
+      d5_payment: 1.0,
+      d6_data_quality: 1.0,
+      d7_security: 1.4,          // Highest privacy sensitivity
+      d8_reliability: 1.2,       // Must be reachable for sessions
+      d9_agent_experience: 1.0,
+    },
+  },
+
+  // -----------------------------------------------------------------------
+  // Finance verticals
+  // -----------------------------------------------------------------------
+  {
+    vertical: 'insurance',
+    description: 'Insurance — quote accuracy is everything, security and discoverability matter',
+    adjustments: {
+      d1_discoverability: 1.2,   // Agents must find and compare quotes
+      d2_interoperability: 1.0,
+      d3_onboarding: 1.0,
+      d4_pricing: 1.4,           // Quote/premium pricing is critical
+      d5_payment: 1.0,
+      d6_data_quality: 1.0,
+      d7_security: 1.3,          // Financial/personal data
+      d8_reliability: 1.0,
+      d9_agent_experience: 1.0,
+    },
+  },
+  {
+    vertical: 'mortgage',
+    description: 'Mortgage — rate transparency, security, and agent workflow integration',
+    adjustments: {
+      d1_discoverability: 1.0,
+      d2_interoperability: 1.0,
+      d3_onboarding: 1.0,
+      d4_pricing: 1.4,           // Rate/APR transparency is critical
+      d5_payment: 1.0,
+      d6_data_quality: 1.0,
+      d7_security: 1.3,          // Financial/personal data
+      d8_reliability: 1.0,
+      d9_agent_experience: 1.2,  // Agents compare rates across lenders
+    },
+  },
+  {
+    vertical: 'financial-advisor',
+    description: 'Financial advisors — onboarding, security, and pricing transparency',
+    adjustments: {
+      d1_discoverability: 1.0,
+      d2_interoperability: 1.0,
+      d3_onboarding: 1.3,        // Client intake/risk assessment flow
+      d4_pricing: 1.2,           // Fee structure transparency
+      d5_payment: 1.0,
+      d6_data_quality: 1.0,
+      d7_security: 1.3,          // Financial data protection
+      d8_reliability: 1.0,
+      d9_agent_experience: 1.0,
+    },
+  },
+
+  // -----------------------------------------------------------------------
+  // Travel verticals
+  // -----------------------------------------------------------------------
+  {
+    vertical: 'hotel',
+    description: 'Hotels — rate transparency, booking flow, and uptime for reservations',
+    adjustments: {
+      d1_discoverability: 1.0,
+      d2_interoperability: 1.0,
+      d3_onboarding: 1.2,        // Booking/check-in flow
+      d4_pricing: 1.3,           // Room rate transparency
+      d5_payment: 1.0,
+      d6_data_quality: 1.0,
+      d7_security: 1.0,
+      d8_reliability: 1.2,       // Booking system must be reliable
+      d9_agent_experience: 1.0,
+    },
+  },
+  {
+    vertical: 'car-rental',
+    description: 'Car rental — pricing, booking flow, and accurate vehicle data',
+    adjustments: {
+      d1_discoverability: 1.0,
+      d2_interoperability: 1.0,
+      d3_onboarding: 1.3,        // Reservation/pickup flow
+      d4_pricing: 1.3,           // Rental rate transparency
+      d5_payment: 1.0,
+      d6_data_quality: 1.2,      // Vehicle availability/specs accuracy
+      d7_security: 1.0,
+      d8_reliability: 1.0,
+      d9_agent_experience: 1.0,
+    },
+  },
+  {
+    vertical: 'tours',
+    description: 'Tours/Activities — discoverability, pricing, and easy booking',
+    adjustments: {
+      d1_discoverability: 1.3,   // Must be found by travel-planning agents
+      d2_interoperability: 1.0,
+      d3_onboarding: 1.2,        // Tour booking flow
+      d4_pricing: 1.2,           // Tour pricing and availability
+      d5_payment: 1.0,
+      d6_data_quality: 1.0,
+      d7_security: 1.0,
+      d8_reliability: 1.0,
+      d9_agent_experience: 1.0,
+    },
+  },
+
+  // -----------------------------------------------------------------------
+  // Home/Trade verticals
+  // -----------------------------------------------------------------------
+  {
+    vertical: 'electrician',
+    description: 'Electricians — emergency booking, reliability, simple service business',
+    adjustments: {
+      d1_discoverability: 1.0,
+      d2_interoperability: 0.7,  // Simple service business, no complex APIs
+      d3_onboarding: 1.4,        // Emergency scheduling must be fast
+      d4_pricing: 1.0,
+      d5_payment: 1.0,
+      d6_data_quality: 1.0,
+      d7_security: 1.0,
+      d8_reliability: 1.3,       // Must be reachable for emergencies
+      d9_agent_experience: 1.0,
+    },
+  },
+  {
+    vertical: 'locksmith',
+    description: 'Locksmiths — fastest possible emergency booking, maximum reliability',
+    adjustments: {
+      d1_discoverability: 1.0,
+      d2_interoperability: 0.6,  // Simplest service model
+      d3_onboarding: 1.5,        // Emergency booking is #1 priority
+      d4_pricing: 1.0,
+      d5_payment: 1.0,
+      d6_data_quality: 1.0,
+      d7_security: 1.0,
+      d8_reliability: 1.4,       // Must answer 24/7
+      d9_agent_experience: 1.0,
+    },
+  },
+  {
+    vertical: 'pest-control',
+    description: 'Pest control — pricing transparency, booking, and discoverability',
+    adjustments: {
+      d1_discoverability: 1.2,   // Agents compare local providers
+      d2_interoperability: 1.0,
+      d3_onboarding: 1.2,        // Service booking flow
+      d4_pricing: 1.3,           // Treatment pricing transparency
+      d5_payment: 1.0,
+      d6_data_quality: 1.0,
+      d7_security: 1.0,
+      d8_reliability: 1.0,
+      d9_agent_experience: 1.0,
+    },
+  },
+
+  // -----------------------------------------------------------------------
+  // Beauty/Wellness verticals
+  // -----------------------------------------------------------------------
+  {
+    vertical: 'salon',
+    description: 'Salons/Barbers — appointment booking, pricing, and discoverability',
+    adjustments: {
+      d1_discoverability: 1.2,   // Must be found by local search agents
+      d2_interoperability: 1.0,
+      d3_onboarding: 1.3,        // Appointment booking is core
+      d4_pricing: 1.2,           // Service menu pricing
+      d5_payment: 1.0,
+      d6_data_quality: 1.0,
+      d7_security: 1.0,
+      d8_reliability: 1.0,
+      d9_agent_experience: 1.0,
+    },
+  },
+  {
+    vertical: 'fitness',
+    description: 'Fitness/Gyms — class booking, membership pricing, and discoverability',
+    adjustments: {
+      d1_discoverability: 1.2,   // Must be found by wellness agents
+      d2_interoperability: 1.0,
+      d3_onboarding: 1.3,        // Class/session booking flow
+      d4_pricing: 1.3,           // Membership/class pricing transparency
+      d5_payment: 1.0,
+      d6_data_quality: 1.0,
+      d7_security: 1.0,
+      d8_reliability: 1.0,
+      d9_agent_experience: 1.0,
+    },
+  },
+  {
+    vertical: 'veterinarian',
+    description: 'Veterinarians — emergency booking, pet data privacy, and reliability',
+    adjustments: {
+      d1_discoverability: 1.0,
+      d2_interoperability: 1.0,
+      d3_onboarding: 1.4,        // Emergency vet visits need fast booking
+      d4_pricing: 1.0,
+      d5_payment: 1.0,
+      d6_data_quality: 1.0,
+      d7_security: 1.2,          // Pet owner data + medical records
+      d8_reliability: 1.3,       // Must be reachable for emergencies
+      d9_agent_experience: 1.0,
+    },
+  },
 ]
 
 // ---------------------------------------------------------------------------
@@ -223,46 +468,124 @@ function normalizeVertical(vertical: string): string {
 
   // Alias mapping — common variants map to canonical names
   const aliases: Record<string, string> = {
+    // SaaS
     'software': 'saas',
     'software-as-a-service': 'saas',
     'api': 'saas',
     'devtools': 'saas',
     'developer-tools': 'saas',
+    // Restaurant
     'food': 'restaurant',
     'food-service': 'restaurant',
     'dining': 'restaurant',
     'hospitality': 'restaurant',
+    // Home services (general)
     'plumbing': 'plumber',
-    'electrical': 'home-services',
     'roofing': 'home-services',
     'landscaping': 'home-services',
     'cleaning': 'home-services',
     'handyman': 'home-services',
+    // Electrician
+    'electrical': 'electrician',
+    'electricians': 'electrician',
+    // Locksmith
+    'locksmiths': 'locksmith',
+    'lock-service': 'locksmith',
+    // Pest control
+    'exterminator': 'pest-control',
+    'pest': 'pest-control',
+    'pest-management': 'pest-control',
+    // E-commerce
     'e-commerce': 'ecommerce',
     'retail': 'ecommerce',
     'shop': 'ecommerce',
     'store': 'ecommerce',
+    // Healthcare (general)
     'health': 'healthcare',
     'medical': 'healthcare',
-    'pharma': 'healthcare',
-    'pharmacy': 'healthcare',
-    'telehealth': 'healthcare',
+    // Pharmacy (now its own profile)
+    'pharma': 'pharmacy',
+    'drugstore': 'pharmacy',
+    'rx': 'pharmacy',
+    // Telehealth (now its own profile)
+    'telemedicine': 'telehealth',
+    'virtual-care': 'telehealth',
+    // Mental health
+    'therapy': 'mental-health',
+    'therapist': 'mental-health',
+    'counseling': 'mental-health',
+    'counselor': 'mental-health',
+    'psychiatry': 'mental-health',
+    'psychologist': 'mental-health',
+    // Fintech (general)
     'finance': 'fintech',
     'banking': 'fintech',
-    'insurance': 'fintech',
     'payments': 'fintech',
+    // Insurance (now its own profile)
+    'insurer': 'insurance',
+    'insurtech': 'insurance',
+    // Mortgage
+    'home-loan': 'mortgage',
+    'home-loans': 'mortgage',
+    'lender': 'mortgage',
+    'mortgages': 'mortgage',
+    // Financial advisor
+    'wealth-management': 'financial-advisor',
+    'financial-planning': 'financial-advisor',
+    'financial-planner': 'financial-advisor',
+    'advisor': 'financial-advisor',
+    // Real estate
     'property': 'real-estate',
     'realestate': 'real-estate',
     'housing': 'real-estate',
+    // Education
     'edtech': 'education',
     'training': 'education',
     'courses': 'education',
+    // Logistics
     'shipping': 'logistics',
     'delivery': 'logistics',
     'freight': 'logistics',
+    // Marketing
     'advertising': 'marketing',
     'adtech': 'marketing',
     'martech': 'marketing',
+    // Hotel
+    'hotels': 'hotel',
+    'lodging': 'hotel',
+    'accommodation': 'hotel',
+    'motel': 'hotel',
+    // Car rental
+    'car-rentals': 'car-rental',
+    'rental-car': 'car-rental',
+    'auto-rental': 'car-rental',
+    'vehicle-rental': 'car-rental',
+    // Tours
+    'tour': 'tours',
+    'activities': 'tours',
+    'excursions': 'tours',
+    'travel-tours': 'tours',
+    // Salon
+    'barber': 'salon',
+    'barbershop': 'salon',
+    'hair-salon': 'salon',
+    'beauty': 'salon',
+    'beauty-salon': 'salon',
+    'nail-salon': 'salon',
+    'spa': 'salon',
+    // Fitness
+    'gym': 'fitness',
+    'gyms': 'fitness',
+    'health-club': 'fitness',
+    'yoga': 'fitness',
+    'pilates': 'fitness',
+    'crossfit': 'fitness',
+    // Veterinarian
+    'vet': 'veterinarian',
+    'vets': 'veterinarian',
+    'veterinary': 'veterinarian',
+    'animal-hospital': 'veterinarian',
+    'pet-clinic': 'veterinarian',
   }
 
   return aliases[v] ?? v
