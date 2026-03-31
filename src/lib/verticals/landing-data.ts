@@ -9,9 +9,14 @@ export interface VerticalTool {
   params: string[]
 }
 
+export type VerticalCategory = 'local-services' | 'retail' | 'professional' | 'tech-emerging'
+
 export interface VerticalData {
   slug: string
   name: string
+  category: VerticalCategory
+  shortDescription: string
+  icon: string // lucide icon name
   headline: string
   agentQuery: string
   tools: VerticalTool[]
@@ -25,6 +30,9 @@ export const verticals: VerticalData[] = [
   {
     slug: 'restaurants',
     name: 'Restaurants',
+    category: 'retail',
+    shortDescription: 'Reservations, menus, and orders — all agent-callable',
+    icon: 'UtensilsCrossed',
     headline: 'Make Your Restaurant Agent-Ready',
     agentQuery:
       "Book me a table for 4 at an Italian restaurant in SoHo for 7:30pm tonight",
@@ -72,6 +80,9 @@ export const verticals: VerticalData[] = [
   {
     slug: 'hvac',
     name: 'HVAC',
+    category: 'local-services',
+    shortDescription: 'Service scheduling, estimates, and emergency dispatch',
+    icon: 'Thermometer',
     headline: 'Make Your HVAC Business Agent-Ready',
     agentQuery:
       "My AC stopped working. Find me an HVAC tech in Austin who can come today",
@@ -119,6 +130,9 @@ export const verticals: VerticalData[] = [
   {
     slug: 'lawn-care',
     name: 'Lawn Care',
+    category: 'local-services',
+    shortDescription: 'Quotes, recurring schedules, and service area checks',
+    icon: 'TreePine',
     headline: 'Make Your Lawn Care Business Agent-Ready',
     agentQuery:
       "Find a lawn care service in my area that can start weekly mowing next Monday",
@@ -166,6 +180,9 @@ export const verticals: VerticalData[] = [
   {
     slug: 'plumbing',
     name: 'Plumbing',
+    category: 'local-services',
+    shortDescription: 'Emergency dispatch, scheduling, and estimates on demand',
+    icon: 'Droplets',
     headline: 'Make Your Plumbing Business Agent-Ready',
     agentQuery:
       "I have a burst pipe. Find me an emergency plumber near 90210 right now",
@@ -213,6 +230,9 @@ export const verticals: VerticalData[] = [
   {
     slug: 'cleaning',
     name: 'Cleaning Services',
+    category: 'local-services',
+    shortDescription: 'Instant booking, pricing, and availability for any property',
+    icon: 'Sparkles',
     headline: 'Make Your Cleaning Business Agent-Ready',
     agentQuery:
       "Book a deep cleaning for my 2-bedroom apartment next Saturday morning",
@@ -260,6 +280,9 @@ export const verticals: VerticalData[] = [
   {
     slug: 'roofing',
     name: 'Roofing',
+    category: 'local-services',
+    shortDescription: 'Inspections, estimates, and service area coverage',
+    icon: 'Home',
     headline: 'Make Your Roofing Business Agent-Ready',
     agentQuery:
       "I need a roof inspection and repair estimate after the storm. Find a roofer in Tampa",
@@ -307,6 +330,9 @@ export const verticals: VerticalData[] = [
   {
     slug: 'dentist',
     name: 'Dental Practices',
+    category: 'professional',
+    shortDescription: 'Appointments, insurance checks, and provider discovery',
+    icon: 'Stethoscope',
     headline: 'Make Your Dental Practice Agent-Ready',
     agentQuery:
       "Find a dentist accepting new patients near me that takes Delta Dental insurance",
@@ -354,6 +380,9 @@ export const verticals: VerticalData[] = [
   {
     slug: 'auto-dealer',
     name: 'Auto Dealers',
+    category: 'retail',
+    shortDescription: 'Inventory search, test drives, and financing estimates',
+    icon: 'Car',
     headline: 'Make Your Dealership Agent-Ready',
     agentQuery:
       "Find me a 2024 Toyota RAV4 under $35K within 50 miles of Chicago",
@@ -401,6 +430,9 @@ export const verticals: VerticalData[] = [
   {
     slug: 'law-firm',
     name: 'Law Firms',
+    category: 'professional',
+    shortDescription: 'Consultations, practice areas, and attorney matching',
+    icon: 'Scale',
     headline: 'Make Your Law Firm Agent-Ready',
     agentQuery:
       "Find me an employment lawyer in Boston who offers free consultations",
@@ -448,6 +480,9 @@ export const verticals: VerticalData[] = [
   {
     slug: 'real-estate',
     name: 'Real Estate',
+    category: 'professional',
+    shortDescription: 'Listing search, showings, and market data on demand',
+    icon: 'Building2',
     headline: 'Make Your Real Estate Business Agent-Ready',
     agentQuery:
       "Find me a 3-bedroom house under $500K in the Denver suburbs with a garage",
@@ -495,6 +530,9 @@ export const verticals: VerticalData[] = [
   {
     slug: 'saas',
     name: 'SaaS',
+    category: 'tech-emerging',
+    shortDescription: 'Product discovery, trial provisioning, and API access',
+    icon: 'Cloud',
     headline: 'Make Your SaaS Product Agent-Ready',
     agentQuery:
       "Find me a project management tool with Gantt charts that integrates with Slack under $20/user",
@@ -542,6 +580,9 @@ export const verticals: VerticalData[] = [
   {
     slug: 'ecommerce',
     name: 'E-Commerce',
+    category: 'retail',
+    shortDescription: 'Product search, cart, checkout, and order tracking',
+    icon: 'ShoppingBag',
     headline: 'Make Your Online Store Agent-Ready',
     agentQuery:
       "Order me a pair of size 10 Nike Air Max in black, delivered by Friday",
@@ -589,6 +630,9 @@ export const verticals: VerticalData[] = [
   {
     slug: 'agency',
     name: 'Agencies',
+    category: 'professional',
+    shortDescription: 'Service discovery, portfolio, and proposal submission',
+    icon: 'Briefcase',
     headline: 'Make Your Agency Agent-Ready',
     agentQuery:
       "Find me a design agency in NYC that specializes in SaaS branding under $15K",
@@ -636,6 +680,9 @@ export const verticals: VerticalData[] = [
   {
     slug: 'accounting',
     name: 'Accounting Firms',
+    category: 'professional',
+    shortDescription: 'Service packages, consultations, and CPA credentials',
+    icon: 'Calculator',
     headline: 'Make Your Accounting Firm Agent-Ready',
     agentQuery:
       "Find me a CPA firm that handles small business taxes and offers monthly bookkeeping",
@@ -683,6 +730,9 @@ export const verticals: VerticalData[] = [
   {
     slug: 'freelancer',
     name: 'Freelancers',
+    category: 'tech-emerging',
+    shortDescription: 'Profiles, availability, rates, and proposal requests',
+    icon: 'Laptop',
     headline: 'Make Your Freelance Business Agent-Ready',
     agentQuery:
       "Find me a freelance React developer with 5+ years experience available this month under $100/hr",
@@ -736,3 +786,21 @@ export function getVerticalBySlug(slug: string): VerticalData | undefined {
 export function getAllVerticalSlugs(): string[] {
   return verticals.map((v) => v.slug)
 }
+
+export function getVerticalsByCategory(category: VerticalCategory): VerticalData[] {
+  return verticals.filter((v) => v.category === category)
+}
+
+export const categoryLabels: Record<VerticalCategory, string> = {
+  'local-services': 'Local Services',
+  retail: 'Retail',
+  professional: 'Professional',
+  'tech-emerging': 'Tech & Emerging',
+}
+
+export const categoryOrder: VerticalCategory[] = [
+  'local-services',
+  'retail',
+  'professional',
+  'tech-emerging',
+]

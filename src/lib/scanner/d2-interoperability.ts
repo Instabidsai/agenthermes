@@ -18,6 +18,8 @@
 
 import type { DimensionResult, Check, Recommendation, ProbeResult } from './types'
 import { probeEndpoint, isJsonContentType, endpointExists, getApiSubdomains } from './types'
+import { detectWooCommerceStore } from '@/lib/adapters/woocommerce'
+import { detectShopifyStore } from '@/lib/adapters/shopify'
 
 // ---------------------------------------------------------------------------
 // Auth-protected API quality helpers
@@ -660,6 +662,58 @@ export async function scanInteroperability(
         auto_fixable: false,
       })
     }
+  }
+
+  // -----------------------------------------------------------------------
+  // 6. WooCommerce detection (informational — no score impact)
+  //    If a site runs WooCommerce, note it in checks and recommend
+  //    connecting via the WooCommerce adapter for auto-generated MCP tools.
+  // -----------------------------------------------------------------------
+  try {
+    const wooResult = await detectWooCommerceStore(base)
+    if (wooResult.detected) {
+      checks.push({
+        name: 'WooCommerce Store',
+        passed: true,
+        details: `${wooResult.details} (confidence: ${wooResult.confidence})`,
+        points: 0, // informational — no score impact
+      })
+      recommendations.push({
+        action:
+          'WooCommerce store detected — connect to AgentHermes to auto-generate MCP tools (search_products, get_product_details, check_availability, get_categories, get_store_info).',
+        impact: '+0 points (enables agent commerce)',
+        difficulty: 'easy',
+        auto_fixable: true,
+      })
+    }
+  } catch {
+    // WooCommerce detection is best-effort — never block the scan
+  }
+
+  // -----------------------------------------------------------------------
+  // 7. Shopify detection (informational — no score impact)
+  //    If a site runs Shopify, note it in checks and recommend connecting
+  //    via the Shopify adapter for auto-generated MCP tools.
+  // -----------------------------------------------------------------------
+  try {
+    const shopifyResult = await detectShopifyStore(base)
+    if (shopifyResult.detected) {
+      checks.push({
+        name: 'Shopify Store',
+        passed: true,
+        details: `${shopifyResult.details} (confidence: ${shopifyResult.confidence})`,
+        points: 0, // informational — no score impact
+      })
+      recommendations.push({
+        action:
+          'Shopify store detected — connect to AgentHermes to auto-generate MCP tools (search_products, get_product_details, check_availability, get_collections, get_store_info).',
+        impact: '+0 points (enables agent commerce)',
+        difficulty: 'easy',
+        auto_fixable: true,
+      })
+    }
+  } catch {
+    // Shopify detection is best-effort — never block the scan
   }
 
   const score = Math.min(rawScore, 100)

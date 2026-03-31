@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import {
   Shield,
@@ -31,6 +31,8 @@ import {
   Cloud,
   Palette,
   LayoutGrid,
+  Store,
+  Zap,
   type LucideIcon,
 } from 'lucide-react'
 import clsx from 'clsx'
@@ -166,6 +168,26 @@ export default function ConnectPage() {
   const [result, setResult] = useState<{ id: string; name: string } | null>(null)
   const [copied, setCopied] = useState(false)
 
+  // Shopify auto-detection state
+  const [shopifyDetection, setShopifyDetection] = useState<{
+    detecting: boolean
+    detected: boolean
+    confidence: string | null
+    details: string | null
+    tools: { name: string; description: string }[]
+    toolCount: number
+  }>({
+    detecting: false,
+    detected: false,
+    confidence: null,
+    details: null,
+    tools: [],
+    toolCount: 0,
+  })
+  const [shopifyAccepted, setShopifyAccepted] = useState(false)
+  const shopifyDetectTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const lastDetectedDomain = useRef<string>('')
+
   const [form, setForm] = useState<FormData>({
     vertical_id: null,
     name: '',
@@ -178,6 +200,106 @@ export default function ConnectPage() {
     api_key: '',
     actions: [{ ...emptyAction }],
   })
+
+  // Shopify auto-detection: debounce domain changes and probe for Shopify
+  useEffect(() => {
+    const domain = form.domain.trim()
+
+    // Clear if domain is empty or too short
+    if (domain.length < 4 || !domain.includes('.')) {
+      if (shopifyDetection.detected || shopifyDetection.detecting) {
+        setShopifyDetection({
+          detecting: false,
+          detected: false,
+          confidence: null,
+          details: null,
+          tools: [],
+          toolCount: 0,
+        })
+        setShopifyAccepted(false)
+        lastDetectedDomain.current = ''
+      }
+      return
+    }
+
+    // Skip if we already detected this domain
+    if (domain === lastDetectedDomain.current) return
+
+    // Debounce: wait 800ms after typing stops
+    if (shopifyDetectTimer.current) clearTimeout(shopifyDetectTimer.current)
+    shopifyDetectTimer.current = setTimeout(async () => {
+      lastDetectedDomain.current = domain
+      setShopifyDetection((prev) => ({ ...prev, detecting: true }))
+      setShopifyAccepted(false)
+
+      try {
+        const res = await fetch('/api/v1/detect-shopify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: domain }),
+        })
+        const data = await res.json()
+
+        if (data.detected) {
+          setShopifyDetection({
+            detecting: false,
+            detected: true,
+            confidence: data.confidence,
+            details: data.details,
+            tools: (data.tools || []).map((t: { name: string; description: string }) => ({
+              name: t.name,
+              description: t.description,
+            })),
+            toolCount: data.tool_count || data.tools?.length || 0,
+          })
+        } else {
+          setShopifyDetection({
+            detecting: false,
+            detected: false,
+            confidence: null,
+            details: null,
+            tools: [],
+            toolCount: 0,
+          })
+        }
+      } catch {
+        setShopifyDetection({
+          detecting: false,
+          detected: false,
+          confidence: null,
+          details: null,
+          tools: [],
+          toolCount: 0,
+        })
+      }
+    }, 800)
+
+    return () => {
+      if (shopifyDetectTimer.current) clearTimeout(shopifyDetectTimer.current)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.domain])
+
+  // When Shopify is accepted, pre-fill actions from the detected tools
+  const acceptShopifyTools = useCallback(() => {
+    setShopifyAccepted(true)
+    const prefilled: ActionRow[] = shopifyDetection.tools.slice(0, 5).map((t) => ({
+      name: t.name,
+      method: 'GET',
+      path: `/v1/${t.name}`,
+      description: t.description,
+      cost_per_call: '0',
+    }))
+    setForm((prev) => ({
+      ...prev,
+      category: 'retail',
+      actions: prefilled.length > 0 ? prefilled : prev.actions,
+      api_base_url: prev.domain.trim()
+        ? (prev.domain.trim().startsWith('http') ? prev.domain.trim() : `https://${prev.domain.trim()}`)
+        : prev.api_base_url,
+      auth_type: 'none',
+    }))
+  }, [shopifyDetection.tools])
 
   // Derived data
   const selectedTemplate = useMemo(
@@ -720,6 +842,88 @@ export default function ConnectPage() {
                       placeholder="e.g., yourbusiness.com"
                       className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 focus:outline-none transition-colors"
                     />
+
+                    {/* Shopify detecting spinner */}
+                    {shopifyDetection.detecting && (
+                      <div className="mt-2 flex items-center gap-2 text-xs text-zinc-500">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Checking for Shopify store...
+                      </div>
+                    )}
+
+                    {/* Shopify detected banner */}
+                    {shopifyDetection.detected && !shopifyAccepted && (
+                      <div className="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex-shrink-0">
+                            <Store className="h-5 w-5 text-emerald-400" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-sm font-semibold text-emerald-400">
+                                Shopify Store Detected
+                              </span>
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                                {shopifyDetection.confidence}
+                              </span>
+                            </div>
+                            <p className="text-xs text-zinc-400 mb-3">
+                              We can auto-generate {shopifyDetection.toolCount} MCP tools from your product catalog.
+                              Agents will be able to search products, check availability, browse collections, and more.
+                            </p>
+
+                            {/* Preview of tools */}
+                            <div className="space-y-1 mb-3">
+                              {shopifyDetection.tools.map((tool) => (
+                                <div
+                                  key={tool.name}
+                                  className="flex items-center gap-2 text-xs"
+                                >
+                                  <Zap className="h-3 w-3 text-emerald-500/60 flex-shrink-0" />
+                                  <code className="text-emerald-400/80 font-mono text-[11px]">{tool.name}</code>
+                                  <span className="text-zinc-600 truncate hidden sm:inline">
+                                    {tool.description.length > 60 ? tool.description.slice(0, 60) + '...' : tool.description}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+
+                            <button
+                              onClick={acceptShopifyTools}
+                              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-colors"
+                            >
+                              <Sparkles className="h-3.5 w-3.5" />
+                              Auto-Generate {shopifyDetection.toolCount} MCP Tools
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Shopify accepted confirmation */}
+                    {shopifyAccepted && (
+                      <div className="mt-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3 flex items-center gap-3">
+                        <CheckCircle className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                        <span className="text-xs text-emerald-400">
+                          {shopifyDetection.toolCount} Shopify MCP tools auto-generated. API config and actions pre-filled.
+                        </span>
+                        <button
+                          onClick={() => {
+                            setShopifyAccepted(false)
+                            setForm((prev) => ({
+                              ...prev,
+                              category: 'other',
+                              actions: [{ ...emptyAction }],
+                              api_base_url: '',
+                              auth_type: 'none',
+                            }))
+                          }}
+                          className="ml-auto text-[10px] text-zinc-500 hover:text-zinc-400 transition-colors"
+                        >
+                          Undo
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   <div>
