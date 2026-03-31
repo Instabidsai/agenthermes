@@ -668,7 +668,8 @@ async function executeRunAudit(params: Record<string, unknown>) {
   const url = params.url as string
   if (!url) throw new Error('url is required')
 
-  const scanResult = await runScan(url)
+  const vertical = typeof params.vertical === 'string' ? params.vertical : null
+  const scanResult = await runScan(url, { vertical })
 
   return {
     url,
@@ -681,6 +682,7 @@ async function executeRunAudit(params: Record<string, unknown>) {
     caps_applied: scanResult.caps_applied,
     scanned_at: scanResult.scanned_at,
     next_steps: scanResult.next_steps,
+    vertical_applied: scanResult.vertical_applied,
   }
 }
 

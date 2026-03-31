@@ -14,7 +14,8 @@
 //
 // Checks: OpenAPI spec, Schema.org/JSON-LD, robots.txt, developer docs,
 //         agent-card.json, llms.txt, /.well-known/mcp.json, AGENTS.md,
-//         doc subdomains, meta tags, developer portal
+//         /.well-known/agent-hermes.json, doc subdomains, meta tags,
+//         developer portal
 // ---------------------------------------------------------------------------
 
 import type { DimensionResult, Check, Recommendation } from './types'
@@ -576,6 +577,83 @@ export async function scanDiscoverability(
         'Create /.well-known/mcp.json listing your available MCP tools so agents can discover your capabilities.',
       impact: '+5 points',
       difficulty: 'medium',
+      auto_fixable: true,
+    })
+  }
+
+  // -----------------------------------------------------------------------
+  // 6b. agent-hermes.json (up to 8 pts — NEW)
+  // The AgentHermes Agent Readiness Standard. A single JSON file at
+  // /.well-known/agent-hermes.json that makes a business machine-readable
+  // for AI agents: identity, capabilities, services, fulfillment, trust.
+  // -----------------------------------------------------------------------
+  const hermesJsonPaths = [
+    '/.well-known/agent-hermes.json',
+    '/agent-hermes.json',
+  ]
+  const hermesJsonSettled = await Promise.allSettled(
+    hermesJsonPaths.map((p) => probeEndpoint(`${base}${p}`, 'GET', globalSignal))
+  )
+  const hermesJsonResults = hermesJsonSettled
+    .filter((r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof probeEndpoint>>> => r.status === 'fulfilled')
+    .map((r) => r.value)
+  const hermesJsonHit = hermesJsonResults.find((r) => r.found)
+
+  if (hermesJsonHit) {
+    const isJson = isJsonContentType(hermesJsonHit.contentType)
+    const body = hermesJsonHit.body as Record<string, unknown> | null
+    const hasRequiredFields =
+      body &&
+      typeof body === 'object' &&
+      !!(body.hermes_version || body.business || body.agent_capabilities)
+    const isWellKnown = hermesJsonHit.url.includes('/.well-known/')
+
+    if (isJson && hasRequiredFields) {
+      const points = isWellKnown ? 8 : 6
+      rawScore += points
+      checks.push({
+        name: 'agent-hermes.json',
+        passed: true,
+        details: `Valid agent-hermes.json at ${hermesJsonHit.url}${isWellKnown ? ' (correct .well-known path)' : ''}`,
+        points,
+      })
+      if (!isWellKnown) {
+        recommendations.push({
+          action:
+            'Move your agent-hermes.json to /.well-known/agent-hermes.json — the canonical path per the Agent Readiness Standard.',
+          impact: '+2 points',
+          difficulty: 'easy',
+          auto_fixable: true,
+        })
+      }
+    } else {
+      rawScore += 2
+      checks.push({
+        name: 'agent-hermes.json',
+        passed: false,
+        details: `agent-hermes.json found at ${hermesJsonHit.url} but ${!isJson ? 'not valid JSON' : 'missing required fields (hermes_version, business, agent_capabilities)'}`,
+        points: 2,
+      })
+      recommendations.push({
+        action:
+          'Fix your agent-hermes.json to include hermes_version, business, and agent_capabilities fields. See https://agenthermes.ai/standard for the full spec.',
+        impact: '+6 points',
+        difficulty: 'easy',
+        auto_fixable: true,
+      })
+    }
+  } else {
+    checks.push({
+      name: 'agent-hermes.json',
+      passed: false,
+      details: 'No agent-hermes.json found at /.well-known/agent-hermes.json',
+      points: 0,
+    })
+    recommendations.push({
+      action:
+        'Create /.well-known/agent-hermes.json — the Agent Readiness Standard. One file makes your business discoverable, usable, and payable by AI agents. Generate yours free at https://agenthermes.ai/standard',
+      impact: '+8 points',
+      difficulty: 'easy',
       auto_fixable: true,
     })
   }

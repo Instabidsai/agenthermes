@@ -67,7 +67,8 @@ async function executeSkill(
         return { success: false, error: 'URL too long (max 2048 characters)' }
       }
       try {
-        const scanResult = await runScan(url)
+        const vertical = typeof input.vertical === 'string' ? input.vertical : null
+        const scanResult = await runScan(url, { vertical })
         const domain = normalizeUrl(url)
           .replace(/^https?:\/\//, '')
           .replace(/^www\./, '')

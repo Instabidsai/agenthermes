@@ -247,3 +247,147 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+// ---------------------------------------------------------------------------
+// GET /api/v1/hermes-json?domain=stripe.com — Public generator (no auth)
+// Returns agent-hermes.json for any scanned business
+// ---------------------------------------------------------------------------
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const domain = searchParams.get('domain')
+
+    if (!domain) {
+      return NextResponse.json(
+        {
+          error: 'Missing "domain" query parameter',
+          usage: 'GET /api/v1/agent-hermes-json?domain=stripe.com',
+        },
+        { status: 400 }
+      )
+    }
+
+    const cleanDomain = domain
+      .toLowerCase()
+      .trim()
+      .replace(/^(https?:\/\/)?(www\.)?/, '')
+      .replace(/\/+$/, '')
+
+    const supabase = getServiceClient()
+
+    // Look up business by domain
+    const { data: business, error: bizErr } = await supabase
+      .from('businesses')
+      .select('*')
+      .eq('domain', cleanDomain)
+      .single()
+
+    if (bizErr && bizErr.code !== 'PGRST116') {
+      console.error('[agent-hermes-json] DB error:', bizErr.message)
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    }
+
+    if (!business) {
+      return NextResponse.json(
+        {
+          error: `No business found for domain "${cleanDomain}". Scan it first at https://agenthermes.ai/audit`,
+          scan_url: `https://agenthermes.ai/api/v1/scan`,
+        },
+        { status: 404 }
+      )
+    }
+
+    const biz = business as Record<string, any>
+
+    // Fetch audit results for dimension detail
+    const { data: auditResultsRaw } = await supabase
+      .from('audit_results')
+      .select('category, score, max_score, audited_at')
+      .eq('business_id', biz.id)
+      .order('audited_at', { ascending: false })
+
+    const auditResults = (auditResultsRaw || []) as {
+      category: string
+      score: number
+      max_score: number
+      audited_at: string
+    }[]
+
+    // Check certification
+    const { data: certRaw } = await supabase
+      .from('certifications')
+      .select('*')
+      .eq('business_id', biz.id)
+      .eq('status', 'active')
+      .maybeSingle()
+
+    const cert = certRaw as Record<string, any> | null
+
+    const score = biz.audit_score ?? 0
+    const tier = tierFromScore(score)
+    const hermesId = generateHermesId(biz.id)
+    const dimensions = computeDimensions(auditResults, score)
+    const certified = !!(cert && new Date(cert.expires_at) > new Date())
+
+    const lastScanned =
+      auditResults.length > 0
+        ? auditResults.reduce(
+            (latest, r) => (!latest || r.audited_at > latest ? r.audited_at : latest),
+            '' as string
+          )
+        : biz.updated_at || new Date().toISOString()
+
+    // Build the agent-hermes.json payload
+    const hermesJson: Record<string, unknown> = {
+      hermes_version: '1.0',
+      business: {
+        name: biz.name || cleanDomain,
+        domain: cleanDomain,
+        category: biz.category || 'unknown',
+        subcategory: biz.subcategory || null,
+        description: biz.description || `Business at ${cleanDomain}`,
+      },
+      agent_capabilities: {
+        can_book: false,
+        can_quote: dimensions.pricing > 40,
+        can_pay: dimensions.payment > 40,
+        auth_method: dimensions.interoperability > 50 ? 'api_key' : 'unknown',
+        protocols: dimensions.interoperability > 50 ? ['rest'] : [],
+        ...(biz.mcp_endpoint ? { mcp_endpoint: biz.mcp_endpoint } : {}),
+        ...(biz.openapi_url ? { openapi_spec: biz.openapi_url } : {}),
+      },
+      services: biz.services || [],
+      fulfillment: {
+        type: biz.fulfillment_type || (dimensions.interoperability > 50 ? 'api' : 'unknown'),
+      },
+      trust: {
+        hermes_score: score,
+        hermes_tier: tier,
+        hermes_id: hermesId,
+        verified: true,
+        certified,
+        ...(certified && cert ? { certification_expires: cert.expires_at } : {}),
+        last_scanned: lastScanned,
+        verify_url: `https://agenthermes.ai/api/v1/score/${encodeURIComponent(cleanDomain)}`,
+        profile_url: `https://agenthermes.ai/business/${biz.slug || cleanDomain}`,
+      },
+    }
+
+    // Sign the payload
+    const signature = signPayload(hermesJson)
+
+    return NextResponse.json(
+      { ...hermesJson, signature },
+      {
+        headers: {
+          'Cache-Control': 'public, max-age=3600',
+          'Access-Control-Allow-Origin': '*',
+        },
+      }
+    )
+  } catch (err) {
+    console.error('[agent-hermes-json] Unexpected error:', err instanceof Error ? err.message : err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

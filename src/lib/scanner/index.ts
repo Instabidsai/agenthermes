@@ -46,10 +46,13 @@ import { scanDataQuality } from './d6-data-quality'
 import { scanSecurity, hasNoTls } from './d7-security'
 import { scanReliability } from './d8-reliability'
 import { scanAgentExperience } from './d9-agent-experience'
+import { getVerticalWeights, applyVerticalWeights } from './vertical-weights'
 
 // Re-export types
 export type { ScanResult, DimensionResult, CapApplied } from './types'
 export type { Check, Recommendation } from './types'
+export { getVerticalWeights, listVerticals } from './vertical-weights'
+export type { VerticalWeights } from './vertical-weights'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -244,7 +247,7 @@ function calculateAgentNativeBonus(dimensions: DimensionResult[]): number {
 // Main Scanner
 // ---------------------------------------------------------------------------
 
-export async function runScan(rawUrl: string): Promise<ScanResult> {
+export async function runScan(rawUrl: string, options?: { vertical?: string | null }): Promise<ScanResult> {
   const base = normalizeUrl(rawUrl)
   validateAuditTarget(base)
 
@@ -259,7 +262,24 @@ export async function runScan(rawUrl: string): Promise<ScanResult> {
     // v2 weights: Foundation (60%) + Accessibility (25%) + Commerce (15%)
     // D1:0.12  D2:0.15  D3:0.08  D4:0.05  D5:0.08  D6:0.10  D7:0.12  D8:0.13  D9:0.10
     // Remaining 0.07 goes to agent-native bonus (calculated separately)
-    const WEIGHTS = [0.12, 0.15, 0.08, 0.05, 0.08, 0.10, 0.12, 0.13, 0.10]
+    const BASE_WEIGHTS = [0.12, 0.15, 0.08, 0.05, 0.08, 0.10, 0.12, 0.13, 0.10]
+
+    // -----------------------------------------------------------------------
+    // Vertical-specific weight adjustment (optional)
+    // When a vertical is provided and has a known profile, we adjust the
+    // dimension weights using vertical multipliers. The weights are
+    // renormalized to preserve the 0.93 total (agent-native bonus stays 0.07).
+    // -----------------------------------------------------------------------
+    let verticalApplied: string | null = null
+    let WEIGHTS = BASE_WEIGHTS
+
+    if (options?.vertical) {
+      const vw = getVerticalWeights(options.vertical)
+      if (vw) {
+        WEIGHTS = applyVerticalWeights(vw)
+        verticalApplied = vw.vertical
+      }
+    }
 
     const results = await Promise.allSettled([
       scanDiscoverability(base, globalController.signal),
@@ -285,6 +305,12 @@ export async function runScan(rawUrl: string): Promise<ScanResult> {
             recommendations: [{ action: `${LABELS[i]} scanner failed — retry later`, impact: 'unknown', difficulty: 'easy' as const, auto_fixable: false }],
           }
     )
+
+    // Update dimension weights to reflect vertical adjustments (if applied)
+    // This ensures the DimensionResult.weight field is accurate in the response
+    for (let i = 0; i < dimensions.length; i++) {
+      dimensions[i].weight = WEIGHTS[i]
+    }
 
     // Calculate weighted total (93% from dimensions)
     const weightedRaw = dimensions.reduce(
@@ -326,6 +352,7 @@ export async function runScan(rawUrl: string): Promise<ScanResult> {
       caps_applied: caps,
       scanned_at: new Date().toISOString(),
       next_steps: nextSteps,
+      vertical_applied: verticalApplied,
     }
   } finally {
     clearTimeout(globalTimer)

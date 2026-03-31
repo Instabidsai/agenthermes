@@ -27,11 +27,29 @@ export async function POST(req: NextRequest) {
     }
 
     const rawUrl: string = body.url.trim()
+    const verticalHint: string | null = typeof body.vertical === 'string' ? body.vertical.trim() : null
 
     // -----------------------------------------------------------------------
-    // 1. Run the 9-dimension scan (replaces old 5-category runAudit)
+    // 0. Look up existing vertical from DB (if business was previously scanned)
     // -----------------------------------------------------------------------
-    const scanResult = await runScan(rawUrl)
+    let vertical: string | null = verticalHint
+    if (!vertical) {
+      const db0 = getServiceClient()
+      const domainForLookup = normalizeUrl(rawUrl)
+        .replace(/^https?:\/\//, '')
+        .replace(/^www\./, '')
+      const { data: existing } = await db0
+        .from('businesses')
+        .select('vertical')
+        .eq('domain', domainForLookup)
+        .single()
+      vertical = (existing as any)?.vertical ?? null
+    }
+
+    // -----------------------------------------------------------------------
+    // 1. Run the 9-dimension scan (with optional vertical-specific scoring)
+    // -----------------------------------------------------------------------
+    const scanResult = await runScan(rawUrl, { vertical })
 
     // -----------------------------------------------------------------------
     // 2. Persist to Supabase

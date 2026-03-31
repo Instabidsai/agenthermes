@@ -39,6 +39,8 @@ export interface ScanResult {
   caps_applied: CapApplied[]
   scanned_at: string
   next_steps: string[]
+  /** If vertical-specific scoring was applied, which vertical was used */
+  vertical_applied?: string | null
 }
 
 // ---------------------------------------------------------------------------
