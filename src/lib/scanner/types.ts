@@ -112,10 +112,14 @@ export async function probeEndpoint(
       'x-content-type-options',
       'referrer-policy',
       'x-request-id',
+      'request-id',
+      'x-req-id',
       'x-trace-id',
       'x-correlation-id',
       'traceparent',
       'api-version',
+      'stripe-version',
+      'x-api-version',
       'x-ratelimit-limit',
       'x-ratelimit-remaining',
       'x-ratelimit-reset',
@@ -123,6 +127,7 @@ export async function probeEndpoint(
       'access-control-allow-origin',
       'access-control-allow-methods',
       'access-control-allow-headers',
+      'access-control-expose-headers',
       'deprecation',
       'sunset',
       'link',
@@ -150,7 +155,7 @@ export async function probeEndpoint(
       try {
         body = JSON.parse(text)
       } catch {
-        body = text.slice(0, 2_000)
+        body = text.slice(0, 15_000)
       }
     } catch {
       // body stays null

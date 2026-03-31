@@ -611,7 +611,12 @@ export async function scanSecurity(
     probeEndpoint(`${base}/api/user`, 'GET', globalSignal),
     probeEndpoint(`${base}/api/v1/account`, 'GET', globalSignal),
     probeEndpoint(`${base}/api/v1/organizations`, 'GET', globalSignal),
-    ...apiSubdomains.map((sub) => probeEndpoint(`${sub}/v1/me`, 'GET', globalSignal)),
+    ...apiSubdomains.flatMap((sub) => [
+      probeEndpoint(`${sub}/v1/me`, 'GET', globalSignal),
+      probeEndpoint(`${sub}/v1/charges`, 'GET', globalSignal),
+      probeEndpoint(`${sub}/v1/customers`, 'GET', globalSignal),
+      probeEndpoint(`${sub}/v1/accounts`, 'GET', globalSignal),
+    ]),
   ])
   const authResults = authProbes
     .filter((r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof probeEndpoint>>> => r.status === 'fulfilled')

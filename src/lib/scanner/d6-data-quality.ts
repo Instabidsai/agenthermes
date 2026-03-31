@@ -247,10 +247,30 @@ function scoreErrorResponseQuality(authResponses: ProbeResult[]): {
       }
     }
 
-    // Check headers for request ID
-    if (resp.headers['x-request-id'] || resp.headers['x-trace-id'] || resp.headers['x-correlation-id']) {
+    // Check headers for request ID — cover all common formats:
+    // Stripe uses "Request-Id" (lowercased to "request-id" by HTTP),
+    // others use x-request-id, x-req-id, cf-ray (Cloudflare)
+    if (
+      resp.headers['x-request-id'] ||
+      resp.headers['request-id'] ||
+      resp.headers['x-req-id'] ||
+      resp.headers['x-trace-id'] ||
+      resp.headers['x-correlation-id'] ||
+      resp.headers['cf-ray']
+    ) {
       requestIdInHeaders = true
       hasRequestIds = true
+    }
+
+    // Also check Access-Control-Expose-Headers — APIs like Stripe declare
+    // Request-Id in CORS expose headers even when the header is only sent
+    // on authenticated requests. This is strong evidence of tracing support.
+    if (!requestIdInHeaders) {
+      const exposeHeaders = resp.headers['access-control-expose-headers'] || ''
+      if (/request-id|x-request-id|x-trace-id/i.test(exposeHeaders)) {
+        requestIdInHeaders = true
+        hasRequestIds = true
+      }
     }
   }
 
@@ -462,12 +482,13 @@ export async function scanDataQuality(
   if (!hasOkResponses && hasAuthResponses) {
     const errorQuality = scoreErrorResponseQuality(authJsonResponses)
 
-    // Scale: error quality 0-100 maps to D6 score 0-70
-    // v2: Raised from 40 to 70. A company like Stripe that returns
-    // beautifully structured JSON error responses demonstrates genuine
-    // API maturity. Penalizing them for not having public endpoints
-    // was destroying score credibility.
-    const AUTH_CEILING = 70
+    // Scale: error quality 0-100 maps to D6 score 0-75
+    // v2: Raised from 40 to 70. v3: Raised to 75. APIs like Stripe that
+    // return beautifully structured JSON errors with request IDs, doc links,
+    // consistent naming, and proper status codes demonstrate genuine API
+    // maturity. A 5-point gap from full score is sufficient penalty for
+    // not having public endpoints.
+    const AUTH_CEILING = 75
     const scaledScore = Math.round((errorQuality.score / 100) * AUTH_CEILING)
 
     checks.push({
@@ -571,7 +592,7 @@ export async function scanDataQuality(
     // Recommendation to expose public endpoints for full score
     recommendations.push({
       action:
-        'Expose at least one public endpoint (e.g., /api/health, /api/status) that returns JSON without authentication. Auth-protected APIs are capped at 70/100 for data quality.',
+        'Expose at least one public endpoint (e.g., /api/health, /api/status) that returns JSON without authentication. Auth-protected APIs are capped at 75/100 for data quality.',
       impact: `+${100 - scaledScore} points`,
       difficulty: 'easy',
       auto_fixable: false,

@@ -216,8 +216,11 @@ export async function scanPricing(
   ].map((r) =>
     typeof r.body === 'string' ? r.body : JSON.stringify(r.body ?? '')
   )
+  // Detect free tier, trial, or pay-as-you-go pricing (no upfront cost)
+  // "Pay as you go" / "No monthly fee" / "No setup fees" / "No minimum" are
+  // effectively free tiers — you only pay when you actually use the service
   const mentionsFree = allBodies.some((text) =>
-    /free.?tier|free.?trial|freemium|sandbox|\$0|free plan|starter.?free/i.test(text)
+    /free.?tier|free.?trial|freemium|sandbox|\$0|free plan|starter.?free|pay.?as.?you.?go|no.?(monthly|setup|upfront).?fee|no.?minimum|no.?commitment|usage.?based.?pricing|only.?pay.?(for\s+)?what.?you.?use/i.test(text)
   )
 
   if (mentionsFree) {
@@ -247,8 +250,9 @@ export async function scanPricing(
   // -----------------------------------------------------------------------
   // 5. Usage tiers / rate limits in pricing (up to 10 pts)
   // -----------------------------------------------------------------------
+  // Detect usage tiers, rate limits, and per-transaction pricing models
   const mentionsUsage = allBodies.some((text) =>
-    /rate.?limit|usage.?tier|requests?.?per|calls?.?per|quota|credits|burst/i.test(text)
+    /rate.?limit|usage.?tier|requests?.?per|calls?.?per|quota|credits|burst|per.?transaction|per.?api.?call|volume.?discount|tiered.?pricing|interchange|processing.?fee|per.?card|per.?charge|per.?successful/i.test(text)
   )
 
   if (mentionsUsage) {

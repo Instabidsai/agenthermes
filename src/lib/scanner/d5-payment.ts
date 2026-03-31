@@ -236,8 +236,19 @@ export async function scanPayment(
     '/api/metering',
     '/api/v1/metering',
   ]
+  // Also check API subdomains for usage/metering endpoints
+  const subdomainUsagePaths = apiSubdomains.flatMap((sub) => [
+    `${sub}/v1/usage_records`,
+    `${sub}/v1/billing/meters`,
+    `${sub}/v1/billing/meter_events`,
+    `${sub}/v1/subscription_items`,
+  ])
+  const allUsageUrls = [
+    ...usagePaths.map((p) => `${base}${p}`),
+    ...subdomainUsagePaths,
+  ]
   const usageResults = await Promise.all(
-    usagePaths.map((p) => probeEndpoint(`${base}${p}`, 'GET', globalSignal))
+    allUsageUrls.map((url) => probeEndpoint(url, 'GET', globalSignal))
   )
   const usageHits = usageResults.filter((r) => endpointExists(r))
 
@@ -268,17 +279,26 @@ export async function scanPayment(
   // -----------------------------------------------------------------------
   // 6. Multi-currency support (up to 10 pts)
   // -----------------------------------------------------------------------
+  // Check all collected pages including pricing page for currency mentions
+  const pricingPageResult = await probeEndpoint(`${base}/pricing`, 'GET', globalSignal)
   const allBodies = [
     ...paymentResults,
     ...progResults,
     homepageResult,
+    pricingPageResult,
   ].map((r) =>
     typeof r.body === 'string' ? r.body : JSON.stringify(r.body ?? '')
   )
+  // Also look for "135+ currencies" or "multi-currency" style phrases
+  // Or detect hreflang links to multiple country-specific pages (indicates global payments)
   const hasMultiCurrency = allBodies.some((text) => {
     const currencies = ['USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD']
     const found = currencies.filter((c) => text.includes(c))
-    return found.length >= 2
+    const hasCurrencyPhrase = /multi.?currenc|135\+?\s*currenc|\d+\s*currenc|international\s*payment|global\s*payment|cross.?border/i.test(text)
+    // Count hreflang country links — 10+ indicates a truly global payment platform
+    const hrefLangMatches = text.match(/hrefLang="[a-z]{2}-[A-Z]{2}"/gi) || []
+    const isGlobalPlatform = hrefLangMatches.length >= 10
+    return found.length >= 2 || hasCurrencyPhrase || isGlobalPlatform
   })
 
   if (hasMultiCurrency) {

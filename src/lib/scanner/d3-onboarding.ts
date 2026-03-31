@@ -367,6 +367,23 @@ export async function scanOnboarding(
     apiKeyCta.details.push(...cta.details)
   }
 
+  // Also check dashboard subdomains — a live dashboard (e.g., dashboard.stripe.com)
+  // that responds with 200 is strong evidence of self-service key management
+  const dashboardKeyUrls = domain ? [
+    `https://dashboard.${domain}`,
+    `https://dashboard.${domain}/apikeys`,
+    `https://dashboard.${domain}/api-keys`,
+    `https://console.${domain}`,
+    `https://app.${domain}`,
+  ] : []
+  const dashboardKeySettled = await Promise.allSettled(
+    dashboardKeyUrls.map((url) => probeEndpoint(url, 'GET', globalSignal))
+  )
+  const dashboardKeyResults = dashboardKeySettled
+    .filter((r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof probeEndpoint>>> => r.status === 'fulfilled')
+    .map((r) => r.value)
+  const dashboardKeyHits = dashboardKeyResults.filter((r) => r.found)
+
   if (keyHits.length > 0) {
     rawScore += 15
     checks.push({
@@ -374,6 +391,23 @@ export async function scanOnboarding(
       passed: true,
       details: `API key endpoint(s) detected: ${keyHits.map((r) => `${r.url} (${r.status})`).join(', ')}`,
       points: 15,
+    })
+  } else if (dashboardKeyHits.length > 0) {
+    // Dashboard/console subdomain responding = self-service key management via UI
+    const dashPts = apiKeyCta.hasGetApiKey ? 12 : 10
+    rawScore += dashPts
+    checks.push({
+      name: 'API Key Generation',
+      passed: true,
+      details: `Self-service dashboard detected at ${dashboardKeyHits.map((r) => r.url).slice(0, 2).join(', ')} — API keys can be generated via dashboard login${apiKeyCta.hasGetApiKey ? ' (+ "Get API Key" CTA found)' : ''}`,
+      points: dashPts,
+    })
+    recommendations.push({
+      action:
+        'Add /api/keys or /api/api-keys endpoint for programmatic API key generation so agents can obtain credentials without a browser.',
+      impact: `+${15 - dashPts} points`,
+      difficulty: 'medium',
+      auto_fixable: false,
     })
   } else if (apiKeyCta.hasGetApiKey) {
     rawScore += 7
@@ -420,19 +454,27 @@ export async function scanOnboarding(
     '/auth/token',
     '/auth/authorize',
   ]
-  // Also check common auth subdomains
+  // Also check common auth subdomains — covers Stripe (connect.X/oauth),
+  // Auth0/Okta (id.X/authorize, auth.X/authorize), etc.
   const oauthSubdomainPaths = domain ? [
     `https://connect.${domain}/oauth/authorize`,
     `https://connect.${domain}/oauth/token`,
+    `https://connect.${domain}/oauth`,
     `https://auth.${domain}/oauth/token`,
     `https://auth.${domain}/oauth/authorize`,
+    `https://auth.${domain}/authorize`,
     `https://auth.${domain}/.well-known/openid-configuration`,
+    `https://id.${domain}/authorize`,
+    `https://id.${domain}/oauth/authorize`,
+    `https://id.${domain}/oauth/token`,
+    `https://id.${domain}/.well-known/openid-configuration`,
     `https://accounts.${domain}/.well-known/openid-configuration`,
     `https://accounts.${domain}/oauth/authorize`,
     `https://login.${domain}/.well-known/openid-configuration`,
     `https://login.${domain}/oauth/authorize`,
+    `https://login.${domain}/authorize`,
     `https://sso.${domain}/.well-known/openid-configuration`,
-    `https://id.${domain}/.well-known/openid-configuration`,
+    `https://sso.${domain}/authorize`,
   ] : []
   const allOauthUrls = [
     ...oauthPaths.map((p) => `${base}${p}`),
@@ -646,9 +688,14 @@ export async function scanOnboarding(
   // -----------------------------------------------------------------------
   // 6. CLI / SDK installation (up to 8 pts)
   // -----------------------------------------------------------------------
+  // Also check llms.txt, signup pages, and dashboard pages for CLI/SDK mentions
+  const llmsTxtResult = await probeEndpoint(`${base}/llms.txt`, 'GET', globalSignal)
   const allBodiesForCli = [
     homepageResult,
     ...devResults.filter((r) => r.found),
+    ...signupPageHits,
+    ...dashboardKeyResults.filter((r) => r.found),
+    llmsTxtResult,
   ]
   const cliDetails: string[] = []
   let hasCliInstall = false

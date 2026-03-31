@@ -761,6 +761,51 @@ export async function scanDiscoverability(
     }
   }
 
+  // -----------------------------------------------------------------------
+  // 9. Documentation depth signal — docs subdomain + OpenAPI = enterprise (up to 15 pts bonus)
+  //    Having BOTH a dedicated docs subdomain AND a published OpenAPI spec is
+  //    the hallmark of enterprise API providers (Stripe, GitHub, Twilio).
+  //    This combination deserves a significant bonus because it separates
+  //    world-class developer experience from hobby projects.
+  // -----------------------------------------------------------------------
+  const hasDocsSubdomain = !!docsSubdomainHit
+  const hasOpenApiSpec = !!openApiHit && checks.some(
+    (c) => c.name === 'OpenAPI Spec' && c.passed
+  )
+
+  if (hasDocsSubdomain && hasOpenApiSpec) {
+    rawScore += 15
+    checks.push({
+      name: 'Documentation Depth',
+      passed: true,
+      details: `Enterprise documentation: dedicated docs subdomain (${docsSubdomainHit!.url}) AND published OpenAPI spec (${openApiHit!.url})`,
+      points: 15,
+    })
+  } else if (hasDocsSubdomain || hasOpenApiSpec) {
+    rawScore += 5
+    checks.push({
+      name: 'Documentation Depth',
+      passed: false,
+      details: `Partial documentation depth: ${hasDocsSubdomain ? 'docs subdomain found but no OpenAPI spec' : 'OpenAPI spec found but no docs subdomain'}`,
+      points: 5,
+    })
+    recommendations.push({
+      action: hasDocsSubdomain
+        ? 'Publish an OpenAPI spec alongside your docs subdomain. The combination signals enterprise-grade developer experience.'
+        : 'Add a dedicated docs subdomain (docs.yourdomain.com) alongside your OpenAPI spec for maximum discoverability.',
+      impact: '+10 points',
+      difficulty: 'medium',
+      auto_fixable: false,
+    })
+  } else {
+    checks.push({
+      name: 'Documentation Depth',
+      passed: false,
+      details: 'Neither docs subdomain nor OpenAPI spec detected. Enterprise APIs have both.',
+      points: 0,
+    })
+  }
+
   // Cap at 100
   const score = Math.min(rawScore, 100)
 

@@ -49,21 +49,55 @@ export async function scanAgentExperience(
   )
 
   // -----------------------------------------------------------------------
-  // 1. X-Request-ID / trace headers (up to 20 pts)
+  // 2. Structured error responses (up to 25 pts)
+  //    (Run error probes first so we can combine results for tracing check)
   // -----------------------------------------------------------------------
-  const hasRequestId = successfulProbes.some(
-    (r) => !!r.headers['x-request-id']
+  // Deliberately trigger error responses (also on API subdomains)
+  // Include auth-protected resource paths (e.g., Stripe's api.X/v1/charges
+  // returns structured 401 JSON with error/type/message/code)
+  const errorProbeUrls = [
+    `${base}/api/nonexistent-endpoint-${Date.now()}`,
+    `${base}/api/v1/nonexistent-endpoint-${Date.now()}`,
+    ...apiSubdomains.map((sub) => `${sub}/v1/nonexistent-endpoint-${Date.now()}`),
+    // Auth-protected resource paths that return structured 401/403 JSON
+    ...apiSubdomains.flatMap((sub) => [
+      `${sub}/v1/charges`,
+      `${sub}/v1/customers`,
+      `${sub}/v1/users`,
+      `${sub}/v1/me`,
+      `${sub}/v1/accounts`,
+    ]),
+  ]
+  const errorProbes = await Promise.all(
+    errorProbeUrls.map((url) => probeEndpoint(url, 'GET', globalSignal))
   )
-  // Also check for common trace header variations
+
+  const errorResponses = errorProbes.filter(
+    (r) => r.status !== null && r.status >= 400
+  )
+
+  // -----------------------------------------------------------------------
+  // 1. X-Request-ID / trace headers (up to 20 pts)
+  //    Check ALL probes (initial + error) — auth-protected APIs like Stripe
+  //    return Request-Id on every response including 401s
+  // -----------------------------------------------------------------------
+  // Also check for common trace header variations — covers:
+  // Stripe (Request-Id → "request-id"), Cloudflare (cf-ray), standard (x-request-id)
   const traceHeaderNames = [
     'x-request-id',
+    'request-id',
+    'x-req-id',
     'x-trace-id',
     'x-correlation-id',
     'traceparent',
+    'cf-ray',
   ]
 
+  // Combine initial probes + error probes for comprehensive trace header detection
+  const allProbesForTracing = [...successfulProbes, ...errorProbes.filter((r) => r.status !== null)]
+
   let traceHeaderFound: string | null = null
-  for (const probe of successfulProbes) {
+  for (const probe of allProbesForTracing) {
     for (const header of traceHeaderNames) {
       if (probe.headers[header]) {
         traceHeaderFound = header
@@ -73,6 +107,23 @@ export async function scanAgentExperience(
     if (traceHeaderFound) break
   }
 
+  // Also check Access-Control-Expose-Headers for request ID signals.
+  // Stripe declares "Request-Id" in expose headers even though it only
+  // sends the actual header on authenticated requests. This is still
+  // strong evidence of request tracing support.
+  let traceInExposeHeaders: string | null = null
+  if (!traceHeaderFound) {
+    for (const probe of allProbesForTracing) {
+      const exposeHeaders = probe.headers['access-control-expose-headers'] || ''
+      if (/request-id|x-request-id|x-trace-id|traceparent/i.test(exposeHeaders)) {
+        traceInExposeHeaders = exposeHeaders.split(',').find(h =>
+          /request-id|x-request-id|x-trace-id|traceparent/i.test(h.trim())
+        )?.trim() || 'Request-Id'
+        break
+      }
+    }
+  }
+
   if (traceHeaderFound) {
     rawScore += 20
     checks.push({
@@ -80,6 +131,15 @@ export async function scanAgentExperience(
       passed: true,
       details: `Request tracing header found: ${traceHeaderFound}`,
       points: 20,
+    })
+  } else if (traceInExposeHeaders) {
+    // CORS expose headers declare request tracing support — partial credit
+    rawScore += 15
+    checks.push({
+      name: 'Request Tracing',
+      passed: true,
+      details: `Request tracing supported: ${traceInExposeHeaders} declared in Access-Control-Expose-Headers (sent on authenticated requests)`,
+      points: 15,
     })
   } else {
     checks.push({
@@ -97,23 +157,6 @@ export async function scanAgentExperience(
     })
   }
 
-  // -----------------------------------------------------------------------
-  // 2. Structured error responses (up to 25 pts)
-  // -----------------------------------------------------------------------
-  // Deliberately trigger error responses (also on API subdomains)
-  const errorProbeUrls = [
-    `${base}/api/nonexistent-endpoint-${Date.now()}`,
-    `${base}/api/v1/nonexistent-endpoint-${Date.now()}`,
-    ...apiSubdomains.map((sub) => `${sub}/v1/nonexistent-endpoint-${Date.now()}`),
-  ]
-  const errorProbes = await Promise.all(
-    errorProbeUrls.map((url) => probeEndpoint(url, 'GET', globalSignal))
-  )
-
-  const errorResponses = errorProbes.filter(
-    (r) => r.status !== null && r.status >= 400
-  )
-
   if (errorResponses.length > 0) {
     let structuredErrors = 0
     let hasErrorCode = false
@@ -123,11 +166,26 @@ export async function scanAgentExperience(
       if (isJsonContentType(err.contentType) && typeof err.body === 'object') {
         structuredErrors++
         const body = err.body as Record<string, unknown>
+
+        // Check top-level fields
         if (hasField(body, 'error', 'message', 'detail', 'msg')) {
           hasMessage = true
         }
         if (hasField(body, 'code', 'error_code', 'type', 'status')) {
           hasErrorCode = true
+        }
+
+        // Check nested error objects (e.g., Stripe's { error: { type, message, code } })
+        for (const v of Object.values(body)) {
+          if (v && typeof v === 'object' && !Array.isArray(v)) {
+            const nested = v as Record<string, unknown>
+            if (hasField(nested, 'message', 'detail', 'msg')) {
+              hasMessage = true
+            }
+            if (hasField(nested, 'code', 'error_code', 'type', 'status')) {
+              hasErrorCode = true
+            }
+          }
         }
       }
     }
@@ -328,17 +386,79 @@ export async function scanAgentExperience(
   }
 
   // -----------------------------------------------------------------------
+  // 4b. SDK ecosystem breadth — multi-language SDK support (up to 15 pts bonus)
+  //     Companies offering SDKs in multiple languages (Python, Node, Ruby, Go,
+  //     Java, PHP, .NET) are fundamentally more agent-friendly. Agents may use
+  //     any language, so breadth matters. Count language mentions across all
+  //     probed pages (homepage, docs, SDK pages).
+  // -----------------------------------------------------------------------
+  const sdkLanguagePatterns: [string, RegExp][] = [
+    ['Python', /\b(python|pip install|pypi|\.py\b)/i],
+    ['Node.js', /\b(node\.?js|npm install|yarn add|npx|@[\w-]+\/[\w-]+)/i],
+    ['Ruby', /\b(ruby|gem install|rubygems|\.rb\b)/i],
+    ['Go', /\b(golang|go get|go module|go\.mod)/i],
+    ['Java', /\b(java\b|maven|gradle|\.jar\b|jdk|javax)/i],
+    ['PHP', /\b(php|composer require|packagist|\.php\b)/i],
+    ['.NET', /\b(\.net|c#|csharp|nuget|dotnet)/i],
+    ['Rust', /\b(rust|cargo add|crates\.io|\.rs\b)/i],
+    ['Swift', /\b(swift|swiftpm|cocoapods|pod install)/i],
+    ['Kotlin', /\b(kotlin|gradle.*kotlin)/i],
+  ]
+
+  const allPageBodies = [...probeResults, ...supportResults, ...sdkResults].map(
+    (r) => (typeof r.body === 'string' ? r.body : JSON.stringify(r.body ?? ''))
+  ).join(' ')
+
+  const detectedLanguages: string[] = []
+  for (const [lang, pattern] of sdkLanguagePatterns) {
+    if (pattern.test(allPageBodies)) {
+      detectedLanguages.push(lang)
+    }
+  }
+
+  let sdkEcosystemPts = 0
+  if (detectedLanguages.length >= 5) sdkEcosystemPts = 15
+  else if (detectedLanguages.length >= 3) sdkEcosystemPts = 10
+  else if (detectedLanguages.length >= 1) sdkEcosystemPts = 5
+
+  if (sdkEcosystemPts > 0) {
+    rawScore += sdkEcosystemPts
+    checks.push({
+      name: 'SDK Ecosystem Breadth',
+      passed: detectedLanguages.length >= 3,
+      details: `SDK/library mentions for ${detectedLanguages.length} language(s): ${detectedLanguages.join(', ')}`,
+      points: sdkEcosystemPts,
+    })
+  } else {
+    checks.push({
+      name: 'SDK Ecosystem Breadth',
+      passed: false,
+      details: 'No SDK language mentions detected across probed pages. Multi-language SDKs signal mature developer ecosystems.',
+      points: 0,
+    })
+    recommendations.push({
+      action:
+        'Offer SDKs or client libraries in multiple languages (Python, Node.js, Go, etc.) and mention them on your docs/homepage. Multi-language support dramatically improves agent integration.',
+      impact: '+15 points',
+      difficulty: 'hard',
+      auto_fixable: false,
+    })
+  }
+
+  // -----------------------------------------------------------------------
   // 5. Deprecation / versioning notices (up to 15 pts)
   // -----------------------------------------------------------------------
+  // Combine all probes (initial + error) for header and versioning analysis
+  const allRespondingProbes = [...successfulProbes, ...errorProbes.filter((r) => r.status !== null)]
   const allHeaders = Object.assign(
     {},
-    ...successfulProbes.map((r) => r.headers)
+    ...allRespondingProbes.map((r) => r.headers)
   )
 
   const hasDeprecation = !!allHeaders['deprecation'] || !!allHeaders['sunset']
   const hasApiVersion =
     !!allHeaders['api-version'] ||
-    successfulProbes.some((r) => /\/v\d+\//i.test(r.url) && (r.found || r.status === 401))
+    allRespondingProbes.some((r) => /\/v\d+/i.test(r.url) && (r.found || r.status === 401 || r.status === 403 || r.status === 404))
 
   if (hasDeprecation) {
     rawScore += 10

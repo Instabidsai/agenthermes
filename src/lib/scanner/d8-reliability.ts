@@ -327,8 +327,24 @@ export async function scanReliability(
     Object.assign(allHeaders, r.headers)
   }
 
+  // Also probe API subdomains for auth-protected endpoints (they may have
+  // retry/rate-limit headers or CORS expose-headers declaring them)
+  const apiRetryProbes = await Promise.allSettled(
+    apiSubdomains.map((sub) => probeEndpoint(`${sub}/v1/charges`, 'GET', globalSignal))
+  )
+  for (const p of apiRetryProbes) {
+    if (p.status === 'fulfilled' && p.value.status !== null) {
+      Object.assign(allHeaders, p.value.headers)
+    }
+  }
+
   const hasRetryAfter = !!allHeaders['retry-after']
   const hasRateLimit = !!allHeaders['x-ratelimit-remaining']
+
+  // Also check CORS expose-headers for retry/rate-limit signals
+  // Stripe declares "Stripe-Should-Retry" in Access-Control-Expose-Headers
+  const exposeHeaders = allHeaders['access-control-expose-headers'] || ''
+  const hasRetryInCors = /retry|rate.?limit|should.?retry/i.test(exposeHeaders)
 
   if (hasRetryAfter || hasRateLimit) {
     rawScore += 8
@@ -342,6 +358,15 @@ export async function scanReliability(
         .filter(Boolean)
         .join(', ')}`,
       points: 8,
+    })
+  } else if (hasRetryInCors) {
+    // CORS expose-headers declares retry support (sent on authenticated requests)
+    rawScore += 5
+    checks.push({
+      name: 'Retry Hints',
+      passed: true,
+      details: `Retry guidance declared in CORS Expose-Headers (available on authenticated requests)`,
+      points: 5,
     })
   } else {
     checks.push({

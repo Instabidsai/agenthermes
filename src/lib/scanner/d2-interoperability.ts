@@ -26,8 +26,11 @@ import { probeEndpoint, isJsonContentType, endpointExists, getApiSubdomains } fr
 /** Headers that indicate a well-built API (present on 401/403 responses) */
 const API_QUALITY_HEADERS = [
   'x-request-id',
+  'request-id',
+  'x-req-id',
   'x-trace-id',
   'x-correlation-id',
+  'cf-ray',
   'x-ratelimit-limit',
   'x-ratelimit-remaining',
   'x-ratelimit-reset',
@@ -65,6 +68,16 @@ function countQualityHeaders(r: ProbeResult): number {
   let count = 0
   for (const h of API_QUALITY_HEADERS) {
     if (r.headers[h]) count++
+  }
+  // Also count quality headers declared in Access-Control-Expose-Headers
+  // (e.g., Stripe declares Request-Id in CORS expose headers)
+  const exposeHeaders = r.headers['access-control-expose-headers'] || ''
+  if (exposeHeaders) {
+    for (const h of API_QUALITY_HEADERS) {
+      if (!r.headers[h] && new RegExp(h.replace('-', '[-]?'), 'i').test(exposeHeaders)) {
+        count++
+      }
+    }
   }
   return count
 }
@@ -374,11 +387,20 @@ export async function scanInteroperability(
       if (authQualityPts > 0) {
         rawScore += authQualityPts
 
-        // List which quality headers were found
+        // List which quality headers were found (direct + CORS expose)
         const foundHeaders: string[] = []
         for (const r of authJsonHits) {
           for (const h of API_QUALITY_HEADERS) {
             if (r.headers[h] && !foundHeaders.includes(h)) foundHeaders.push(h)
+          }
+          // Also check CORS expose headers
+          const exposeHeaders = r.headers['access-control-expose-headers'] || ''
+          if (exposeHeaders) {
+            for (const h of API_QUALITY_HEADERS) {
+              if (!foundHeaders.includes(h) && new RegExp(h.replace('-', '[-]?'), 'i').test(exposeHeaders)) {
+                foundHeaders.push(`${h} (via CORS)`)
+              }
+            }
           }
         }
 
@@ -598,6 +620,46 @@ export async function scanInteroperability(
       details: 'Could not verify HTTP status code behavior (request failed)',
       points: 0,
     })
+  }
+
+  // -----------------------------------------------------------------------
+  // 5. Scale signal — reward breadth of API surface (up to 15 pts bonus)
+  //    Companies with MORE endpoints are more mature. Finding 20+ REST
+  //    endpoints (Stripe) is fundamentally different from finding 3
+  //    (a hobby Next.js app). This separates enterprise APIs from toys.
+  //    Uses total unique responding endpoints (2xx + auth-protected).
+  // -----------------------------------------------------------------------
+  const totalEndpointCount = getHits.length
+  let scaleBonusPts = 0
+  if (totalEndpointCount > 20) scaleBonusPts = 15
+  else if (totalEndpointCount >= 11) scaleBonusPts = 10
+  else if (totalEndpointCount >= 4) scaleBonusPts = 5
+  // 1-3 endpoints: no bonus (score as-is)
+
+  if (scaleBonusPts > 0) {
+    rawScore += scaleBonusPts
+    checks.push({
+      name: 'API Scale',
+      passed: true,
+      details: `${totalEndpointCount} unique API endpoints detected — indicates ${totalEndpointCount > 20 ? 'enterprise-grade' : totalEndpointCount >= 11 ? 'comprehensive' : 'growing'} API surface`,
+      points: scaleBonusPts,
+    })
+  } else {
+    checks.push({
+      name: 'API Scale',
+      passed: false,
+      details: `Only ${totalEndpointCount} endpoint(s) detected. Mature APIs expose 4+ distinct endpoints.`,
+      points: 0,
+    })
+    if (totalEndpointCount > 0) {
+      recommendations.push({
+        action:
+          'Expose more API endpoints (health, status, versioned resources). Agents benefit from a broader API surface with 4+ distinct endpoints.',
+        impact: '+5 points',
+        difficulty: 'medium',
+        auto_fixable: false,
+      })
+    }
   }
 
   const score = Math.min(rawScore, 100)
