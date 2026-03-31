@@ -31,6 +31,7 @@ import {
 import clsx from 'clsx'
 import ScoreGauge from '@/components/ScoreGauge'
 import TierBadge from '@/components/TierBadge'
+import AgentJourneyScore from '@/components/AgentJourneyScore'
 
 type AuditTier = 'unaudited' | 'bronze' | 'silver' | 'gold' | 'platinum'
 
@@ -43,12 +44,20 @@ interface CategoryResult {
   recommendations: string[]
 }
 
+interface DimensionResult {
+  dimension: string
+  score: number
+  label?: string
+  weight?: number
+}
+
 interface AuditScorecard {
   business_name: string
   domain: string
   total_score: number
   tier: AuditTier
   categories: CategoryResult[]
+  dimensions?: DimensionResult[]
   audited_at: string
   next_steps: string[]
   business_id?: string
@@ -61,6 +70,7 @@ interface AuditState {
   totalScore: number
   tier: AuditTier
   categories: CategoryResult[]
+  dimensions: DimensionResult[]
   nextSteps: string[]
   errorMessage: string
   businessId?: string
@@ -134,6 +144,7 @@ function AuditPageContent() {
     totalScore: 0,
     tier: 'unaudited',
     categories: [],
+    dimensions: [],
     nextSteps: [],
     errorMessage: '',
   })
@@ -202,6 +213,7 @@ function AuditPageContent() {
       totalScore: 0,
       tier: 'unaudited',
       categories: [],
+      dimensions: [],
       nextSteps: [],
       errorMessage: '',
     })
@@ -220,16 +232,18 @@ function AuditPageContent() {
 
       const scorecard: AuditScorecard = await res.json()
 
-      setAudit({
+      const completedState: AuditState = {
         phase: 'complete',
         domain: scorecard.domain || domain,
         totalScore: scorecard.total_score,
         tier: scorecard.tier as AuditTier,
         categories: scorecard.categories,
+        dimensions: scorecard.dimensions || [],
         nextSteps: scorecard.next_steps || [],
         errorMessage: '',
         businessId: scorecard.business_id,
-      })
+      }
+      setAudit(completedState)
 
       // Expand failing categories by default
       const failingCats = scorecard.categories
@@ -542,6 +556,18 @@ function AuditPageContent() {
               </>
             )}
           </div>
+
+          {/* Agent Journey — 6-step pipeline */}
+          {audit.dimensions.length > 0 && (
+            <div className="p-6 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
+              <AgentJourneyScore
+                dimensions={audit.dimensions.map((d) => ({
+                  dimension: d.dimension,
+                  score: d.score,
+                }))}
+              />
+            </div>
+          )}
 
           {/* Category Breakdown — Score cards */}
           <div>

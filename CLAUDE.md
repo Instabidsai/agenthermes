@@ -18,6 +18,12 @@
 - Self-service onboarding at /connect (4-step wizard)
 - Schema.org on 7 pages (FAQ, HowTo, Product, SoftwareApplication, Dataset, ItemList, Speakable)
 
+## Product Vision (confirmed 2026-03-31)
+Three products: Score It -> Fix It -> Connect It
+- Score: 6-step agent journey (FIND, UNDERSTAND, SIGN UP, CONNECT, USE, PAY)
+- Fix: Auto-remediation (agent cards, llms.txt, MCP) + guided fixes
+- Connect: One API gateway — agents connect once, access everything
+
 ## Key Patterns
 - `getServiceClient()` for server-side Supabase
 - `requireAuth()` on financial endpoints

@@ -1,13 +1,13 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Gateway Marketplace | AgentHermes',
+  title: 'Gateway — Connect It | AgentHermes',
   description:
-    'One API key, every service. Browse AI, video, voice, media, and database services available through the AgentHermes gateway. Connect your service or start calling APIs today.',
+    'One API. Every service. Agent-ready today. List your service on the AgentHermes gateway and AI agents can discover, use, and pay for it through a single connection.',
   openGraph: {
-    title: 'Gateway Marketplace | AgentHermes',
+    title: 'Gateway — Connect It | AgentHermes',
     description:
-      'One API key, every service. Browse and call AI, video, voice, and media APIs through a single gateway.',
+      'One API. Every service. Agent-ready today. List your service and let AI agents discover, use, and pay for it automatically.',
     url: 'https://agenthermes.ai/gateway',
   },
 }

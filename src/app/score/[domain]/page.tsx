@@ -4,8 +4,9 @@ import Link from 'next/link'
 import { getServiceClient } from '@/lib/supabase'
 import ScoreGauge from '@/components/ScoreGauge'
 import TierBadge from '@/components/TierBadge'
+import AgentJourneyScore from '@/components/AgentJourneyScore'
+import TechnicalDetailsSection from '@/components/TechnicalDetailsSection'
 import {
-  Shield,
   ExternalLink,
   Copy,
   Wrench,
@@ -253,59 +254,6 @@ export async function generateStaticParams(): Promise<{ domain: string }[]> {
 
 // -- Component helpers -------------------------------------------------------
 
-function DimensionBar({
-  label,
-  score,
-  dimension,
-}: {
-  label: string
-  score: number
-  dimension: string
-}) {
-  const pct = Math.min(Math.max(score, 0), 100)
-  return (
-    <div className="group">
-      <div className="flex items-center justify-between mb-1.5">
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-mono text-zinc-600 w-5">
-            {dimension}
-          </span>
-          <span className="text-sm text-zinc-300 font-medium">{label}</span>
-        </div>
-        <span
-          className={clsx(
-            'text-sm font-bold tabular-nums',
-            pct >= 75
-              ? 'text-emerald-400'
-              : pct >= 50
-                ? 'text-yellow-400'
-                : pct >= 25
-                  ? 'text-amber-400'
-                  : 'text-red-400'
-          )}
-        >
-          {score}
-        </span>
-      </div>
-      <div className="h-2 w-full rounded-full bg-zinc-800 overflow-hidden">
-        <div
-          className={clsx(
-            'h-full rounded-full transition-all duration-700',
-            pct >= 75
-              ? 'bg-emerald-500'
-              : pct >= 50
-                ? 'bg-yellow-500'
-                : pct >= 25
-                  ? 'bg-amber-500'
-                  : 'bg-red-500'
-          )}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-    </div>
-  )
-}
-
 function CategoryBar({
   label,
   score,
@@ -513,24 +461,23 @@ export default async function ScorePage({
         )}
       </div>
 
-      {/* ---- 9-Dimension Breakdown ---- */}
+      {/* ---- Agent Journey (6-step pipeline) ---- */}
       {data.dimensions.length > 0 && (
         <section className="mb-10">
-          <h2 className="text-lg font-semibold mb-5 flex items-center gap-2">
-            <Shield className="h-4 w-4 text-emerald-500" />
-            9-Dimension Breakdown
-          </h2>
-          <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/50 p-6 space-y-4">
-            {data.dimensions.map((d) => (
-              <DimensionBar
-                key={d.dimension}
-                dimension={d.dimension}
-                label={d.label}
-                score={d.score}
-              />
-            ))}
+          <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/50 p-6">
+            <AgentJourneyScore
+              dimensions={data.dimensions.map((d) => ({
+                dimension: d.dimension,
+                score: d.score,
+              }))}
+            />
           </div>
         </section>
+      )}
+
+      {/* ---- Technical Details (9-dimension breakdown, expandable) ---- */}
+      {data.dimensions.length > 0 && (
+        <TechnicalDetailsSection dimensions={data.dimensions} />
       )}
 
       {/* ---- 5-Category Audit Results (fallback / legacy) ---- */}
