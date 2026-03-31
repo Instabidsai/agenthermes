@@ -8,6 +8,7 @@
 
 import type { DimensionResult, Check, Recommendation } from './types'
 import { probeEndpoint, endpointExists, getApiSubdomains } from './types'
+import { detectX402Support } from '../commerce/x402'
 
 export async function scanPayment(
   base: string,
@@ -400,6 +401,63 @@ export async function scanPayment(
         'Support multiple currencies to serve agents operating in different regions.',
       impact: '+10 points',
       difficulty: 'medium',
+      auto_fixable: false,
+    })
+  }
+
+  // -----------------------------------------------------------------------
+  // 8. x402 HTTP-native micropayment support (up to 10 pts BONUS)
+  //    Rewards businesses that support the x402 protocol — HTTP 402 with
+  //    structured payment headers (x-payment, x-payment-amount, etc.).
+  //    This is the fastest-growing agent payment rail (161M+ txns).
+  // -----------------------------------------------------------------------
+  // Probe the base URL and a common API path for x402
+  const x402Urls = [base, `${base}/api`, `${base}/api/v1`]
+  const x402Results = await Promise.all(
+    x402Urls.map((url) => detectX402Support(url, globalSignal))
+  )
+  const x402Hit = x402Results.find((r) => r.supported)
+
+  if (x402Hit && x402Hit.payment_details) {
+    rawScore += 10
+    const networks = x402Hit.payment_details.networks.join(', ')
+    checks.push({
+      name: 'x402 Micropayments',
+      passed: true,
+      details: `Full x402 support detected with structured payment headers. Networks: ${networks}. Currency: ${x402Hit.payment_details.currency}.`,
+      points: 10,
+    })
+  } else if (x402Hit) {
+    // 402 with some x402 headers but incomplete details
+    rawScore += 5
+    checks.push({
+      name: 'x402 Micropayments',
+      passed: true,
+      details:
+        'x402 headers detected on 402 response but payment details are incomplete. Add x-payment header with JSON payment details for full support.',
+      points: 5,
+    })
+    recommendations.push({
+      action:
+        'Your 402 responses have x402 signals but missing structured payment details. Add an x-payment header with JSON containing amount, currency, recipient, and networks.',
+      impact: '+5 points',
+      difficulty: 'medium',
+      auto_fixable: false,
+    })
+  } else if (!x402Check) {
+    // Only add recommendation if no 402 was detected at all (x402Check comes from section 5)
+    checks.push({
+      name: 'x402 Micropayments',
+      passed: false,
+      details:
+        'No x402 HTTP-native micropayment support detected. x402 enables agents to pay per-request in USDC without pre-funding.',
+      points: 0,
+    })
+    recommendations.push({
+      action:
+        'Support x402 micropayments — return HTTP 402 with x-payment headers on paid endpoints. Agents pay in USDC per-request. 161M+ transactions on the x402 network.',
+      impact: '+10 points',
+      difficulty: 'hard',
       auto_fixable: false,
     })
   }

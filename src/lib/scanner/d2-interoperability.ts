@@ -20,6 +20,7 @@ import type { DimensionResult, Check, Recommendation, ProbeResult } from './type
 import { probeEndpoint, isJsonContentType, endpointExists, getApiSubdomains } from './types'
 import { detectWooCommerceStore } from '@/lib/adapters/woocommerce'
 import { detectShopifyStore } from '@/lib/adapters/shopify'
+import { detectSquareStore } from '@/lib/adapters/square'
 
 // ---------------------------------------------------------------------------
 // Auth-protected API quality helpers
@@ -714,6 +715,32 @@ export async function scanInteroperability(
     }
   } catch {
     // Shopify detection is best-effort — never block the scan
+  }
+
+  // -----------------------------------------------------------------------
+  // 8. Square detection (informational — no score impact)
+  //    If a site runs Square Online, note it in checks and recommend
+  //    connecting via the Square adapter for auto-generated MCP tools.
+  // -----------------------------------------------------------------------
+  try {
+    const squareResult = await detectSquareStore(base)
+    if (squareResult.detected) {
+      checks.push({
+        name: 'Square Online Store',
+        passed: true,
+        details: `${squareResult.details} (confidence: ${squareResult.confidence})`,
+        points: 0, // informational — no score impact
+      })
+      recommendations.push({
+        action:
+          'Square Online store detected — connect to AgentHermes to auto-generate MCP tools (search_products, get_product_details, check_availability, get_store_info, get_menu).',
+        impact: '+0 points (enables agent commerce)',
+        difficulty: 'easy',
+        auto_fixable: true,
+      })
+    }
+  } catch {
+    // Square detection is best-effort — never block the scan
   }
 
   const score = Math.min(rawScore, 100)

@@ -5,6 +5,7 @@ import {
   toMcpProtocolFormat,
   type BusinessProfile,
 } from '@/lib/verticals/mcp-generator'
+import { routeFulfillment, type FulfillmentResult } from '@/lib/fulfillment/router'
 
 // ---------------------------------------------------------------------------
 // Hosted MCP Endpoint — /api/mcp/hosted/{businessSlug}
@@ -22,7 +23,7 @@ import {
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Agent-Id, X-Session-Id',
 }
 
 // --- JSON-RPC helpers -------------------------------------------------------
@@ -101,31 +102,25 @@ async function getBusinessBySlug(slug: string): Promise<CachedBusiness | null> {
   return entry
 }
 
-// --- Fulfillment routing ----------------------------------------------------
+// --- Fulfillment routing (delegates to the fulfillment router) --------------
 
-type FulfillmentMethod = 'api' | 'webhook' | 'email' | 'lead'
-
-function detectFulfillmentMethod(business: Record<string, any>): FulfillmentMethod {
-  // Check gateway_services for API endpoints
-  if (business.api_base_url || business.mcp_endpoints?.length > 0) return 'api'
-  if (business.webhook_url) return 'webhook'
-  if (business.owner_email) return 'email'
-  return 'lead'
-}
-
+/**
+ * Read-only info tools return static/DB data directly.
+ * Action tools (book, quote, contact, etc.) go through the fulfillment router
+ * which tries: API proxy -> webhook -> email -> lead capture.
+ */
 async function fulfillToolCall(
   business: Record<string, any>,
   profile: BusinessProfile,
   toolName: string,
   toolArgs: Record<string, unknown>,
   agentId: string | null
-): Promise<{ result: unknown; method: FulfillmentMethod }> {
-  const method = detectFulfillmentMethod(business)
+): Promise<{ result: unknown; method: string }> {
+  // ---- Read-only info tools — return data directly ----
 
-  // For info tools, always return static data from the profile
   if (toolName === 'get_business_info') {
     return {
-      method: 'lead',
+      method: 'static',
       result: {
         name: profile.name,
         description: profile.description,
@@ -148,7 +143,7 @@ async function fulfillToolCall(
       .eq('status', 'active')
 
     return {
-      method: 'lead',
+      method: 'static',
       result: {
         services: services || [],
         count: (services || []).length,
@@ -156,138 +151,53 @@ async function fulfillToolCall(
     }
   }
 
-  // For action tools (book, quote, order, etc.), route by fulfillment method
-  switch (method) {
-    case 'api': {
-      // Proxy to the business's gateway service if configured
-      const supabase = getServiceClient()
-      const { data: gatewayService } = await supabase
-        .from('gateway_services')
-        .select('id, api_base_url, actions, auth_type, encrypted_credentials')
-        .eq('business_id', business.id)
-        .eq('status', 'active')
-        .limit(1)
-        .single()
-
-      if (gatewayService) {
-        const gw = gatewayService as Record<string, any>
-        const actions = (gw.actions || []) as Array<{ name: string; method: string; path: string }>
-        const matchedAction = actions.find(
-          (a) => a.name === toolName || a.name.toLowerCase() === toolName.toLowerCase()
-        )
-
-        if (matchedAction) {
-          try {
-            const apiUrl = `${gw.api_base_url}${matchedAction.path}`
-            const res = await fetch(apiUrl, {
-              method: matchedAction.method || 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: matchedAction.method !== 'GET' ? JSON.stringify(toolArgs) : undefined,
-            })
-            const data = await res.json()
-            return { method: 'api', result: data }
-          } catch (err) {
-            // Fall through to lead storage on API failure
-            console.error(`[hosted-mcp] API proxy failed for ${business.slug}:`, err)
-          }
-        }
-      }
-
-      // If no matching action or API call failed, fall through to lead storage
-      return storeLead(business, toolName, toolArgs, agentId)
-    }
-
-    case 'webhook': {
-      try {
-        const res = await fetch(business.webhook_url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            tool: toolName,
-            input: toolArgs,
-            agent_id: agentId,
-            business_id: business.id,
-            timestamp: new Date().toISOString(),
-          }),
-        })
-
-        if (res.ok) {
-          const data = await res.json().catch(() => ({}))
-          return { method: 'webhook', result: { status: 'delivered', response: data } }
-        }
-      } catch (err) {
-        console.error(`[hosted-mcp] Webhook failed for ${business.slug}:`, err)
-      }
-
-      // Fall through to lead storage on webhook failure
-      return storeLead(business, toolName, toolArgs, agentId)
-    }
-
-    case 'email': {
-      // Log email notification (email integration pending)
-      console.log(
-        `[hosted-mcp] Email notification for ${business.name} (${business.owner_email}): ` +
-        `Tool "${toolName}" called by agent ${agentId || 'unknown'}. Input: ${JSON.stringify(toolArgs)}`
-      )
-
-      // Also store as lead
-      return storeLead(business, toolName, toolArgs, agentId)
-    }
-
-    case 'lead':
-    default:
-      return storeLead(business, toolName, toolArgs, agentId)
-  }
-}
-
-async function storeLead(
-  business: Record<string, any>,
-  toolName: string,
-  toolArgs: Record<string, unknown>,
-  agentId: string | null
-): Promise<{ result: unknown; method: FulfillmentMethod }> {
-  const supabase = getServiceClient()
-
-  const { data: lead, error } = await supabase
-    .from('agent_leads')
-    .insert({
-      business_id: business.id,
-      tool_called: toolName,
-      input: toolArgs,
-      agent_id: agentId,
-      status: 'new',
-    } as any)
-    .select()
-    .single()
-
-  if (error) {
-    console.error(`[hosted-mcp] Failed to store lead for ${business.slug}:`, error.message)
+  if (toolName === 'check_availability') {
+    // Return hours-based availability from the profile
     return {
-      method: 'lead',
+      method: 'static',
       result: {
-        status: 'received',
-        message: `Your request has been received by ${business.name}. They will follow up shortly.`,
+        business_name: profile.name,
+        hours: profile.hours || 'Contact business for hours',
+        service_area: profile.service_area || 'Contact business for service area',
+        note: 'For real-time availability, contact the business directly.',
       },
     }
   }
 
-  // Log notification (email integration pending)
-  if (business.owner_email) {
-    console.log(
-      `[hosted-mcp] New lead for ${business.name} (${business.owner_email}): ` +
-      `Tool "${toolName}", Lead ID: ${(lead as any).id}`
-    )
+  // ---- Action tools — route through fulfillment engine ----
+
+  const fulfillmentResult: FulfillmentResult = await routeFulfillment({
+    business_id: business.id,
+    tool_called: toolName,
+    input: toolArgs as Record<string, any>,
+    agent_id: agentId || undefined,
+    business_name: business.name,
+  })
+
+  // Shape the result for the MCP response
+  if (fulfillmentResult.success) {
+    return {
+      method: fulfillmentResult.route_used,
+      result: {
+        status: fulfillmentResult.route_used === 'lead_capture' ? 'received' : 'fulfilled',
+        message: fulfillmentResult.message,
+        ...(fulfillmentResult.lead_id ? { lead_id: fulfillmentResult.lead_id } : {}),
+        ...(fulfillmentResult.response_data ? { data: fulfillmentResult.response_data } : {}),
+        business_name: business.name,
+        business_phone: business.phone || null,
+        business_email: business.owner_email || null,
+      },
+    }
   }
 
+  // Fulfillment failed (all routes exhausted) — return error context
   return {
-    method: 'lead',
+    method: fulfillmentResult.route_used,
     result: {
-      status: 'received',
-      lead_id: (lead as any).id,
-      message: `Your request has been received by ${business.name}. They will follow up shortly.`,
+      status: 'error',
+      message: fulfillmentResult.message || `Could not process "${toolName}" at this time.`,
       business_name: business.name,
       business_phone: business.phone || null,
-      business_email: business.owner_email || null,
     },
   }
 }
@@ -299,7 +209,7 @@ export async function OPTIONS() {
 }
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ businessSlug: string }> }
 ) {
   const { businessSlug } = await params
@@ -316,7 +226,20 @@ export async function GET(
     )
   }
 
-  // GET returns the MCP server manifest (tools list, server info)
+  // ---------------------------------------------------------------
+  // SSE transport — MCP over Server-Sent Events
+  // Claude Desktop and other MCP clients connect with Accept: text/event-stream
+  // Protocol: client GETs to open SSE stream, then POSTs JSON-RPC to the
+  // session endpoint provided in the initial "endpoint" event.
+  // ---------------------------------------------------------------
+  const acceptHeader = request.headers.get('accept') || ''
+  if (acceptHeader.includes('text/event-stream')) {
+    return handleSseTransport(request, businessSlug, entry)
+  }
+
+  // ---------------------------------------------------------------
+  // Standard GET — return the MCP server manifest as JSON
+  // ---------------------------------------------------------------
   try {
     const generated = generateMcpTools(entry.profile)
     const protocol = toMcpProtocolFormat(generated)
@@ -364,6 +287,206 @@ export async function GET(
       },
       { headers: { ...corsHeaders, 'Cache-Control': 'public, max-age=60, s-maxage=120' } }
     )
+  }
+}
+
+// ---------------------------------------------------------------------------
+// SSE Transport Handler
+// ---------------------------------------------------------------------------
+// MCP SSE protocol:
+//   1. Client GETs with Accept: text/event-stream
+//   2. Server sends "endpoint" event with the POST URL for JSON-RPC messages
+//   3. Server holds the connection open and sends keep-alive pings
+//   4. Client POSTs JSON-RPC requests to the endpoint URL
+//   5. Server sends responses as SSE "message" events on the original stream
+//
+// Since Next.js App Router is request-response (no shared state between
+// GET and POST), we implement a simplified SSE transport:
+//   - The GET opens the SSE stream and sends the endpoint event
+//   - The POST handler (above) still handles JSON-RPC requests independently
+//   - The SSE stream provides server info + tools/list on connect, then pings
+//
+// This gives MCP clients everything they need for tool discovery and keeps
+// the connection alive for monitoring. Tool calls still go through POST.
+// ---------------------------------------------------------------------------
+
+// Active SSE sessions keyed by session ID — used for cross-request messaging
+const sseSessions = new Map<string, {
+  controller: ReadableStreamDefaultController
+  businessSlug: string
+  createdAt: number
+}>()
+
+// Lazy cleanup of stale sessions (called on new session creation)
+const SSE_SESSION_TTL = 300_000 // 5 min
+let lastCleanup = 0
+function cleanupStaleSessions() {
+  const now = Date.now()
+  if (now - lastCleanup < 60_000) return // at most once per minute
+  lastCleanup = now
+  for (const [id, session] of sseSessions) {
+    if (now - session.createdAt > SSE_SESSION_TTL) {
+      try { session.controller.close() } catch { /* already closed */ }
+      sseSessions.delete(id)
+    }
+  }
+}
+
+function generateSessionId(): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
+  let id = ''
+  for (let i = 0; i < 24; i++) {
+    id += chars[Math.floor(Math.random() * chars.length)]
+  }
+  return id
+}
+
+function sseEvent(event: string, data: unknown): string {
+  const json = JSON.stringify(data)
+  return `event: ${event}\ndata: ${json}\n\n`
+}
+
+function handleSseTransport(
+  request: NextRequest,
+  businessSlug: string,
+  entry: CachedBusiness
+): Response {
+  cleanupStaleSessions()
+  const sessionId = generateSessionId()
+  const encoder = new TextEncoder()
+
+  const stream = new ReadableStream({
+    start(controller) {
+      // Register session for potential cross-request messaging
+      sseSessions.set(sessionId, {
+        controller,
+        businessSlug,
+        createdAt: Date.now(),
+      })
+
+      // 1. Send the endpoint event — tells the client where to POST JSON-RPC
+      const endpointUrl = `https://agenthermes.ai/api/mcp/hosted/${businessSlug}`
+      controller.enqueue(encoder.encode(
+        sseEvent('endpoint', endpointUrl)
+      ))
+
+      // 2. Send server info
+      controller.enqueue(encoder.encode(
+        sseEvent('message', {
+          jsonrpc: '2.0',
+          method: 'notifications/initialized',
+          params: {
+            protocolVersion: '2024-11-05',
+            serverInfo: {
+              name: `${entry.business.name} MCP Server`,
+              version: '1.0.0',
+              description: `AI agent tools for ${entry.business.name} — powered by AgentHermes`,
+            },
+            capabilities: {
+              tools: {},
+            },
+            session_id: sessionId,
+          },
+        })
+      ))
+
+      // 3. Send the tools list
+      try {
+        const generated = generateMcpTools(entry.profile)
+        controller.enqueue(encoder.encode(
+          sseEvent('message', {
+            jsonrpc: '2.0',
+            method: 'notifications/tools/list_changed',
+            params: {
+              tools: generated.tools.map((t) => ({
+                name: t.name,
+                description: t.description,
+                inputSchema: t.inputSchema,
+              })),
+            },
+          })
+        ))
+      } catch {
+        // Unknown vertical — send minimal tools
+        controller.enqueue(encoder.encode(
+          sseEvent('message', {
+            jsonrpc: '2.0',
+            method: 'notifications/tools/list_changed',
+            params: {
+              tools: [
+                {
+                  name: 'get_business_info',
+                  description: `Get business information for ${entry.business.name}`,
+                  inputSchema: { type: 'object', properties: {}, required: [] },
+                },
+                {
+                  name: 'contact_business',
+                  description: `Send an inquiry to ${entry.business.name}`,
+                  inputSchema: {
+                    type: 'object',
+                    properties: {
+                      customer_name: { type: 'string', description: 'Your name' },
+                      message: { type: 'string', description: 'Your message or request' },
+                    },
+                    required: ['customer_name', 'message'],
+                  },
+                },
+              ],
+            },
+          })
+        ))
+      }
+
+      // 4. Keep-alive pings every 30s
+      const pingInterval = setInterval(() => {
+        try {
+          controller.enqueue(encoder.encode(': ping\n\n'))
+        } catch {
+          // Stream closed
+          clearInterval(pingInterval)
+          sseSessions.delete(sessionId)
+        }
+      }, 30_000)
+
+      // Clean up on abort (client disconnect)
+      request.signal.addEventListener('abort', () => {
+        clearInterval(pingInterval)
+        sseSessions.delete(sessionId)
+        try { controller.close() } catch { /* already closed */ }
+      })
+    },
+
+    cancel() {
+      sseSessions.delete(sessionId)
+    },
+  })
+
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache, no-transform',
+      'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no',
+      ...corsHeaders,
+    },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Send a message to an active SSE session (called from POST handler)
+// ---------------------------------------------------------------------------
+
+function sendToSseSession(sessionId: string, data: unknown): boolean {
+  const session = sseSessions.get(sessionId)
+  if (!session) return false
+
+  try {
+    const encoder = new TextEncoder()
+    session.controller.enqueue(encoder.encode(sseEvent('message', data)))
+    return true
+  } catch {
+    sseSessions.delete(sessionId)
+    return false
   }
 }
 
@@ -542,22 +665,27 @@ export async function POST(
           agentId
         )
 
-        return NextResponse.json(
-          rpcSuccess(requestId, {
-            content: [
-              {
-                type: 'text',
-                text: JSON.stringify(result, null, 2),
-              },
-            ],
-            _meta: {
-              fulfillment_method: fulfillmentMethod,
-              business_slug: businessSlug,
-              tool: toolName,
+        const rpcResponse = rpcSuccess(requestId, {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
             },
-          }),
-          { headers: corsHeaders }
-        )
+          ],
+          _meta: {
+            fulfillment_method: fulfillmentMethod,
+            business_slug: businessSlug,
+            tool: toolName,
+          },
+        })
+
+        // Bridge to SSE session if client sent X-Session-Id header
+        const sseSessionId = request.headers.get('x-session-id')
+        if (sseSessionId) {
+          sendToSseSession(sseSessionId, rpcResponse)
+        }
+
+        return NextResponse.json(rpcResponse, { headers: corsHeaders })
       }
 
       default:
