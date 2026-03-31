@@ -137,10 +137,13 @@ export async function scanDiscoverability(
       : ''
 
   // -----------------------------------------------------------------------
-  // 1. A2A Agent Card (up to 8 pts — reduced from 25 in v1)
+  // 1. A2A Agent Card (up to 10 pts — 8 base, +2 bonus for v0.3 correct path)
   // Agent-native feature: main value now in Agent-Native Bonus (7% total)
+  // Checks: /.well-known/agent-card.json (v0.3), /.well-known/agent.json,
+  //         /agent-card.json, /agent.json
   // -----------------------------------------------------------------------
   const agentCardPaths = [
+    '/.well-known/agent-card.json',
     '/.well-known/agent.json',
     '/agent-card.json',
     '/agent.json',
@@ -148,10 +151,10 @@ export async function scanDiscoverability(
   const agentCardResults = await Promise.allSettled(
     agentCardPaths.map((p) => probeEndpoint(`${base}${p}`, 'GET', globalSignal))
   )
-  const agentCard = agentCardResults
+  const agentCardFulfilled = agentCardResults
     .filter((r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof probeEndpoint>>> => r.status === 'fulfilled')
     .map((r) => r.value)
-    .find((r) => r.found)
+  const agentCard = agentCardFulfilled.find((r) => r.found)
 
   if (agentCard) {
     const isJson = isJsonContentType(agentCard.contentType)
@@ -161,14 +164,27 @@ export async function scanDiscoverability(
       typeof body === 'object' &&
       !!(body.name || body.skills || body.capabilities || body.url)
 
+    // Bonus: agent-card.json is the v0.3 correct path per the A2A spec
+    const isCorrectPath = agentCard.url.endsWith('/agent-card.json')
+
     if (isJson && hasRequiredFields) {
-      rawScore += 8
+      const cardPoints = isCorrectPath ? 10 : 8
+      rawScore += cardPoints
       checks.push({
         name: 'Agent Card',
         passed: true,
-        details: `Valid agent card at ${agentCard.url} with required fields`,
-        points: 8,
+        details: `Valid agent card at ${agentCard.url} with required fields${isCorrectPath ? ' (v0.3 correct path — bonus +2)' : ''}`,
+        points: cardPoints,
       })
+      if (!isCorrectPath) {
+        recommendations.push({
+          action:
+            'Move your agent card to /agent-card.json — the v0.3 canonical path per the A2A spec. Currently at ' + agentCard.url,
+          impact: '+2 points',
+          difficulty: 'easy',
+          auto_fixable: true,
+        })
+      }
     } else {
       rawScore += 3
       checks.push({
@@ -194,8 +210,8 @@ export async function scanDiscoverability(
     })
     recommendations.push({
       action:
-        'Create /.well-known/agent.json describing your service capabilities, supported protocols, and authentication methods.',
-      impact: '+8 points',
+        'Create /agent-card.json (the v0.3 A2A spec canonical path) describing your service capabilities, supported protocols, and authentication methods.',
+      impact: '+10 points',
       difficulty: 'medium',
       auto_fixable: true,
     })
@@ -565,41 +581,64 @@ export async function scanDiscoverability(
   }
 
   // -----------------------------------------------------------------------
-  // 7. AGENTS.md (up to 5 pts — reduced from 10 in v1)
+  // 7. AGENTS.md (up to 10 pts — 5 base, +5 bonus for .github/ LF standard)
   // Agent-native feature: main value now in Agent-Native Bonus
+  // Checks: /AGENTS.md, /agents.md, /.well-known/AGENTS.md, /.github/AGENTS.md
   // -----------------------------------------------------------------------
-  const agentsMdPaths = ['/AGENTS.md', '/agents.md', '/.well-known/AGENTS.md']
+  // Check standard paths + .github/ (Linux Foundation standard, 60K+ repos)
+  const agentsMdPaths = ['/AGENTS.md', '/agents.md', '/.well-known/AGENTS.md', '/.github/AGENTS.md']
   const agentsMdSettled = await Promise.allSettled(
     agentsMdPaths.map((p) => probeEndpoint(`${base}${p}`, 'GET', globalSignal))
   )
-  const agentsMd = agentsMdSettled
+  const agentsMdResults = agentsMdSettled
     .filter((r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof probeEndpoint>>> => r.status === 'fulfilled')
     .map((r) => r.value)
-    .find((r) => r.found)
+  const agentsMd = agentsMdResults.find((r) => r.found)
 
   if (agentsMd) {
     const body = typeof agentsMd.body === 'string' ? agentsMd.body : ''
     const hasContent = body.length > 50
-    rawScore += hasContent ? 5 : 2
+    // Check if also found at .github/ location (Linux Foundation standard)
+    const hasGithubLocation = agentsMdResults.some(
+      (r) => r.found && r.url.includes('/.github/AGENTS.md')
+    )
+    const hasRootLocation = agentsMdResults.some(
+      (r) => r.found && (r.url.endsWith('/AGENTS.md') || r.url.endsWith('/agents.md')) && !r.url.includes('/.github/') && !r.url.includes('/.well-known/')
+    )
+    // Base: 5 for content, 2 for stub. Bonus: +5 if found at both root AND .github/ (Linux Foundation standard)
+    const bothLocations = hasGithubLocation && hasRootLocation
+    let agentsMdPoints = hasContent ? 5 : 2
+    if (bothLocations && hasContent) agentsMdPoints = 10
+
+    rawScore += agentsMdPoints
     checks.push({
       name: 'AGENTS.md',
       passed: hasContent,
       details: hasContent
-        ? `Found at ${agentsMd.url} (${body.length} chars)`
+        ? `Found at ${agentsMd.url} (${body.length} chars)${bothLocations ? ' + .github/AGENTS.md (Linux Foundation standard)' : hasGithubLocation ? ' (Linux Foundation .github/ standard)' : ''}`
         : `Found at ${agentsMd.url} but very short`,
-      points: hasContent ? 5 : 2,
+      points: agentsMdPoints,
     })
+    if (hasContent && !hasGithubLocation) {
+      recommendations.push({
+        action:
+          'Also place AGENTS.md at /.github/AGENTS.md — the Linux Foundation standard adopted by 60K+ repos.',
+        impact: '+5 points',
+        difficulty: 'easy',
+        auto_fixable: true,
+      })
+    }
   } else {
     checks.push({
       name: 'AGENTS.md',
       passed: false,
-      details: 'No AGENTS.md found',
+      details: 'No AGENTS.md found at root, .well-known/, or .github/',
       points: 0,
     })
     recommendations.push({
       action:
-        'Create /AGENTS.md with agent-specific instructions: auth methods, rate limits, preferred endpoints, and behavioral guidelines.',
-      impact: '+5 points',
+        'Create /AGENTS.md and /.github/AGENTS.md (Linux Foundation standard) with agent-specific instructions: auth methods, rate limits, preferred endpoints, and behavioral guidelines.',
+      impact: '+10 points',
       difficulty: 'easy',
       auto_fixable: true,
     })

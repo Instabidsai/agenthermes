@@ -155,8 +155,8 @@ async function testReliability(endpoint: string): Promise<MysteryShopTest> {
 /** Test: Can we fetch /.well-known/agent-card.json or /.well-known/agent.json? */
 async function testAgentCardDiscoverability(domain: string): Promise<MysteryShopTest> {
   const paths = [
-    `https://${domain}/.well-known/agent.json`,
     `https://${domain}/.well-known/agent-card.json`,
+    `https://${domain}/.well-known/agent.json`,
     `https://${domain}/agent-card.json`,
     `https://${domain}/agent.json`,
   ]

@@ -79,7 +79,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/.well-known/agent.json" className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
+                <Link href="/.well-known/agent-card.json" className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
                   A2A Protocol
                 </Link>
               </li>

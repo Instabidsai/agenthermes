@@ -400,6 +400,7 @@ export async function scanDataQuality(
     '/status',
     '/api/pricing',
     '/api/v1/pricing',
+    '/.well-known/agent-card.json',
     '/.well-known/agent.json',
     '/.well-known/mcp.json',
   ]

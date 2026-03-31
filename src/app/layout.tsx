@@ -16,13 +16,13 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://agenthermes.ai'),
-  title: "AgentHermes — Verified Commerce Network",
+  title: "AgentHermes — The Shopify of the Agent Economy",
   description:
-    "Get your Agent Readiness Score \u2014 the industry standard for AI agent commerce. See if AI agents can discover, use, and pay your business. Free scan in 60 seconds.",
+    "The Shopify of the Agent Economy \u2014 make any business discoverable, usable, and payable by AI agents. Get your Agent Readiness Score free in 60 seconds.",
   openGraph: {
-    title: 'AgentHermes — Verified Commerce Network',
+    title: 'AgentHermes — The Shopify of the Agent Economy',
     description:
-      'The verified commerce network for agent-ready businesses. Machine-readable trust, real transactions, no black boxes.',
+      'Make any business discoverable, usable, and payable by AI agents. Score It, Fix It, Connect It. Free Agent Readiness Score in 60 seconds.',
     url: 'https://agenthermes.ai',
     siteName: 'AgentHermes',
     locale: 'en_US',
@@ -32,15 +32,15 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'AgentHermes — Verified Commerce Network for AI Agents',
+        alt: 'AgentHermes — The Shopify of the Agent Economy',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AgentHermes — Verified Commerce Network',
+    title: 'AgentHermes — The Shopify of the Agent Economy',
     description:
-      'The verified commerce network for agent-ready businesses. Machine-readable trust, real transactions, no black boxes.',
+      'Make any business discoverable, usable, and payable by AI agents. Score It, Fix It, Connect It. Free Agent Readiness Score in 60 seconds.',
     images: ['/og-image.png'],
   },
   authors: [{ name: 'AgentHermes Team', url: 'https://agenthermes.ai' }],
@@ -64,7 +64,7 @@ const jsonLd = {
   applicationCategory: 'BusinessApplication',
   operatingSystem: 'Web',
   description:
-    'The verified commerce network for the agent economy. Scores businesses 0-100 on AI agent readiness across 9 dimensions including API quality, security, reliability, and discoverability.',
+    'The Shopify of the Agent Economy. Make any business discoverable, usable, and payable by AI agents. Scores businesses 0-100 on agent readiness across 9 dimensions. Three products: Score It, Fix It, Connect It.',
   offers: {
     '@type': 'Offer',
     price: '0',

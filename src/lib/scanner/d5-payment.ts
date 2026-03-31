@@ -1,7 +1,8 @@
 // ---------------------------------------------------------------------------
 // D5 — Payment (weight: 0.08)
 // Can an agent pay for services programmatically without a browser?
-// Checks: Stripe integration, ACP/MPP/x402 support, programmatic payment
+// Checks: Stripe integration, UCP (Universal Commerce Protocol),
+//         ACP (Agent Commerce Protocol), x402 support, programmatic payment
 //         initiation, multi-currency
 // ---------------------------------------------------------------------------
 
@@ -172,7 +173,61 @@ export async function scanPayment(
   }
 
   // -----------------------------------------------------------------------
-  // 4. ACP / Agent Commerce Protocol / x402 support (up to 15 pts)
+  // 4. UCP / Universal Commerce Protocol (up to 10 pts)
+  // -----------------------------------------------------------------------
+  const ucpResult = await probeEndpoint(`${base}/.well-known/ucp.json`, 'GET', globalSignal)
+  // Also check homepage for UCP meta tags or headers
+  let ucpMetaDetected = false
+  if (homepageResult.found && typeof homepageResult.body === 'string') {
+    ucpMetaDetected =
+      /universal.?commerce.?protocol|ucp\.json|ucp-version/i.test(homepageResult.body)
+  }
+  // Check response headers for UCP signals
+  const ucpHeaderDetected = homepageResult.headers?.['x-ucp-version'] ||
+    homepageResult.headers?.['x-commerce-protocol']
+
+  if (endpointExists(ucpResult)) {
+    const isJson = ucpResult.contentType?.includes('json')
+    rawScore += isJson ? 10 : 5
+    checks.push({
+      name: 'Universal Commerce Protocol (UCP)',
+      passed: true,
+      details: `UCP manifest found at ${ucpResult.url}${isJson ? ' (valid JSON)' : ' (non-JSON response)'}`,
+      points: isJson ? 10 : 5,
+    })
+  } else if (ucpMetaDetected || ucpHeaderDetected) {
+    rawScore += 5
+    checks.push({
+      name: 'Universal Commerce Protocol (UCP)',
+      passed: false,
+      details: `UCP signals detected (${ucpMetaDetected ? 'meta tags' : 'headers'}) but no /.well-known/ucp.json manifest`,
+      points: 5,
+    })
+    recommendations.push({
+      action:
+        'Publish a UCP manifest at /.well-known/ucp.json to fully declare your commerce capabilities for agent discovery.',
+      impact: '+5 points',
+      difficulty: 'medium',
+      auto_fixable: true,
+    })
+  } else {
+    checks.push({
+      name: 'Universal Commerce Protocol (UCP)',
+      passed: false,
+      details: 'No Universal Commerce Protocol support detected at /.well-known/ucp.json',
+      points: 0,
+    })
+    recommendations.push({
+      action:
+        'Support the Universal Commerce Protocol (UCP) at /.well-known/ucp.json — a standardized way for agents to discover and interact with commerce endpoints.',
+      impact: '+10 points',
+      difficulty: 'medium',
+      auto_fixable: false,
+    })
+  }
+
+  // -----------------------------------------------------------------------
+  // 5. ACP / Agent Commerce Protocol / x402 support (up to 10 pts)
   // -----------------------------------------------------------------------
   const acpPaths = [
     '/.well-known/acp.json',
@@ -187,47 +242,71 @@ export async function scanPayment(
   // Also check for x402 Payment Required responses
   const x402Check = paymentResults.some((r) => r.status === 402)
 
+  // Check for Stripe ACP integration signals (headers, meta tags)
+  let stripeAcpDetected = false
+  if (homepageResult.found && typeof homepageResult.body === 'string') {
+    stripeAcpDetected =
+      /stripe.*acp|acp.*stripe|agent.?commerce.?protocol/i.test(homepageResult.body)
+  }
+  const acpHeaderDetected = homepageResult.headers?.['x-acp-version'] ||
+    homepageResult.headers?.['x-agent-commerce']
+
   if (acpHits.length > 0) {
-    rawScore += 15
+    rawScore += 10
     checks.push({
-      name: 'Agent Commerce Protocol',
+      name: 'Agent Commerce Protocol (ACP)',
       passed: true,
       details: `ACP/agent payment protocol detected: ${acpHits.map((r) => r.url).join(', ')}`,
-      points: 15,
+      points: 10,
     })
   } else if (x402Check) {
-    rawScore += 8
+    rawScore += 5
     checks.push({
-      name: 'Agent Commerce Protocol',
+      name: 'Agent Commerce Protocol (ACP)',
       passed: false,
       details: 'HTTP 402 Payment Required responses detected — partial agent payment support',
-      points: 8,
+      points: 5,
     })
     recommendations.push({
       action:
         'You return 402 statuses which is a great start. Add /.well-known/acp.json with payment instructions for full agent commerce protocol support.',
-      impact: '+7 points',
+      impact: '+5 points',
+      difficulty: 'medium',
+      auto_fixable: true,
+    })
+  } else if (stripeAcpDetected || acpHeaderDetected) {
+    rawScore += 5
+    checks.push({
+      name: 'Agent Commerce Protocol (ACP)',
+      passed: false,
+      details: `ACP signals detected (${stripeAcpDetected ? 'Stripe ACP references' : 'ACP headers'}) but no /.well-known/acp.json manifest`,
+      points: 5,
+    })
+    recommendations.push({
+      action:
+        'Publish an ACP manifest at /.well-known/acp.json to formalize your agent commerce support.',
+      impact: '+5 points',
       difficulty: 'medium',
       auto_fixable: true,
     })
   } else {
     checks.push({
-      name: 'Agent Commerce Protocol',
+      name: 'Agent Commerce Protocol (ACP)',
       passed: false,
-      details: 'No Agent Commerce Protocol (ACP), MPP, or x402 support detected',
+      details: 'No Agent Commerce Protocol (ACP), Stripe ACP, or x402 support detected',
       points: 0,
     })
     recommendations.push({
       action:
-        'Support the Agent Commerce Protocol (ACP) at /.well-known/acp.json — the emerging standard for agent-to-business payments.',
-      impact: '+15 points',
+        'Support the Agent Commerce Protocol (ACP) at /.well-known/acp.json — the emerging standard for agent-to-business payments, with Stripe ACP integration.',
+      impact: '+10 points',
       difficulty: 'hard',
       auto_fixable: false,
     })
   }
 
   // -----------------------------------------------------------------------
-  // 5. Usage-based billing / metering (up to 15 pts)
+  // 6. Usage-based billing / metering (up to 15 pts)
   // -----------------------------------------------------------------------
   const usagePaths = [
     '/api/usage',
@@ -277,7 +356,7 @@ export async function scanPayment(
   }
 
   // -----------------------------------------------------------------------
-  // 6. Multi-currency support (up to 10 pts)
+  // 7. Multi-currency support (up to 10 pts)
   // -----------------------------------------------------------------------
   // Check all collected pages including pricing page for currency mentions
   const pricingPageResult = await probeEndpoint(`${base}/pricing`, 'GET', globalSignal)

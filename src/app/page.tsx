@@ -280,8 +280,13 @@ export default async function HomePage() {
 
         <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 pt-24 pb-20 sm:pt-32 sm:pb-28">
           <div className="text-center">
-            {/* Tag */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium mb-8">
+            {/* Brand tagline */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-semibold mb-4">
+              The Shopify of the Agent Economy
+            </div>
+
+            {/* Product tag */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-800/60 border border-zinc-700/40 text-zinc-400 text-xs font-medium mb-8">
               <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-subtle-pulse" />
               Score It &middot; Fix It &middot; Connect It
             </div>

@@ -77,7 +77,7 @@ Disallow: /
 
 # AI agent metadata
 # LLM-readable context: https://agenthermes.ai/llms.txt
-# Agent card (A2A): https://agenthermes.ai/.well-known/agent.json
+# Agent card (A2A v0.3): https://agenthermes.ai/.well-known/agent-card.json
 
 Sitemap: https://agenthermes.ai/sitemap.xml
 `

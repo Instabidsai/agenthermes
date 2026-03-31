@@ -166,11 +166,19 @@ export async function scanPricing(
   // -----------------------------------------------------------------------
   // 3. Pricing in agent card (up to 15 pts)
   // -----------------------------------------------------------------------
-  const agentCardResult = await probeEndpoint(
-    `${base}/.well-known/agent.json`,
+  // Try A2A spec path first, then legacy
+  let agentCardResult = await probeEndpoint(
+    `${base}/.well-known/agent-card.json`,
     'GET',
     globalSignal
   )
+  if (!agentCardResult.found) {
+    agentCardResult = await probeEndpoint(
+      `${base}/.well-known/agent.json`,
+      'GET',
+      globalSignal
+    )
+  }
   if (agentCardResult.found && typeof agentCardResult.body === 'object') {
     const card = agentCardResult.body as Record<string, unknown>
     if (hasField(card, 'pricing', 'price', 'cost', 'rate', 'plans')) {
@@ -191,7 +199,7 @@ export async function scanPricing(
       })
       recommendations.push({
         action:
-          'Add a "pricing" field to your agent.json with per-call costs or plan references.',
+          'Add a "pricing" field to your agent-card.json with per-call costs or plan references.',
         impact: '+13 points',
         difficulty: 'easy',
         auto_fixable: true,

@@ -1,17 +1,33 @@
 import { NextResponse } from 'next/server'
 
-const llmsTxt = `# AgentHermes — The Agent Readiness Score Platform
+const llmsTxt = `# AgentHermes — The Shopify of the Agent Economy
 
-> AgentHermes is the verified commerce network where AI agents find, evaluate, and transact with businesses. We score businesses 0-100 on agent readiness across 9 dimensions.
+> Make any business discoverable, usable, and payable by AI agents.
+> Three products: Score It -> Fix It -> Connect It.
+> Vertical templates for SaaS, e-commerce, marketplaces, and more.
+> Agent card registry at /.well-known/agent-card.json (A2A v0.3 spec).
 
 ## What AgentHermes Does
-- Scans any business URL and produces an Agent Readiness Score (0-100)
-- Scores across 9 weighted dimensions (see below)
-- Lists verified businesses in a searchable directory with semantic search
-- Provides machine-readable business manifests and hermes.json for agent consumption
-- Enables wallet-to-wallet payments between businesses via agent transactions
-- Certifies businesses with embeddable trust badges
-- Monitors endpoint health, runs mystery shops, and tracks score changes over time
+AgentHermes is the platform that makes businesses agent-ready. Like Shopify made it easy
+for anyone to sell online, AgentHermes makes it easy for any business to be discovered,
+used, and paid by AI agents.
+
+- **Score It** — Scans any business URL and produces an Agent Readiness Score (0-100) across 9 weighted dimensions. Free, instant, no signup.
+- **Fix It** — Auto-remediation for agent cards, llms.txt, MCP endpoints, Schema.org markup, and pricing APIs. Shows exactly what to fix and generates the files.
+- **Connect It** — One API gateway for agents. Connect once, access every service. Wallet-to-wallet payments for agent transactions.
+
+## Agent Card Registry
+Every business scored by AgentHermes gets an agent card. The platform serves as a registry
+where AI agents can discover businesses, check their readiness, and connect programmatically.
+Agent card spec: A2A v0.3 at /.well-known/agent-card.json
+
+## Vertical Templates
+AgentHermes provides industry-specific templates for becoming agent-ready:
+- SaaS companies (API-first businesses)
+- E-commerce stores (product catalogs, checkout flows)
+- Marketplaces (multi-sided discovery and transactions)
+- Professional services (booking, pricing, deliverables)
+- Financial services (compliance, security, payments)
 
 ## 9-Dimension Scoring System (v2 — recalibrated)
 Base score reflects API/service maturity. Agent-native features are a bonus.
@@ -40,6 +56,15 @@ Cap rules: No TLS = max 39 | No callable endpoints = max 29
 - 60-74: Silver — Agent-usable with friction
 - 75-89: Gold — Fully agent-native
 - 90-100: Platinum — Certified, battle-tested, zero-friction
+
+## Capabilities
+- **MCP Server**: 10 tools, 4 resources, 3 prompts at /api/mcp (JSON-RPC 2.0)
+- **A2A Protocol**: 5 skills at /api/a2a (tasks/send, tasks/get, tasks/cancel)
+- **REST API**: 40+ endpoints at /api/v1 (OpenAPI spec at /openapi.json)
+- **NLWeb**: AI-queryable data at /api/nlweb?q=
+- **Agent Card**: /.well-known/agent-card.json (A2A v0.3)
+- **MCP Discovery**: /.well-known/mcp.json
+- **Gateway**: One API key for every connected service
 
 ## API Endpoints
 
@@ -119,6 +144,14 @@ Cap rules: No TLS = max 39 | No callable endpoints = max 29
 - POST /api/v1/remediate/mcp-proxy — Generate an MCP proxy config from API endpoints
 - POST /api/v1/remediate/openapi-to-mcp — Convert an OpenAPI spec to MCP tool definitions
 
+### Gateway — One API Key, Every Service
+- GET /api/v1/gateway — List connected services
+- POST /api/v1/gateway — Connect a new service (auth)
+- GET /api/v1/gateway/{id} — Get service details + actions
+- POST /api/v1/gateway/call — Execute a service call through gateway (auth)
+- GET /api/v1/gateway/usage — View usage history (auth)
+- GET/POST /api/v1/gateway/budget — View/set spending limits (auth)
+
 ### MCP Server
 - POST /api/mcp — JSON-RPC 2.0 MCP server (10 tools, 4 resources, 3 prompts)
 - GET /api/mcp — Server info and tool listing
@@ -147,32 +180,9 @@ Cap rules: No TLS = max 39 | No callable endpoints = max 29
 - find-service — Find a service by capability or description (args: query, max_price)
 - check-readiness — Check if a business is agent-ready (args: domain)
 
-## Gateway — One API Key, Every Service
-AgentHermes Gateway lets agents access any connected business service through a single API key.
-Instead of managing separate API keys for OpenAI, Creatify, ElevenLabs, etc., agents connect
-to AgentHermes and access everything through MCP or REST.
-
-### Gateway Endpoints
-- GET /api/v1/gateway — List connected services
-- POST /api/v1/gateway — Connect a new service (auth)
-- GET /api/v1/gateway/{id} — Get service details + actions
-- POST /api/v1/gateway/call — Execute a service call through gateway (auth)
-- GET /api/v1/gateway/usage — View usage history (auth)
-- GET/POST /api/v1/gateway/budget — View/set spending limits (auth)
-
-### MCP Gateway Tools
-- list_gateway_services — Browse available services
-- call_service — Execute API call through gateway
-- get_service_actions — View actions + costs for a service
-
-### How it works
-1. Agent connects to AgentHermes MCP with one API key
-2. Discovers available services via list_gateway_services
-3. Calls services via call_service (cost deducted from wallet)
-4. Budget controls prevent overspending
-
 ## Integration
 Connect via MCP at https://agenthermes.ai/api/mcp (JSON-RPC 2.0)
+Agent card at https://agenthermes.ai/.well-known/agent-card.json (A2A v0.3)
 Check scores via https://agenthermes.ai/api/v1/score/{domain}
 Discover businesses via https://agenthermes.ai/api/v1/discover
 Run a full 9-dimension scan via POST https://agenthermes.ai/api/v1/scan

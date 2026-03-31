@@ -13,12 +13,20 @@ export async function GET() {
     { loc: '/discover', priority: '0.9', changefreq: 'daily' },
     { loc: '/audit', priority: '0.9', changefreq: 'weekly' },
     { loc: '/register', priority: '0.8', changefreq: 'monthly' },
+    { loc: '/registry', priority: '0.8', changefreq: 'daily' },
     { loc: '/dashboard', priority: '0.7', changefreq: 'weekly' },
     { loc: '/remediate', priority: '0.8', changefreq: 'weekly' },
     { loc: '/leaderboard', priority: '0.8', changefreq: 'daily' },
     { loc: '/report', priority: '0.7', changefreq: 'weekly' },
     { loc: '/analytics', priority: '0.6', changefreq: 'weekly' },
     { loc: '/changelog', priority: '0.5', changefreq: 'weekly' },
+  ]
+
+  // Vertical landing pages
+  const verticals = [
+    'restaurants', 'hvac', 'plumbing', 'electricians', 'roofing',
+    'dental', 'legal', 'real-estate', 'auto-repair', 'landscaping',
+    'fitness', 'salons', 'insurance', 'accounting', 'veterinary',
   ]
 
   // Dynamic business profile pages + score pages
@@ -70,9 +78,21 @@ export async function GET() {
     )
     .join('\n')
 
+  const verticalEntries = verticals
+    .map(
+      (v) => `  <url>
+    <loc>${baseUrl}/for/${v}</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>`
+    )
+    .join('\n')
+
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${staticEntries}
+${verticalEntries}
 ${businessEntries}
 ${scoreEntries}
 </urlset>`

@@ -503,11 +503,19 @@ export async function scanAgentExperience(
   // 6. Documentation quality for agents (up to 10 pts)
   // -----------------------------------------------------------------------
   // Check agent card for detailed capabilities
-  const agentCardResult = await probeEndpoint(
-    `${base}/.well-known/agent.json`,
+  // Try A2A spec path first, then legacy
+  let agentCardResult = await probeEndpoint(
+    `${base}/.well-known/agent-card.json`,
     'GET',
     globalSignal
   )
+  if (!agentCardResult.found) {
+    agentCardResult = await probeEndpoint(
+      `${base}/.well-known/agent.json`,
+      'GET',
+      globalSignal
+    )
+  }
 
   if (agentCardResult.found && typeof agentCardResult.body === 'object') {
     const card = agentCardResult.body as Record<string, unknown>

@@ -1,5 +1,10 @@
 # AgentHermes — The Agent Readiness Score Platform
 
+## Brand
+"The Shopify of the Agent Economy"
+Make any business discoverable, usable, and payable by AI agents.
+Three products: Score It -> Fix It -> Connect It
+
 ## Quick Start
 - `npm run dev` — starts on port 3013
 - `npx next build` — production build (must pass with 0 errors)
