@@ -65,6 +65,12 @@ function detectNamingConvention(key: string): string {
 /** Standard error response fields that well-designed APIs include */
 const ERROR_QUALITY_FIELDS = ['error', 'message', 'code', 'type', 'status', 'detail', 'details'] as const
 
+/** Fields that indicate request tracing / debugging support in error responses */
+const REQUEST_ID_FIELDS = ['request_id', 'requestId', 'request-id', 'trace_id', 'traceId', 'id'] as const
+
+/** Fields/patterns that indicate documentation links in error responses */
+const DOC_LINK_PATTERNS = ['doc_url', 'documentation_url', 'docs', 'help', 'help_url', 'more_info', 'link', 'url'] as const
+
 /** Check if a response is a well-structured error (401/403 with JSON body) */
 function isAuthErrorJson(r: ProbeResult): boolean {
   return (
@@ -86,6 +92,9 @@ function isAuthErrorJson(r: ProbeResult): boolean {
  * - Field naming consistency (snake_case vs camelCase)
  * - ISO 8601 timestamps if present
  * - Consistent envelope structure across multiple error responses
+ * - Request ID fields in error body (debugging support)
+ * - Documentation links in error responses (developer experience)
+ * - Quality headers (X-Request-Id, rate limit headers)
  */
 function scoreErrorResponseQuality(authResponses: ProbeResult[]): {
   score: number
@@ -94,15 +103,22 @@ function scoreErrorResponseQuality(authResponses: ProbeResult[]): {
   namingStyle: string | null
   hasTimestamps: boolean
   isoTimestamps: boolean
+  hasRequestIds: boolean
+  hasDocLinks: boolean
+  qualityHeaderCount: number
 } {
   if (authResponses.length === 0) {
-    return { score: 0, fieldChecks: [], envelopeConsistent: false, namingStyle: null, hasTimestamps: false, isoTimestamps: false }
+    return {
+      score: 0, fieldChecks: [], envelopeConsistent: false, namingStyle: null,
+      hasTimestamps: false, isoTimestamps: false,
+      hasRequestIds: false, hasDocLinks: false, qualityHeaderCount: 0,
+    }
   }
 
   let points = 0
   const fieldChecks: string[] = []
 
-  // --- 1. Standard error fields present (up to 30 pts) ---
+  // --- 1. Standard error fields present (up to 25 pts — reduced from 30 to make room) ---
   const fieldPresence: Record<string, number> = {}
   for (const f of ERROR_QUALITY_FIELDS) {
     fieldPresence[f] = 0
@@ -131,34 +147,34 @@ function scoreErrorResponseQuality(authResponses: ProbeResult[]): {
   const foundFieldNames = foundFields.map(([name]) => name)
 
   if (foundFields.length >= 4) {
-    points += 30
+    points += 25
     fieldChecks.push(`Excellent: ${foundFieldNames.join(', ')} fields present`)
   } else if (foundFields.length >= 3) {
-    points += 25
+    points += 20
     fieldChecks.push(`Good: ${foundFieldNames.join(', ')} fields present`)
   } else if (foundFields.length >= 2) {
-    points += 18
+    points += 15
     fieldChecks.push(`Adequate: ${foundFieldNames.join(', ')} fields present`)
   } else if (foundFields.length >= 1) {
-    points += 10
+    points += 8
     fieldChecks.push(`Minimal: only ${foundFieldNames.join(', ')} field(s) present`)
   }
 
-  // --- 2. Content-Type correctness (up to 20 pts) ---
+  // --- 2. Content-Type correctness (up to 15 pts) ---
   const correctCt = authResponses.filter((r) => r.contentType?.includes('application/json'))
   const ctRate = correctCt.length / authResponses.length
   if (ctRate === 1) {
-    points += 20
+    points += 15
   } else if (ctRate > 0) {
-    points += 10
+    points += 8
   }
 
-  // --- 3. Proper HTTP status codes — 401/403 for auth, not 200-with-error (up to 20 pts) ---
+  // --- 3. Proper HTTP status codes — 401/403 for auth, not 200-with-error (up to 15 pts) ---
   // If they're in this list, they already use proper status codes (we filtered for 401/403)
-  points += 20
+  points += 15
   fieldChecks.push('Proper HTTP status codes for auth errors')
 
-  // --- 4. Field naming consistency (up to 15 pts) ---
+  // --- 4. Field naming consistency (up to 10 pts) ---
   const conventionCounts: Record<string, number> = {}
   for (const resp of authResponses) {
     const { keys } = flattenObject(resp.body)
@@ -177,12 +193,12 @@ function scoreErrorResponseQuality(authResponses: ProbeResult[]): {
   if (totalFieldKeys > 0 && dominant) {
     const consistency = dominant[1] / totalFieldKeys
     namingStyle = dominant[0]
-    if (consistency >= 0.9) points += 15
-    else if (consistency >= 0.7) points += 10
-    else points += 5
+    if (consistency >= 0.9) points += 10
+    else if (consistency >= 0.7) points += 7
+    else points += 3
   }
 
-  // --- 5. Envelope consistency across error responses (up to 15 pts) ---
+  // --- 5. Envelope consistency across error responses (up to 10 pts) ---
   let envelopeConsistent = false
   if (authResponses.length >= 2) {
     const patterns = authResponses.map((r) => {
@@ -192,18 +208,126 @@ function scoreErrorResponseQuality(authResponses: ProbeResult[]): {
     const uniquePatterns = new Set(patterns)
     envelopeConsistent = uniquePatterns.size === 1
     if (envelopeConsistent) {
-      points += 15
+      points += 10
       fieldChecks.push('Consistent error envelope across all auth responses')
     } else {
-      points += 5
+      points += 3
     }
   } else {
     // Single response — give moderate credit, can't fully assess consistency
-    points += 8
+    points += 6
     envelopeConsistent = true // vacuously true for 1 response
   }
 
-  // --- 6. ISO 8601 timestamps in error responses (bonus, not penalized if absent) ---
+  // --- 6. Request ID in error body or headers (up to 10 pts — NEW) ---
+  // APIs like Stripe include request_id in the error body AND X-Request-Id header.
+  // This is critical for debugging agent API calls.
+  let hasRequestIds = false
+  let requestIdInBody = false
+  let requestIdInHeaders = false
+
+  for (const resp of authResponses) {
+    // Check body for request ID fields
+    const body = resp.body as Record<string, unknown>
+    const allKeys = new Set<string>()
+    const topKeys = Object.keys(body)
+    for (const k of topKeys) allKeys.add(k)
+    for (const v of Object.values(body)) {
+      if (v && typeof v === 'object' && !Array.isArray(v)) {
+        for (const nestedKey of Object.keys(v as Record<string, unknown>)) {
+          allKeys.add(nestedKey)
+        }
+      }
+    }
+
+    for (const f of REQUEST_ID_FIELDS) {
+      if (allKeys.has(f)) {
+        requestIdInBody = true
+        hasRequestIds = true
+      }
+    }
+
+    // Check headers for request ID
+    if (resp.headers['x-request-id'] || resp.headers['x-trace-id'] || resp.headers['x-correlation-id']) {
+      requestIdInHeaders = true
+      hasRequestIds = true
+    }
+  }
+
+  if (requestIdInBody && requestIdInHeaders) {
+    points += 10
+    fieldChecks.push('Request IDs in both error body and response headers (excellent debugging support)')
+  } else if (requestIdInBody || requestIdInHeaders) {
+    points += 6
+    const where = requestIdInBody ? 'error body' : 'response headers'
+    fieldChecks.push(`Request IDs in ${where}`)
+  }
+
+  // --- 7. Documentation links in error responses (up to 5 pts — NEW) ---
+  // Best APIs include doc_url or help links in error responses so developers
+  // (and agents) can self-serve to fix the issue.
+  let hasDocLinks = false
+  for (const resp of authResponses) {
+    const body = resp.body as Record<string, unknown>
+    const allKeys = new Set<string>()
+    const topKeys = Object.keys(body)
+    for (const k of topKeys) allKeys.add(k)
+    for (const v of Object.values(body)) {
+      if (v && typeof v === 'object' && !Array.isArray(v)) {
+        for (const nestedKey of Object.keys(v as Record<string, unknown>)) {
+          allKeys.add(nestedKey)
+        }
+      }
+    }
+
+    for (const f of DOC_LINK_PATTERNS) {
+      if (allKeys.has(f)) {
+        hasDocLinks = true
+        break
+      }
+    }
+
+    // Also check if any string value looks like a documentation URL
+    if (!hasDocLinks) {
+      const { values } = flattenObject(resp.body)
+      for (const v of values) {
+        if (typeof v === 'string' && /https?:\/\/.*(?:doc|help|support|guide|reference)/i.test(v)) {
+          hasDocLinks = true
+          break
+        }
+      }
+    }
+
+    if (hasDocLinks) break
+  }
+
+  if (hasDocLinks) {
+    points += 5
+    fieldChecks.push('Error responses include documentation/help links')
+  }
+
+  // --- 8. Quality headers on error responses (up to 5 pts — NEW) ---
+  // Rate limit headers, API version headers on 401/403 prove infrastructure maturity
+  let qualityHeaderCount = 0
+  const foundQualityHeaders: string[] = []
+  for (const resp of authResponses) {
+    for (const h of ['x-ratelimit-limit', 'x-ratelimit-remaining', 'x-ratelimit-reset', 'retry-after', 'api-version']) {
+      if (resp.headers[h] && !foundQualityHeaders.includes(h)) {
+        foundQualityHeaders.push(h)
+        qualityHeaderCount++
+      }
+    }
+  }
+
+  if (qualityHeaderCount >= 2) {
+    points += 5
+    fieldChecks.push(`Quality headers: ${foundQualityHeaders.join(', ')}`)
+  } else if (qualityHeaderCount >= 1) {
+    points += 3
+    fieldChecks.push(`Quality header: ${foundQualityHeaders.join(', ')}`)
+  }
+
+  // --- 9. ISO 8601 timestamps in error responses (bonus, not penalized if absent) ---
   let hasTimestamps = false
   let isoTimestamps = false
   for (const resp of authResponses) {
@@ -226,6 +350,9 @@ function scoreErrorResponseQuality(authResponses: ProbeResult[]): {
     namingStyle,
     hasTimestamps,
     isoTimestamps,
+    hasRequestIds,
+    hasDocLinks,
+    qualityHeaderCount,
   }
 }
 
@@ -372,6 +499,26 @@ export async function scanDataQuality(
 
     rawScore += structurePoints
 
+    // Request ID check (informational — points already in errorQuality)
+    checks.push({
+      name: 'Request IDs in Error Responses',
+      passed: errorQuality.hasRequestIds,
+      details: errorQuality.hasRequestIds
+        ? 'Error responses include request/trace IDs for debugging'
+        : 'Error responses lack request IDs — agents cannot reference specific failures',
+      points: 0, // Already counted in error quality score
+    })
+
+    // Documentation link check (informational — points already in errorQuality)
+    checks.push({
+      name: 'Documentation Links in Errors',
+      passed: errorQuality.hasDocLinks,
+      details: errorQuality.hasDocLinks
+        ? 'Error responses include documentation or help links'
+        : 'Error responses lack documentation links — agents cannot self-serve to resolve errors',
+      points: 0, // Already counted in error quality score
+    })
+
     // Analyze naming consistency of error responses
     const conventionCounts: Record<string, number> = {}
     for (const resp of authJsonResponses) {
@@ -411,6 +558,16 @@ export async function scanDataQuality(
       points: 0, // Already counted in error quality score
     })
 
+    // Quality headers check (informational — points already in errorQuality)
+    if (errorQuality.qualityHeaderCount > 0) {
+      checks.push({
+        name: 'API Quality Headers on Errors',
+        passed: true,
+        details: `${errorQuality.qualityHeaderCount} quality header(s) present on auth error responses (rate limits, API version, etc.)`,
+        points: 0, // Already counted in error quality score
+      })
+    }
+
     // Recommendation to expose public endpoints for full score
     recommendations.push({
       action:
@@ -425,6 +582,26 @@ export async function scanDataQuality(
         action:
           'Improve error response structure: include error, message, code, and type fields in all error responses.',
         impact: '+15 points',
+        difficulty: 'easy',
+        auto_fixable: true,
+      })
+    }
+
+    if (!errorQuality.hasRequestIds) {
+      recommendations.push({
+        action:
+          'Include a request_id field in error response bodies and X-Request-Id in response headers. This enables agents to reference specific failed requests for debugging.',
+        impact: '+7 points',
+        difficulty: 'easy',
+        auto_fixable: true,
+      })
+    }
+
+    if (!errorQuality.hasDocLinks) {
+      recommendations.push({
+        action:
+          'Include a doc_url or documentation_url field in error responses linking to relevant API documentation. Agents can use these to self-serve error resolution.',
+        impact: '+4 points',
         difficulty: 'easy',
         auto_fixable: true,
       })

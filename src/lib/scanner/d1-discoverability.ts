@@ -7,12 +7,115 @@
 // Schema.org, robots.txt). Agent-native features now primarily contribute
 // to the separate Agent-Native Bonus (7% of total score).
 //
+// v3 improvements: Expanded doc subdomain detection (docs.X, developers.X,
+// developer.X, api.X, reference.X), more OpenAPI/Swagger paths, HTML meta
+// tag analysis for doc links, richer JSON-LD scoring, developer portal
+// detection on separate subdomains.
+//
 // Checks: OpenAPI spec, Schema.org/JSON-LD, robots.txt, developer docs,
-//         agent-card.json, llms.txt, /.well-known/mcp.json, AGENTS.md
+//         agent-card.json, llms.txt, /.well-known/mcp.json, AGENTS.md,
+//         doc subdomains, meta tags, developer portal
 // ---------------------------------------------------------------------------
 
 import type { DimensionResult, Check, Recommendation } from './types'
-import { probeEndpoint, isJsonContentType, hasField, getApiSubdomains, getInfraSubdomains, endpointExists } from './types'
+import { probeEndpoint, isJsonContentType, hasField, getApiSubdomains, getInfraSubdomains, endpointExists, extractDomain } from './types'
+
+// ---------------------------------------------------------------------------
+// HTML analysis helpers
+// ---------------------------------------------------------------------------
+
+/** Extract API documentation links from HTML meta tags and link elements */
+function extractDocLinksFromHtml(html: string): {
+  hasApiDocMeta: boolean
+  hasDocsLink: boolean
+  links: string[]
+} {
+  const links: string[] = []
+
+  // Check <link rel="api-documentation"> or <link rel="help">
+  const linkRelMatches = html.match(/<link[^>]+rel\s*=\s*["'](api-documentation|help|documentation|service-desc)[^>]*>/gi) || []
+  for (const match of linkRelMatches) {
+    const hrefMatch = match.match(/href\s*=\s*["']([^"']+)["']/i)
+    if (hrefMatch) links.push(hrefMatch[1])
+  }
+
+  // Check <meta name="api-docs"> or similar
+  const hasApiDocMeta =
+    /<meta[^>]+name\s*=\s*["'](api-docs|api-documentation|docs-url|developer-docs)[^>]*>/i.test(html) ||
+    /<meta[^>]+property\s*=\s*["']og:see_also["'][^>]*content\s*=\s*["'][^"']*doc/i.test(html)
+
+  // Check for <a href="..."> pointing to doc-like destinations
+  const anchorMatches = html.match(/<a[^>]+href\s*=\s*["']([^"']*(?:docs|documentation|api-reference|developers|api-docs|reference)[^"']*)["'][^>]*>/gi) || []
+  for (const match of anchorMatches) {
+    const hrefMatch = match.match(/href\s*=\s*["']([^"']+)["']/i)
+    if (hrefMatch) links.push(hrefMatch[1])
+  }
+
+  const hasDocsLink = links.length > 0
+
+  return { hasApiDocMeta, hasDocsLink, links }
+}
+
+/** Analyze JSON-LD structured data quality */
+function analyzeJsonLd(html: string): {
+  hasJsonLd: boolean
+  hasSchemaOrg: boolean
+  types: string[]
+  hasOrganization: boolean
+  hasWebApi: boolean
+  hasSoftwareApp: boolean
+} {
+  const hasJsonLd = html.includes('application/ld+json')
+  const hasSchemaOrg = html.includes('schema.org')
+  const types: string[] = []
+
+  // Extract @type values from JSON-LD blocks
+  const ldBlocks = html.match(/<script[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) || []
+  for (const block of ldBlocks) {
+    const contentMatch = block.match(/<script[^>]*>([\s\S]*?)<\/script>/i)
+    if (contentMatch) {
+      try {
+        const data = JSON.parse(contentMatch[1])
+        const extractTypes = (obj: Record<string, unknown>) => {
+          if (obj['@type']) {
+            const t = obj['@type']
+            if (Array.isArray(t)) types.push(...t.map(String))
+            else types.push(String(t))
+          }
+          if (obj['@graph'] && Array.isArray(obj['@graph'])) {
+            for (const item of obj['@graph']) {
+              if (item && typeof item === 'object') extractTypes(item as Record<string, unknown>)
+            }
+          }
+        }
+        if (data && typeof data === 'object') extractTypes(data)
+      } catch {
+        // Malformed JSON-LD — still counts as present
+      }
+    }
+  }
+
+  // Also check for microdata / RDFa schema.org types
+  const microdataTypes = html.match(/itemtype\s*=\s*["']https?:\/\/schema\.org\/(\w+)["']/gi) || []
+  for (const match of microdataTypes) {
+    const typeMatch = match.match(/schema\.org\/(\w+)/i)
+    if (typeMatch) types.push(typeMatch[1])
+  }
+
+  const hasOrganization = types.some((t) =>
+    /^(Organization|Corporation|LocalBusiness|OnlineBusiness)$/i.test(t)
+  )
+  const hasWebApi = types.some((t) => /^(WebAPI|APIReference|TechArticle)$/i.test(t))
+  const hasSoftwareApp = types.some((t) =>
+    /^(SoftwareApplication|WebApplication|MobileApplication|SoftwareSourceCode)$/i.test(t)
+  )
+
+  return { hasJsonLd, hasSchemaOrg, types, hasOrganization, hasWebApi, hasSoftwareApp }
+}
+
+// ---------------------------------------------------------------------------
+// Main scanner
+// ---------------------------------------------------------------------------
 
 export async function scanDiscoverability(
   base: string,
@@ -21,6 +124,17 @@ export async function scanDiscoverability(
   const checks: Check[] = []
   const recommendations: Recommendation[] = []
   let rawScore = 0
+
+  const domain = extractDomain(base)
+
+  // -----------------------------------------------------------------------
+  // 0. Fetch homepage once — reused by multiple checks below
+  // -----------------------------------------------------------------------
+  const homepageResult = await probeEndpoint(base, 'GET', globalSignal)
+  const homepageHtml =
+    homepageResult.found && typeof homepageResult.body === 'string'
+      ? homepageResult.body
+      : ''
 
   // -----------------------------------------------------------------------
   // 1. A2A Agent Card (up to 8 pts — reduced from 25 in v1)
@@ -31,10 +145,13 @@ export async function scanDiscoverability(
     '/agent-card.json',
     '/agent.json',
   ]
-  const agentCardResults = await Promise.all(
+  const agentCardResults = await Promise.allSettled(
     agentCardPaths.map((p) => probeEndpoint(`${base}${p}`, 'GET', globalSignal))
   )
-  const agentCard = agentCardResults.find((r) => r.found)
+  const agentCard = agentCardResults
+    .filter((r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof probeEndpoint>>> => r.status === 'fulfilled')
+    .map((r) => r.value)
+    .find((r) => r.found)
 
   if (agentCard) {
     const isJson = isJsonContentType(agentCard.contentType)
@@ -89,10 +206,13 @@ export async function scanDiscoverability(
   // Agent-native feature: main value now in Agent-Native Bonus
   // -----------------------------------------------------------------------
   const llmsPaths = ['/llms.txt', '/.well-known/llms.txt']
-  const llmsResults = await Promise.all(
+  const llmsSettled = await Promise.allSettled(
     llmsPaths.map((p) => probeEndpoint(`${base}${p}`, 'GET', globalSignal))
   )
-  const llmsTxt = llmsResults.find((r) => r.found)
+  const llmsTxt = llmsSettled
+    .filter((r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof probeEndpoint>>> => r.status === 'fulfilled')
+    .map((r) => r.value)
+    .find((r) => r.found)
 
   if (llmsTxt) {
     const body = typeof llmsTxt.body === 'string' ? llmsTxt.body : ''
@@ -187,36 +307,67 @@ export async function scanDiscoverability(
   //    This is the GOLD STANDARD for API discoverability. A published OpenAPI
   //    spec tells agents exactly what endpoints exist, what parameters they
   //    accept, and what they return. Worth more than agent-native features.
+  //
+  //    v3: Expanded paths — /openapi.yaml, /api/openapi, /v1/openapi.json,
+  //    /v2/openapi.json, /docs/openapi.json. Also checks doc subdomains.
   // -----------------------------------------------------------------------
   const openApiPaths = [
     '/openapi.json',
+    '/openapi.yaml',
     '/swagger.json',
+    '/swagger.yaml',
     '/.well-known/openapi.json',
     '/api-docs',
     '/api/docs',
+    '/api/openapi',
+    '/api/openapi.json',
+    '/api/openapi.yaml',
+    '/api/swagger.json',
+    '/docs/api',
+    '/docs/openapi.json',
+    '/v1/openapi.json',
+    '/v2/openapi.json',
+    '/v3/openapi.json',
   ]
   // Also check API subdomains for OpenAPI specs
   const apiSubdomains = getApiSubdomains(base)
   const subdomainOpenApiPaths = apiSubdomains.flatMap((sub) => [
     `${sub}/openapi.json`,
+    `${sub}/openapi.yaml`,
     `${sub}/swagger.json`,
     `${sub}/api-docs`,
   ])
+  // Check doc subdomains for OpenAPI specs too (e.g., docs.stripe.com/openapi)
+  const docSubdomainOpenApiPaths = domain
+    ? [
+        `https://docs.${domain}/openapi.json`,
+        `https://docs.${domain}/openapi.yaml`,
+        `https://docs.${domain}/api/openapi.json`,
+        `https://reference.${domain}/openapi.json`,
+      ]
+    : []
   const allOpenApiPaths = [
     ...openApiPaths.map((p) => `${base}${p}`),
     ...subdomainOpenApiPaths,
+    ...docSubdomainOpenApiPaths,
   ]
-  const openApiResults = await Promise.all(
+  const openApiSettled = await Promise.allSettled(
     allOpenApiPaths.map((url) => probeEndpoint(url, 'GET', globalSignal))
   )
-  const openApiHit = openApiResults.find((r) => r.found)
+  const openApiHit = openApiSettled
+    .filter((r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof probeEndpoint>>> => r.status === 'fulfilled')
+    .map((r) => r.value)
+    .find((r) => r.found)
 
   if (openApiHit) {
     const body = openApiHit.body as Record<string, unknown> | null
+    const bodyStr = typeof openApiHit.body === 'string' ? openApiHit.body : ''
     const isOpenApi =
-      body &&
-      typeof body === 'object' &&
-      !!(body.openapi || body.swagger || body.paths)
+      (body &&
+        typeof body === 'object' &&
+        !!(body.openapi || body.swagger || body.paths)) ||
+      // YAML specs may come back as text — check for common markers
+      /^(openapi|swagger):/m.test(bodyStr)
 
     if (isOpenApi) {
       rawScore += 25
@@ -261,27 +412,61 @@ export async function scanDiscoverability(
   // -----------------------------------------------------------------------
   // 5. Schema.org / JSON-LD (up to 15 pts — increased from 10 in v1)
   //    Structured data is how agents understand what a business IS.
+  //    v3: Deeper analysis — bonus for Organization type, WebAPI type, or
+  //    SoftwareApplication type. Richer detail reporting.
   // -----------------------------------------------------------------------
-  const homepageResult = await probeEndpoint(base, 'GET', globalSignal)
-  let hasJsonLd = false
+  const jsonLdAnalysis = analyzeJsonLd(homepageHtml)
 
-  if (homepageResult.found && typeof homepageResult.body === 'string') {
-    const html = homepageResult.body
-    hasJsonLd =
-      html.includes('application/ld+json') || html.includes('schema.org')
+  if (jsonLdAnalysis.hasJsonLd || jsonLdAnalysis.hasSchemaOrg) {
+    // Base credit for having any structured data
+    let jsonLdPoints = 10
+    const jsonLdDetails: string[] = ['Homepage includes structured data']
 
-    if (hasJsonLd) {
-      rawScore += 15
-      checks.push({
-        name: 'Schema.org / JSON-LD',
-        passed: true,
-        details: 'Homepage includes structured data (JSON-LD or Schema.org markup)',
-        points: 15,
+    // Bonus: identified Organization/Business type (+2)
+    if (jsonLdAnalysis.hasOrganization) {
+      jsonLdPoints += 2
+      jsonLdDetails.push('Organization type detected')
+    }
+
+    // Bonus: identified WebAPI or API reference type (+2)
+    if (jsonLdAnalysis.hasWebApi) {
+      jsonLdPoints += 2
+      jsonLdDetails.push('WebAPI/APIReference type detected')
+    }
+
+    // Bonus: identified SoftwareApplication type (+1)
+    if (jsonLdAnalysis.hasSoftwareApp) {
+      jsonLdPoints += 1
+      jsonLdDetails.push('SoftwareApplication type detected')
+    }
+
+    jsonLdPoints = Math.min(jsonLdPoints, 15)
+
+    if (jsonLdAnalysis.types.length > 0) {
+      jsonLdDetails.push(`Types: ${[...new Set(jsonLdAnalysis.types)].slice(0, 5).join(', ')}`)
+    }
+
+    rawScore += jsonLdPoints
+    checks.push({
+      name: 'Schema.org / JSON-LD',
+      passed: true,
+      details: jsonLdDetails.join('. '),
+      points: jsonLdPoints,
+    })
+
+    if (jsonLdPoints < 15) {
+      const missing: string[] = []
+      if (!jsonLdAnalysis.hasOrganization) missing.push('Organization')
+      if (!jsonLdAnalysis.hasWebApi) missing.push('WebAPI')
+      if (!jsonLdAnalysis.hasSoftwareApp) missing.push('SoftwareApplication')
+      recommendations.push({
+        action: `Enhance your JSON-LD with additional Schema.org types: ${missing.join(', ')}. This helps agents understand your business and API surface.`,
+        impact: `+${15 - jsonLdPoints} points`,
+        difficulty: 'easy',
+        auto_fixable: true,
       })
     }
-  }
-
-  if (!hasJsonLd) {
+  } else {
     checks.push({
       name: 'Schema.org / JSON-LD',
       passed: false,
@@ -298,14 +483,51 @@ export async function scanDiscoverability(
   }
 
   // -----------------------------------------------------------------------
+  // 5b. HTML meta tags for API documentation links (up to 5 pts — NEW in v3)
+  //     Companies often embed <link rel="api-documentation"> or <meta> tags
+  //     pointing to their API docs. This is a lightweight discoverability
+  //     signal that agents can parse from the homepage.
+  // -----------------------------------------------------------------------
+  const metaAnalysis = extractDocLinksFromHtml(homepageHtml)
+
+  if (metaAnalysis.hasApiDocMeta || metaAnalysis.hasDocsLink) {
+    const metaPoints = metaAnalysis.hasApiDocMeta ? 5 : 3
+    rawScore += metaPoints
+    const linkSample = metaAnalysis.links.slice(0, 3).join(', ')
+    checks.push({
+      name: 'Doc Meta Tags',
+      passed: true,
+      details: `Homepage contains ${metaAnalysis.hasApiDocMeta ? 'API documentation meta tags' : 'links to documentation'}${linkSample ? ` (${linkSample})` : ''}`,
+      points: metaPoints,
+    })
+  } else {
+    checks.push({
+      name: 'Doc Meta Tags',
+      passed: false,
+      details: 'No API documentation meta tags or doc links found in homepage HTML',
+      points: 0,
+    })
+    recommendations.push({
+      action:
+        'Add <link rel="api-documentation" href="..."> or <link rel="help" href="..."> meta tags to your homepage so agents can discover your docs programmatically.',
+      impact: '+5 points',
+      difficulty: 'easy',
+      auto_fixable: true,
+    })
+  }
+
+  // -----------------------------------------------------------------------
   // 6. MCP Discovery (up to 5 pts — reduced from 10 in v1)
   // Agent-native feature: main value now in Agent-Native Bonus
   // -----------------------------------------------------------------------
   const mcpPaths = ['/.well-known/mcp.json', '/mcp.json']
-  const mcpResults = await Promise.all(
+  const mcpSettled = await Promise.allSettled(
     mcpPaths.map((p) => probeEndpoint(`${base}${p}`, 'GET', globalSignal))
   )
-  const mcpHit = mcpResults.find((r) => r.found)
+  const mcpHit = mcpSettled
+    .filter((r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof probeEndpoint>>> => r.status === 'fulfilled')
+    .map((r) => r.value)
+    .find((r) => r.found)
 
   if (mcpHit) {
     const isJson = isJsonContentType(mcpHit.contentType)
@@ -347,10 +569,13 @@ export async function scanDiscoverability(
   // Agent-native feature: main value now in Agent-Native Bonus
   // -----------------------------------------------------------------------
   const agentsMdPaths = ['/AGENTS.md', '/agents.md', '/.well-known/AGENTS.md']
-  const agentsMdResults = await Promise.all(
+  const agentsMdSettled = await Promise.allSettled(
     agentsMdPaths.map((p) => probeEndpoint(`${base}${p}`, 'GET', globalSignal))
   )
-  const agentsMd = agentsMdResults.find((r) => r.found)
+  const agentsMd = agentsMdSettled
+    .filter((r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof probeEndpoint>>> => r.status === 'fulfilled')
+    .map((r) => r.value)
+    .find((r) => r.found)
 
   if (agentsMd) {
     const body = typeof agentsMd.body === 'string' ? agentsMd.body : ''
@@ -385,46 +610,155 @@ export async function scanDiscoverability(
   //    Companies like Stripe (docs.stripe.com) and Anthropic (docs.anthropic.com)
   //    have excellent docs on subdomains. This is one of the MOST important
   //    signals for agent discoverability — comprehensive docs = agent-friendly.
+  //
+  //    v3: Expanded subdomain list — docs.X, developers.X, developer.X,
+  //    api.X, reference.X. Also checks /docs, /documentation, /api-reference,
+  //    /developers paths on the main domain.
   // -----------------------------------------------------------------------
-  const infraSubdomains = getInfraSubdomains(base)
-  const docsSubdomainUrls = infraSubdomains.filter(
-    (u) => u.includes('docs.') || u.includes('developer')
+  const docsSubdomainUrls = domain
+    ? [
+        `https://docs.${domain}`,
+        `https://developer.${domain}`,
+        `https://developers.${domain}`,
+        `https://api.${domain}`,
+        `https://reference.${domain}`,
+      ]
+    : []
+  const docsPathUrls = [
+    `${base}/docs`,
+    `${base}/documentation`,
+    `${base}/api-reference`,
+    `${base}/developers`,
+    `${base}/developer`,
+    `${base}/api-docs`,
+  ]
+  const allDocsUrls = [...docsSubdomainUrls, ...docsPathUrls]
+  const docsSettled = await Promise.allSettled(
+    allDocsUrls.map((url) => probeEndpoint(url, 'GET', globalSignal))
   )
-  const docsSubdomainResults = await Promise.all(
-    docsSubdomainUrls.map((url) => probeEndpoint(url, 'GET', globalSignal))
-  )
-  const docsSubdomainHit = docsSubdomainResults.find((r) => r.found)
+  const docsResults = docsSettled
+    .filter((r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof probeEndpoint>>> => r.status === 'fulfilled')
+    .map((r) => r.value)
+  const docsSubdomainHit = docsResults.find((r) => r.found && docsSubdomainUrls.some((u) => r.url.startsWith(u)))
+  const docsPathHit = docsResults.find((r) => r.found && docsPathUrls.some((u) => r.url.startsWith(u)))
 
   // Also check homepage HTML for links to developer docs, API references, OpenAPI specs
   let hasDevDocsLink = false
-  if (homepageResult.found && typeof homepageResult.body === 'string') {
-    const html = homepageResult.body
-    hasDevDocsLink = /docs\.|developer\.|\/docs|\/api-reference|\/api-docs|openapi|swagger/i.test(html)
+  if (homepageHtml) {
+    hasDevDocsLink = /docs\.|developer\.|\/docs|\/api-reference|\/api-docs|\/documentation|openapi|swagger/i.test(homepageHtml)
   }
 
   if (docsSubdomainHit) {
     rawScore += 25
+    const allDocsHits = docsResults.filter((r) => r.found).map((r) => r.url)
     checks.push({
-      name: 'Developer Docs (Subdomain)',
+      name: 'Developer Docs',
       passed: true,
-      details: `Developer documentation found at ${docsSubdomainHit.url}`,
+      details: `Developer documentation on subdomain: ${docsSubdomainHit.url}${allDocsHits.length > 1 ? ` (+ ${allDocsHits.length - 1} more)` : ''}`,
       points: 25,
     })
-  } else if (hasDevDocsLink) {
-    rawScore += 12
+  } else if (docsPathHit) {
+    rawScore += 18
     checks.push({
-      name: 'Developer Docs (Subdomain)',
+      name: 'Developer Docs',
+      passed: true,
+      details: `Developer documentation found at ${docsPathHit.url}`,
+      points: 18,
+    })
+    recommendations.push({
+      action:
+        'Consider hosting developer documentation on a dedicated subdomain (e.g., docs.yourdomain.com) for better discoverability by agents.',
+      impact: '+7 points',
+      difficulty: 'medium',
+      auto_fixable: false,
+    })
+  } else if (hasDevDocsLink) {
+    rawScore += 10
+    checks.push({
+      name: 'Developer Docs',
       passed: false,
-      details: 'Homepage links to developer documentation or API reference',
-      points: 12,
+      details: 'Homepage links to developer documentation or API reference but no dedicated docs page/subdomain detected',
+      points: 10,
+    })
+    recommendations.push({
+      action:
+        'Ensure your documentation is accessible at a predictable path (/docs, /api-reference) or subdomain (docs.yourdomain.com).',
+      impact: '+15 points',
+      difficulty: 'medium',
+      auto_fixable: false,
     })
   } else {
     checks.push({
-      name: 'Developer Docs (Subdomain)',
+      name: 'Developer Docs',
       passed: false,
-      details: 'No developer documentation found on subdomains (docs.*, developer.*) or linked from homepage',
+      details: 'No developer documentation found on subdomains (docs.*, developer.*, api.*, reference.*) or common paths (/docs, /documentation, /api-reference)',
       points: 0,
     })
+    recommendations.push({
+      action:
+        'Create developer documentation at /docs or docs.yourdomain.com. Comprehensive docs are the single most important signal for agent discoverability.',
+      impact: '+25 points',
+      difficulty: 'medium',
+      auto_fixable: false,
+    })
+  }
+
+  // -----------------------------------------------------------------------
+  // 8b. Developer Portal on separate subdomain (up to 5 pts — NEW in v3)
+  //     A developer portal (separate from docs) with dev-focused content
+  //     like getting-started guides, API explorers, changelogs, etc.
+  // -----------------------------------------------------------------------
+  const portalUrls = domain
+    ? [
+        `https://developer.${domain}`,
+        `https://developers.${domain}`,
+        `https://developer.${domain}/docs`,
+        `https://developers.${domain}/docs`,
+      ]
+    : []
+  // Reuse results from docs probing for portal subdomains
+  const portalHits = docsResults.filter(
+    (r) => r.found && (r.url.includes('developer.') || r.url.includes('developers.'))
+  )
+  // Check if portal content has developer-focused keywords
+  const hasDevContent = portalHits.some((r) => {
+    const text = typeof r.body === 'string' ? r.body : ''
+    return /getting.?started|quickstart|api.?key|sdk|tutorial|changelog|playground/i.test(text)
+  })
+
+  if (portalHits.length > 0 && hasDevContent) {
+    rawScore += 5
+    checks.push({
+      name: 'Developer Portal',
+      passed: true,
+      details: `Developer portal with dev-focused content at ${portalHits[0].url}`,
+      points: 5,
+    })
+  } else if (portalHits.length > 0) {
+    rawScore += 3
+    checks.push({
+      name: 'Developer Portal',
+      passed: false,
+      details: `Developer subdomain exists (${portalHits[0].url}) but lacks developer-focused content (quickstart, API keys, SDKs)`,
+      points: 3,
+    })
+  } else {
+    checks.push({
+      name: 'Developer Portal',
+      passed: false,
+      details: 'No dedicated developer portal subdomain (developer.*, developers.*) detected',
+      points: 0,
+    })
+    // Only recommend if they also lack docs
+    if (!docsSubdomainHit && !docsPathHit) {
+      recommendations.push({
+        action:
+          'Create a developer portal at developer.yourdomain.com with getting-started guides, API explorer, and SDK documentation.',
+        impact: '+5 points',
+        difficulty: 'hard',
+        auto_fixable: false,
+      })
+    }
   }
 
   // Cap at 100

@@ -4,8 +4,10 @@
 // v2: Weight increased from 0.05 to 0.13. Reliability is one of the MOST
 // important qualities for agent workflows. An unreliable API breaks agent
 // chains regardless of how many protocols it supports.
-// Checks: /health or /status endpoint, response time p95, 5xx rates,
-//         published SLA
+// v3: Added CDN detection, HTTP/2 support, multiple timing samples with
+// median, and deeper status page / statuspage.io integration checks.
+// Checks: /health or /status endpoint, response time (median of 3-5 samples),
+//         5xx rates, published SLA, retry hints, CDN presence, HTTP/2 support
 // ---------------------------------------------------------------------------
 
 import type { DimensionResult, Check, Recommendation } from './types'
@@ -20,7 +22,7 @@ export async function scanReliability(
   let rawScore = 0
 
   // -----------------------------------------------------------------------
-  // 1. Health / Status endpoint (up to 30 pts)
+  // 1. Health / Status endpoint (up to 25 pts)
   // -----------------------------------------------------------------------
   const healthPaths = [
     '/health',
@@ -30,6 +32,7 @@ export async function scanReliability(
     '/api/status',
     '/api/v1/status',
     '/healthz',
+    '/_health',
     '/readyz',
     '/livez',
   ]
@@ -55,30 +58,33 @@ export async function scanReliability(
     ...statusSubdomains,
   ]
 
-  const healthResults = await Promise.all(
+  const healthSettled = await Promise.allSettled(
     allHealthUrls.map((url) => probeEndpoint(url, 'GET', globalSignal))
   )
+  const healthResults = healthSettled
+    .filter((r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof probeEndpoint>>> => r.status === 'fulfilled')
+    .map((r) => r.value)
   const healthHit = healthResults.find((r) => r.found)
 
   if (healthHit) {
-    rawScore += 15
+    rawScore += 12
     checks.push({
       name: 'Health Endpoint',
       passed: true,
       details: `Health check endpoint at ${healthHit.url} (${healthHit.status}, ${healthHit.responseTimeMs}ms)`,
-      points: 15,
+      points: 12,
     })
 
     // Bonus: structured health response
     if (isJsonContentType(healthHit.contentType) && typeof healthHit.body === 'object') {
       const body = healthHit.body as Record<string, unknown>
       if (hasField(body, 'status', 'healthy', 'ok', 'uptime', 'version')) {
-        rawScore += 15
+        rawScore += 13
         checks.push({
           name: 'Structured Health Response',
           passed: true,
-          details: `Health endpoint returns structured JSON with status/version fields`,
-          points: 15,
+          details: 'Health endpoint returns structured JSON with status/version fields',
+          points: 13,
         })
       } else {
         rawScore += 5
@@ -91,7 +97,7 @@ export async function scanReliability(
         recommendations.push({
           action:
             'Include { status, uptime, version, dependencies } in your health endpoint response.',
-          impact: '+10 points',
+          impact: '+8 points',
           difficulty: 'easy',
           auto_fixable: true,
         })
@@ -107,64 +113,68 @@ export async function scanReliability(
     recommendations.push({
       action:
         'Create a /health or /api/health endpoint returning JSON { status: "ok", uptime, version }. Agents use this to verify availability before making requests.',
-      impact: '+30 points',
+      impact: '+25 points',
       difficulty: 'easy',
       auto_fixable: true,
     })
   }
 
   // -----------------------------------------------------------------------
-  // 2. Response time analysis (up to 25 pts)
+  // 2. Response time analysis (up to 20 pts) — 3-5 samples, use median
   // -----------------------------------------------------------------------
-  // Make 5 sequential requests to the homepage to get response time distribution
+  // Make 5 requests to different paths to get response time distribution
   const timingTargets = [
     base,
     `${base}/api`,
     `${base}/api/v1`,
-    `${base}/health`,
+    base,  // duplicate homepage for more samples
     `${base}/api/health`,
   ]
 
-  const timingResults = await Promise.all(
+  const timingSettled = await Promise.allSettled(
     timingTargets.map((url) => probeEndpoint(url, 'GET', globalSignal))
   )
+  const timingResults = timingSettled
+    .filter((r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof probeEndpoint>>> => r.status === 'fulfilled')
+    .map((r) => r.value)
   const successfulTimings = timingResults.filter(
     (r) => r.status !== null && r.responseTimeMs > 0
   )
 
   if (successfulTimings.length > 0) {
     const times = successfulTimings.map((r) => r.responseTimeMs).sort((a, b) => a - b)
+    const median = times[Math.floor(times.length / 2)]
     const avg = times.reduce((a, b) => a + b, 0) / times.length
-    const p95 = times[Math.floor(times.length * 0.95)] ?? times[times.length - 1]
+    const min = times[0]
     const max = times[times.length - 1]
 
     let timingPoints = 0
-    if (p95 < 200) timingPoints = 25
-    else if (p95 < 500) timingPoints = 20
-    else if (p95 < 1000) timingPoints = 15
-    else if (p95 < 2000) timingPoints = 8
-    else if (p95 < 5000) timingPoints = 3
+    if (median < 200) timingPoints = 20
+    else if (median < 500) timingPoints = 16
+    else if (median < 1000) timingPoints = 12
+    else if (median < 2000) timingPoints = 6
+    else if (median < 5000) timingPoints = 3
     else timingPoints = 1
 
     rawScore += timingPoints
     checks.push({
-      name: 'Response Time p95',
-      passed: p95 < 1000,
-      details: `p95: ${Math.round(p95)}ms, avg: ${Math.round(avg)}ms, max: ${Math.round(max)}ms (${successfulTimings.length} samples)`,
+      name: 'Response Time',
+      passed: median < 1000,
+      details: `median: ${Math.round(median)}ms, avg: ${Math.round(avg)}ms, min: ${Math.round(min)}ms, max: ${Math.round(max)}ms (${successfulTimings.length} samples)`,
       points: timingPoints,
     })
 
-    if (p95 >= 1000) {
+    if (median >= 1000) {
       recommendations.push({
-        action: `Improve response times (p95 currently ${Math.round(p95)}ms). Agents prefer <500ms for reliable workflows.`,
-        impact: `+${25 - timingPoints} points`,
+        action: `Improve response times (median currently ${Math.round(median)}ms). Agents prefer <500ms for reliable workflows.`,
+        impact: `+${20 - timingPoints} points`,
         difficulty: 'medium',
         auto_fixable: false,
       })
     }
   } else {
     checks.push({
-      name: 'Response Time p95',
+      name: 'Response Time',
       passed: false,
       details: 'No successful responses to measure timing',
       points: 0,
@@ -172,7 +182,7 @@ export async function scanReliability(
   }
 
   // -----------------------------------------------------------------------
-  // 3. 5xx error rate (up to 20 pts)
+  // 3. 5xx error rate (up to 15 pts)
   // -----------------------------------------------------------------------
   const totalResponses = timingResults.filter((r) => r.status !== null)
   const serverErrors = totalResponses.filter(
@@ -183,15 +193,15 @@ export async function scanReliability(
 
   if (totalResponses.length > 0) {
     if (errorRate === 0) {
-      rawScore += 20
+      rawScore += 15
       checks.push({
         name: '5xx Error Rate',
         passed: true,
         details: `0% server errors across ${totalResponses.length} probe(s)`,
-        points: 20,
+        points: 15,
       })
     } else {
-      const errorPoints = errorRate < 0.2 ? 10 : errorRate < 0.5 ? 5 : 1
+      const errorPoints = errorRate < 0.2 ? 8 : errorRate < 0.5 ? 4 : 1
       rawScore += errorPoints
       checks.push({
         name: '5xx Error Rate',
@@ -201,7 +211,7 @@ export async function scanReliability(
       })
       recommendations.push({
         action: `Reduce 5xx error rate (currently ${Math.round(errorRate * 100)}%). Server errors break agent workflows.`,
-        impact: `+${20 - errorPoints} points`,
+        impact: `+${15 - errorPoints} points`,
         difficulty: 'medium',
         auto_fixable: false,
       })
@@ -233,9 +243,12 @@ export async function scanReliability(
     ...slaPaths.map((p) => `${base}${p}`),
     ...slaSubdomainUrls,
   ]
-  const slaResults = await Promise.all(
+  const slaSettled = await Promise.allSettled(
     allSlaUrls.map((url) => probeEndpoint(url, 'GET', globalSignal))
   )
+  const slaResults = slaSettled
+    .filter((r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof probeEndpoint>>> => r.status === 'fulfilled')
+    .map((r) => r.value)
   const slaHit = slaResults.find((r) => r.found)
 
   // Also check homepage for SLA references
@@ -246,13 +259,31 @@ export async function scanReliability(
     homepageBody
   )
 
+  // Check if status page has statuspage.io integration
+  const statusPageHit = slaResults.find(
+    (r) => r.found && r.url?.includes('status.')
+  )
+  let isStatuspageIo = false
+  if (statusPageHit) {
+    const statusBody =
+      typeof statusPageHit.body === 'string' ? statusPageHit.body : ''
+    isStatuspageIo =
+      statusBody.includes('statuspage') ||
+      statusBody.includes('Atlassian') ||
+      statusBody.includes('Statuspage') ||
+      (typeof statusPageHit.body === 'object' &&
+        statusPageHit.body !== null &&
+        'page' in (statusPageHit.body as Record<string, unknown>))
+  }
+
   if (slaHit) {
-    rawScore += 15
+    const slaPoints = isStatuspageIo ? 15 : 12
+    rawScore += slaPoints
     checks.push({
       name: 'Published SLA',
       passed: true,
-      details: `SLA or status page at ${slaHit.url}`,
-      points: 15,
+      details: `SLA or status page at ${slaHit.url}${isStatuspageIo ? ' (Statuspage.io integration detected)' : ''}`,
+      points: slaPoints,
     })
   } else if (mentionsSla) {
     rawScore += 7
@@ -286,13 +317,12 @@ export async function scanReliability(
   }
 
   // -----------------------------------------------------------------------
-  // 5. Retry hints (up to 10 pts)
+  // 5. Retry hints (up to 8 pts)
   // -----------------------------------------------------------------------
-  const allHeaders = { ...homepageResult.headers }
+  const allHeaders: Record<string, string> = { ...homepageResult.headers }
   for (const r of timingResults) {
     Object.assign(allHeaders, r.headers)
   }
-  // Also check API subdomain headers for rate-limit / retry hints
   for (const r of healthResults) {
     Object.assign(allHeaders, r.headers)
   }
@@ -301,7 +331,7 @@ export async function scanReliability(
   const hasRateLimit = !!allHeaders['x-ratelimit-remaining']
 
   if (hasRetryAfter || hasRateLimit) {
-    rawScore += 10
+    rawScore += 8
     checks.push({
       name: 'Retry Hints',
       passed: true,
@@ -311,7 +341,7 @@ export async function scanReliability(
       ]
         .filter(Boolean)
         .join(', ')}`,
-      points: 10,
+      points: 8,
     })
   } else {
     checks.push({
@@ -323,9 +353,117 @@ export async function scanReliability(
     recommendations.push({
       action:
         'Return Retry-After headers on 429/503 responses and X-RateLimit-Remaining so agents know when to retry.',
-      impact: '+10 points',
+      impact: '+8 points',
       difficulty: 'easy',
       auto_fixable: true,
+    })
+  }
+
+  // -----------------------------------------------------------------------
+  // 6. CDN detection (up to 10 pts)
+  // -----------------------------------------------------------------------
+  const cdnSignals: string[] = []
+
+  // Check all collected headers for CDN indicators
+  if (allHeaders['cf-ray']) cdnSignals.push('Cloudflare (CF-Ray)')
+  if (allHeaders['x-cache']) cdnSignals.push(`X-Cache: ${allHeaders['x-cache']}`)
+  if (allHeaders['x-cdn']) cdnSignals.push(`X-CDN: ${allHeaders['x-cdn']}`)
+  if (allHeaders['x-served-by']) cdnSignals.push(`X-Served-By: ${allHeaders['x-served-by']}`)
+  if (allHeaders['x-cache-hits']) cdnSignals.push(`X-Cache-Hits: ${allHeaders['x-cache-hits']}`)
+  if (allHeaders['x-fastly-request-id']) cdnSignals.push('Fastly')
+  if (allHeaders['x-amz-cf-id'] || allHeaders['x-amz-cf-pop']) cdnSignals.push('CloudFront')
+
+  // Check Via header for CDN proxies
+  const viaHeader = allHeaders['via']
+  if (viaHeader) {
+    if (/cloudfront|akamai|fastly|varnish|cloudflare|cdn/i.test(viaHeader)) {
+      cdnSignals.push(`Via: ${viaHeader}`)
+    }
+  }
+
+  // Check server header for CDN indicators
+  const serverHeader = (allHeaders['server'] ?? '').toLowerCase()
+  if (serverHeader.includes('cloudflare')) cdnSignals.push('Cloudflare (Server header)')
+  if (serverHeader.includes('akamaghost') || serverHeader.includes('akamai'))
+    cdnSignals.push('Akamai (Server header)')
+  if (serverHeader.includes('cdn')) cdnSignals.push(`CDN (Server: ${allHeaders['server']})`)
+
+  if (cdnSignals.length > 0) {
+    rawScore += 10
+    checks.push({
+      name: 'CDN',
+      passed: true,
+      details: `CDN detected: ${cdnSignals.join('; ')}`,
+      points: 10,
+    })
+  } else {
+    checks.push({
+      name: 'CDN',
+      passed: false,
+      details: 'No CDN detected (no CF-Ray, X-Cache, X-CDN, Via, or CDN server headers)',
+      points: 0,
+    })
+    recommendations.push({
+      action:
+        'Deploy behind a CDN (Cloudflare, CloudFront, Fastly, etc.) for global edge caching and DDoS protection. CDNs dramatically improve latency for agents worldwide.',
+      impact: '+10 points',
+      difficulty: 'medium',
+      auto_fixable: false,
+    })
+  }
+
+  // -----------------------------------------------------------------------
+  // 7. HTTP/2 support (up to 7 pts)
+  // -----------------------------------------------------------------------
+  // We can detect HTTP/2 through several proxy signals since fetch() in
+  // Node.js doesn't directly expose the protocol version:
+  // - alt-svc header presence (common with HTTP/2+ servers)
+  // - Server push indicators
+  // - Modern CDN/server (Cloudflare, nginx, etc. default to HTTP/2)
+  // Note: If a site is behind Cloudflare or a modern CDN, HTTP/2 is virtually guaranteed.
+
+  // Check for alt-svc header which indicates HTTP/2+ support
+  const altSvc = allHeaders['alt-svc'] || ''
+  const hasHttp2Signals =
+    altSvc.includes('h2') ||
+    altSvc.includes('h3') ||
+    cdnSignals.length > 0 || // CDNs universally serve HTTP/2
+    serverHeader.includes('cloudflare') ||
+    serverHeader.includes('nginx') ||
+    serverHeader.includes('envoy') ||
+    serverHeader.includes('apache/2.4')
+
+  const hasHttp3 = altSvc.includes('h3')
+
+  if (hasHttp3) {
+    rawScore += 7
+    checks.push({
+      name: 'HTTP/2+ Support',
+      passed: true,
+      details: `HTTP/3 (h3) advertised via alt-svc: ${altSvc.slice(0, 100)}`,
+      points: 7,
+    })
+  } else if (hasHttp2Signals) {
+    rawScore += 5
+    checks.push({
+      name: 'HTTP/2+ Support',
+      passed: true,
+      details: `HTTP/2 likely supported (${altSvc ? `alt-svc: ${altSvc.slice(0, 80)}` : `modern server/CDN: ${serverHeader || 'CDN detected'}`})`,
+      points: 5,
+    })
+  } else {
+    checks.push({
+      name: 'HTTP/2+ Support',
+      passed: false,
+      details: 'No HTTP/2 indicators detected (no alt-svc, no modern server/CDN signals)',
+      points: 0,
+    })
+    recommendations.push({
+      action:
+        'Enable HTTP/2 on your server for multiplexed connections and reduced latency. Most modern servers and CDNs support it by default.',
+      impact: '+7 points',
+      difficulty: 'easy',
+      auto_fixable: false,
     })
   }
 

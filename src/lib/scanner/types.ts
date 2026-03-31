@@ -110,6 +110,7 @@ export async function probeEndpoint(
       'content-security-policy',
       'x-frame-options',
       'x-content-type-options',
+      'referrer-policy',
       'x-request-id',
       'x-trace-id',
       'x-correlation-id',
@@ -125,6 +126,18 @@ export async function probeEndpoint(
       'deprecation',
       'sunset',
       'link',
+      // CDN / caching headers
+      'cf-ray',
+      'x-cache',
+      'x-cdn',
+      'via',
+      'x-served-by',
+      'x-cache-hits',
+      'x-fastly-request-id',
+      'x-amz-cf-id',
+      'x-amz-cf-pop',
+      'server',
+      'alt-svc',
     ]
     for (const key of headerKeys) {
       const val = res.headers.get(key)

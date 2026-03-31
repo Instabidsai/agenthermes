@@ -6,12 +6,76 @@
 // MCP tools reduced to 10pts (bonus, not core). The best APIs in the world
 // (Stripe, GitHub, Twilio) should score 70+ here based on REST alone.
 //
+// v2.1 auth-aware: 401/403 with JSON body = proof of a well-built API.
+// Auth-protected endpoints that return structured JSON error responses
+// score nearly as high as 200 responses. A 401 with JSON + proper headers
+// (X-Request-Id, rate limits, API versioning) is BETTER than a 200 with HTML.
+//
 // Checks: REST API endpoints, OPTIONS support, JSON responses, response
-//         times, HTTP status codes, MCP tools/list (bonus)
+//         times, HTTP status codes, auth-protected API quality, API
+//         versioning headers, MCP tools/list (bonus)
 // ---------------------------------------------------------------------------
 
-import type { DimensionResult, Check, Recommendation } from './types'
+import type { DimensionResult, Check, Recommendation, ProbeResult } from './types'
 import { probeEndpoint, isJsonContentType, endpointExists, getApiSubdomains } from './types'
+
+// ---------------------------------------------------------------------------
+// Auth-protected API quality helpers
+// ---------------------------------------------------------------------------
+
+/** Headers that indicate a well-built API (present on 401/403 responses) */
+const API_QUALITY_HEADERS = [
+  'x-request-id',
+  'x-trace-id',
+  'x-correlation-id',
+  'x-ratelimit-limit',
+  'x-ratelimit-remaining',
+  'x-ratelimit-reset',
+  'retry-after',
+] as const
+
+/** Headers that indicate API versioning support */
+const API_VERSION_HEADERS = [
+  'api-version',
+  'stripe-version',
+  'x-api-version',
+  'x-version',
+] as const
+
+/** Check if a probe result is an auth-protected endpoint returning JSON */
+function isAuthJsonResponse(r: ProbeResult): boolean {
+  return (
+    (r.status === 401 || r.status === 403) &&
+    isJsonContentType(r.contentType) &&
+    r.body !== null &&
+    typeof r.body === 'object'
+  )
+}
+
+/** Check if a probe result is an auth-protected endpoint returning non-JSON (HTML, etc.) */
+function isAuthNonJsonResponse(r: ProbeResult): boolean {
+  return (
+    (r.status === 401 || r.status === 403) &&
+    !isJsonContentType(r.contentType)
+  )
+}
+
+/** Count how many API quality headers are present on a probe result */
+function countQualityHeaders(r: ProbeResult): number {
+  let count = 0
+  for (const h of API_QUALITY_HEADERS) {
+    if (r.headers[h]) count++
+  }
+  return count
+}
+
+/** Check for API versioning headers on any probe result */
+function getVersionHeader(r: ProbeResult): string | null {
+  for (const h of API_VERSION_HEADERS) {
+    if (r.headers[h]) return `${h}: ${r.headers[h]}`
+  }
+  return null
+}
 
 export async function scanInteroperability(
   base: string,
@@ -212,26 +276,65 @@ export async function scanInteroperability(
   )
   const optionsHits = optionsResults.filter((r) => r.found || r.status === 204)
 
+  // Separate hits by type: 2xx, auth-JSON (401/403 with JSON), auth-non-JSON
+  const okHits = getHits.filter((r) => r.found) // 2xx responses
+  const authJsonHits = getHits.filter((r) => isAuthJsonResponse(r))
+  const authNonJsonHits = getHits.filter((r) => isAuthNonJsonResponse(r))
+
   if (getHits.length > 0) {
-    // Scale: 1 endpoint = 10pts, 2 = 18pts, 3 = 25pts, 4 = 30pts, 5+ = 35pts
-    const pts = Math.min(getHits.length <= 1 ? 10 : getHits.length <= 2 ? 18 : getHits.length <= 3 ? 25 : getHits.length <= 4 ? 30 : 35, 35)
+    // -----------------------------------------------------------------------
+    // Auth-aware endpoint scoring:
+    //   - 2xx response: full credit per endpoint
+    //   - 401/403 with JSON body: ~87% credit (proves endpoint exists + structured)
+    //   - 401/403 with HTML/text: ~43% credit (endpoint exists but no structure)
+    //
+    // Weighted endpoint count: each ok = 1.0, authJson = 0.87, authNonJson = 0.43
+    // This means 5 auth-JSON endpoints score like ~4.3 ok endpoints
+    // -----------------------------------------------------------------------
+    const weightedCount = okHits.length + authJsonHits.length * 0.87 + authNonJsonHits.length * 0.43
+
+    // Scale: 1 equiv = 10pts, 2 = 18pts, 3 = 25pts, 4 = 30pts, 5+ = 35pts
+    const pts = Math.min(
+      weightedCount <= 1 ? 10 :
+      weightedCount <= 2 ? 18 :
+      weightedCount <= 3 ? 25 :
+      weightedCount <= 4 ? 30 : 35,
+      35
+    )
     rawScore += pts
+
+    // Build a descriptive breakdown
+    const breakdown: string[] = []
+    if (okHits.length > 0) breakdown.push(`${okHits.length} public (2xx)`)
+    if (authJsonHits.length > 0) breakdown.push(`${authJsonHits.length} auth-protected with JSON`)
+    if (authNonJsonHits.length > 0) breakdown.push(`${authNonJsonHits.length} auth-protected (non-JSON)`)
+
     checks.push({
       name: 'REST API Endpoints',
       passed: true,
-      details: `${getHits.length} API endpoint(s) responding: ${getHits.map((r) => r.url).join(', ')}`,
+      details: `${getHits.length} API endpoint(s) responding: ${breakdown.join(', ')}. URLs: ${getHits.slice(0, 5).map((r) => r.url).join(', ')}${getHits.length > 5 ? ` (+${getHits.length - 5} more)` : ''}`,
       points: pts,
     })
 
-    // Bonus for JSON responses (up to 10 pts)
-    const jsonHits = getHits.filter((r) => isJsonContentType(r.contentType))
-    if (jsonHits.length > 0) {
-      const jsonPts = Math.min(jsonHits.length * 3, 10)
+    // -----------------------------------------------------------------------
+    // JSON responses (up to 10 pts) — auth JSON responses count fully here
+    // A 401 with application/json proves the API returns structured data
+    // -----------------------------------------------------------------------
+    const allJsonHits = getHits.filter((r) => isJsonContentType(r.contentType))
+    if (allJsonHits.length > 0) {
+      const jsonPts = Math.min(allJsonHits.length * 3, 10)
       rawScore += jsonPts
+
+      const jsonBreakdown: string[] = []
+      const okJson = allJsonHits.filter((r) => r.found)
+      const authJson = allJsonHits.filter((r) => !r.found)
+      if (okJson.length > 0) jsonBreakdown.push(`${okJson.length} public`)
+      if (authJson.length > 0) jsonBreakdown.push(`${authJson.length} auth-protected`)
+
       checks.push({
         name: 'JSON API Responses',
         passed: true,
-        details: `${jsonHits.length}/${getHits.length} endpoints return JSON`,
+        details: `${allJsonHits.length}/${getHits.length} endpoints return JSON (${jsonBreakdown.join(', ')})`,
         points: jsonPts,
       })
     } else {
@@ -247,6 +350,127 @@ export async function scanInteroperability(
         difficulty: 'easy',
         auto_fixable: true,
       })
+    }
+
+    // -----------------------------------------------------------------------
+    // Auth-protected API quality indicators (up to 8 pts — NEW)
+    // Headers on 401/403 responses that prove API maturity:
+    //   - X-Request-Id / trace headers = debugging support
+    //   - Rate limit headers = production-grade infrastructure
+    //   - API versioning headers = stable, evolving API
+    // -----------------------------------------------------------------------
+    if (authJsonHits.length > 0) {
+      // Check quality headers across all auth responses
+      const qualityHeaderCounts = authJsonHits.map(countQualityHeaders)
+      const maxQualityHeaders = Math.max(...qualityHeaderCounts)
+      const avgQualityHeaders = qualityHeaderCounts.reduce((a, b) => a + b, 0) / qualityHeaderCounts.length
+
+      // Score: 1 quality header = 2pts, 2 = 4pts, 3+ = 6pts
+      let authQualityPts = 0
+      if (maxQualityHeaders >= 3) authQualityPts = 6
+      else if (maxQualityHeaders >= 2) authQualityPts = 4
+      else if (maxQualityHeaders >= 1) authQualityPts = 2
+
+      if (authQualityPts > 0) {
+        rawScore += authQualityPts
+
+        // List which quality headers were found
+        const foundHeaders: string[] = []
+        for (const r of authJsonHits) {
+          for (const h of API_QUALITY_HEADERS) {
+            if (r.headers[h] && !foundHeaders.includes(h)) foundHeaders.push(h)
+          }
+        }
+
+        checks.push({
+          name: 'Auth Response Quality Headers',
+          passed: true,
+          details: `Auth-protected endpoints include ${foundHeaders.length} quality header(s): ${foundHeaders.join(', ')}. Avg ${avgQualityHeaders.toFixed(1)} per endpoint.`,
+          points: authQualityPts,
+        })
+      } else {
+        checks.push({
+          name: 'Auth Response Quality Headers',
+          passed: false,
+          details: 'Auth-protected endpoints lack quality headers (X-Request-Id, rate limit headers, etc.)',
+          points: 0,
+        })
+        recommendations.push({
+          action: 'Add X-Request-Id and rate limit headers (X-RateLimit-Limit, X-RateLimit-Remaining) to all API responses including 401/403 errors. These help agents debug and respect rate limits.',
+          impact: '+6 points',
+          difficulty: 'easy',
+          auto_fixable: true,
+        })
+      }
+
+      // Check API versioning headers (up to 2 pts)
+      const versionHeaders: string[] = []
+      for (const r of [...authJsonHits, ...okHits]) {
+        const vh = getVersionHeader(r)
+        if (vh && !versionHeaders.includes(vh)) versionHeaders.push(vh)
+      }
+
+      if (versionHeaders.length > 0) {
+        rawScore += 2
+        checks.push({
+          name: 'API Versioning Headers',
+          passed: true,
+          details: `API versioning detected: ${versionHeaders.join(', ')}`,
+          points: 2,
+        })
+      } else {
+        // Check URL-based versioning as fallback (/v1/, /v2/)
+        const urlVersioned = getHits.some((r) => /\/v\d+\//i.test(r.url))
+        if (urlVersioned) {
+          rawScore += 1
+          checks.push({
+            name: 'API Versioning Headers',
+            passed: true,
+            details: 'URL-based API versioning detected (e.g., /v1/). Header-based versioning (API-Version, Stripe-Version) would be even better.',
+            points: 1,
+          })
+        } else {
+          checks.push({
+            name: 'API Versioning Headers',
+            passed: false,
+            details: 'No API versioning detected (neither URL path /v1/ nor headers like API-Version)',
+            points: 0,
+          })
+          recommendations.push({
+            action: 'Add API versioning via URL paths (/v1/) or headers (API-Version, Stripe-Version). Versioning signals a stable, production API.',
+            impact: '+2 points',
+            difficulty: 'easy',
+            auto_fixable: true,
+          })
+        }
+      }
+    } else if (okHits.length > 0) {
+      // No auth endpoints, but check versioning on public endpoints
+      const versionHeaders: string[] = []
+      for (const r of okHits) {
+        const vh = getVersionHeader(r)
+        if (vh && !versionHeaders.includes(vh)) versionHeaders.push(vh)
+      }
+      if (versionHeaders.length > 0) {
+        rawScore += 2
+        checks.push({
+          name: 'API Versioning Headers',
+          passed: true,
+          details: `API versioning detected: ${versionHeaders.join(', ')}`,
+          points: 2,
+        })
+      } else {
+        const urlVersioned = getHits.some((r) => /\/v\d+\//i.test(r.url))
+        if (urlVersioned) {
+          rawScore += 1
+          checks.push({
+            name: 'API Versioning Headers',
+            passed: true,
+            details: 'URL-based API versioning detected (e.g., /v1/)',
+            points: 1,
+          })
+        }
+      }
     }
 
     // Bonus for OPTIONS support (CORS, up to 5 pts)
@@ -291,6 +515,8 @@ export async function scanInteroperability(
 
   // -----------------------------------------------------------------------
   // 3. Response quality — schema consistency + timing (up to 25 pts)
+  //    Auth-protected responses count here too — response time for a 401
+  //    is just as meaningful as for a 200. Fast 401 = good infrastructure.
   // -----------------------------------------------------------------------
   const responseTimes = getHits.map((r) => r.responseTimeMs)
   const avgResponseTime =
