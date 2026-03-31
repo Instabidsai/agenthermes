@@ -1,70 +1,76 @@
-# AgentHermes — The Agent Readiness Score Platform
+# AgentHermes — The Shopify of the Agent Economy
 
-## Brand
-"The Shopify of the Agent Economy"
 Make any business discoverable, usable, and payable by AI agents.
-Three products: Score It -> Fix It -> Connect It
 
 ## Quick Start
-- `npm run dev` — starts on port 3013
-- `npx next build` — production build (must pass with 0 errors)
-- Supabase project: jcuwzyjdpjmpxpsawudf
+- `npx next build` — must pass 0 errors (243 pages)
+- Push to master → Vercel auto-deploys to agenthermes.ai
+- Supabase: jcuwzyjdpjmpxpsawudf | GitHub: Instabidsai/agenthermes
 
-## Architecture
-- Next.js 16 App Router + TypeScript + Tailwind
-- Supabase for DB (service client at src/lib/supabase.ts)
-- 126+ pages generated at build (21 app pages + 49 score pages + API routes)
-- 9-dimension scanner system at src/lib/scanner/
-- Gateway system at src/lib/gateway/ (vault, proxy, types) — 11 services, AES-256-GCM
-- MCP server at /api/mcp (14 tools: 10 static + 4 dynamic gateway, 4 resources, 3 prompts)
-- A2A protocol at /api/a2a (5 skills: score-business, discover, gateway-call, check-score, get-manifest)
-- NLWeb endpoint at /api/nlweb?q= (AI-queryable data)
-- Public score pages at /score/{domain} with JSON-LD + dynamic OG images
-- Self-service onboarding at /connect (4-step wizard)
-- Schema.org on 7 pages (FAQ, HowTo, Product, SoftwareApplication, Dataset, ItemList, Speakable)
+## Three Products
 
-## Product Vision (confirmed 2026-03-31)
-Three products: Score It -> Fix It -> Connect It
-- Score: 6-step agent journey (FIND, UNDERSTAND, SIGN UP, CONNECT, USE, PAY)
-- Fix: Auto-remediation (agent cards, llms.txt, MCP) + guided fixes
-- Connect: One API gateway — agents connect once, access everything
+### Score It (free) — /audit, /score/{domain}
+- 9-dimension scanner → 6-step journey: FIND, UNDERSTAND, SIGN UP, CONNECT, USE, PAY
+- 12 vertical scoring profiles (src/lib/scanner/vertical-weights.ts)
+- Detects: MCP, A2A, agent-card.json, llms.txt, AGENTS.md, UCP, ACP, x402, OpenAPI
+- Detects platforms: Shopify, WooCommerce, Square (src/lib/adapters/)
+- AgentJourneyScore component: "X of 6 steps ready" with pass/partial/fail
+- 139 businesses scored, avg 39/100. Top: Supabase 69, Vercel 69, Slack 68, Stripe 68
+
+### Fix It (freemium) — /remediate, /connect, /for/{vertical}
+- 15 vertical templates with 5 MCP tools each (src/lib/verticals/templates.ts)
+- 7 universal MCP patterns: get_info, get_services, check_availability, get_quote, book, search, vertical-specific
+- Auto-generate: agent-card.json, llms.txt, agent-hermes.json, MCP tools
+- 3 e-commerce adapters: Shopify, WooCommerce, Square (src/lib/adapters/)
+- /connect wizard: Step 0 vertical picker → pre-fills form + tools
+
+### Connect It (per-call revenue) — /gateway, /registry
+- 11 gateway services, AES-256-GCM credential vault, wallet billing
+- Hosted MCP: /api/mcp/hosted/{slug} with SSE transport + dynamic tools
+- Fulfillment: API → webhook → email → lead capture (src/lib/fulfillment/router.ts)
+- Agent leads table + /dashboard/leads
+- Agent Card Registry: /registry (search + submit)
+
+## Protocols
+- MCP: 14+ tools (static + dynamic gateway), 4 resources, 3 prompts
+- A2A: 5 skills, v0.3 agent card at /.well-known/agent-card.json
+- REST: 55+ endpoints | NLWeb: /api/nlweb?q=
+- agent-hermes.json standard: /standard (spec + generator)
+- x402 micropayment detection | KYA agent identity types
+
+## Scoring (v4)
+- Tier 1 (60%): D2 API ×0.15, D7 Security ×0.12, D8 Reliability ×0.13, D6 Data ×0.10, D9 AgentExp ×0.10
+- Tier 2 (25%): D1 Discovery ×0.12, D3 Onboarding ×0.08, D4 Pricing ×0.05
+- Tier 3 (15%): D5 Payment ×0.08, Agent-Native Bonus ×0.07
+- Auth-aware: 401+JSON = 87% of 200 score. Caps: no TLS→39, no endpoints→29
+- 12 vertical profiles adjust weights per business type
+- Tiers: Platinum 90+, Gold 75+, Silver 60+, Bronze 40+, Not Scored <40
 
 ## Key Patterns
-- `getServiceClient()` for server-side Supabase
-- `requireAuth()` on financial endpoints
-- `rateLimit()` on expensive operations (scan, audit, monitoring)
-- Cast Supabase results as `Record<string, any>` (untyped client)
-- Error responses: `{ error: "msg", code: "CODE", request_id: "..." }`
-- All routes get CORS + X-Request-ID via src/middleware.ts
+- `getServiceClient()` for Supabase | Cast as `Record<string,any>`
+- `requireAuth()` on financial endpoints | `rateLimit()` on expensive ops
+- Error format: `{ error, code, request_id }` | CORS + X-Request-ID via middleware
+- E-commerce: shared `EcommerceAdapter` interface (detect + generateTools)
+- Scanner: `runScan(url, { vertical? })` | Vertical weights renormalize to 0.93
 
-## Scoring Philosophy (v2 — 2026-03-30)
-- BASE score reflects API/service maturity (60%): API quality, data quality, security, reliability, agent experience
-- Accessibility (25%): discoverability, onboarding, pricing
-- Agent-native BONUS (15%): MCP, agent cards, llms.txt, A2A — pushes good scores higher
-- Old "no agent discovery = cap 59" rule REMOVED. Only caps: no TLS (39), no endpoints (29)
-- Auth-protected APIs (401/403 with JSON) score up to 70 on D6 (was 40)
+## Key Pages (28+)
+/, /audit, /score/{domain}, /leaderboard, /report/state-of-readiness, /remediate,
+/gateway, /registry, /connect, /about, /blog, /commerce, /integrations, /standard,
+/for (hub), /for/{15 verticals}, /dashboard/leads, /playground, /stats, /digest,
+/compare, /changelog, /status, /developers, /pricing, /analytics, /discover
 
-## Data
-- 108 businesses scanned (pre-recalibration avg 36/100)
-- Post-recalibration: JarvisSDK dropped from 82 Gold to 29 Unaudited, Stripe rose from 40 to 56
-- 45 git commits on master
-
-## Testing
-- Build must pass: `npx next build` (0 TypeScript errors, 126+ pages)
-- Live API: https://agenthermes.ai
-- Health: GET /api/v1/health
-- Self-scan score: ~54 (Bronze) — weighted toward service foundation, agent-native features are bonus
-- Verify: 19 pages return 200, 32/33 APIs return 200, MCP ping works
+## Stats
+- 243 pages | 204 TS files | 104 routes | 139 businesses | 61 commits
+- 6 research docs | 15 verticals | 3 e-commerce adapters | 12 scoring profiles
 
 ## Hard Rules
 1. verify_jwt = false on all Supabase functions
 2. Never expose owner_email or stripe_connect_id in public API responses
-3. Sanitize all error messages (no internal details to clients)
-4. Score thresholds: 90/75/60/40 (Platinum/Gold/Silver/Bronze) — consistent everywhere
-5. "Agent Readiness Score" is the canonical name (not "trust score" or "audit score")
+3. Sanitize all error messages (no internal details)
+4. Score thresholds: 90/75/60/40 — consistent everywhere
+5. "Agent Readiness Score" is canonical name
 6. "Not Scored" for unaudited tier in user-facing text
 
 ## Deploy
 - Push to master → Vercel auto-deploys
 - Domain: agenthermes.ai (Cloudflare DNS)
-- GitHub: Instabidsai/agenthermes
