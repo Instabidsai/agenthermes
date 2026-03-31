@@ -5,18 +5,19 @@ const footerLinks = {
   products: {
     title: 'Products',
     links: [
-      { href: '/audit', label: 'Score' },
-      { href: '/remediate', label: 'Fix' },
-      { href: '/gateway', label: 'Connect' },
+      { href: '/audit', label: 'Score It' },
+      { href: '/remediate', label: 'Fix It' },
+      { href: '/gateway', label: 'Connect It' },
+      { href: '/registry', label: 'Registry' },
     ],
   },
   resources: {
     title: 'Resources',
     links: [
-      { href: '/registry', label: 'Registry' },
-      { href: '/report', label: 'Report' },
+      { href: '/report/state-of-readiness', label: 'Report' },
       { href: '/developers', label: 'Developers' },
       { href: '/leaderboard', label: 'Leaderboard' },
+      { href: '/pricing', label: 'Pricing' },
     ],
   },
   forBusiness: {
@@ -33,7 +34,6 @@ const footerLinks = {
     title: 'Company',
     links: [
       { href: '/about', label: 'About' },
-      { href: '/pricing', label: 'Pricing' },
       { href: '/changelog', label: 'Changelog' },
       { href: '/status', label: 'Status' },
     ],

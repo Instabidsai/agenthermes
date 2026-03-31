@@ -30,19 +30,9 @@ const mainNav = [
 const businessVerticals = [
   { href: '/for/restaurants', label: 'Restaurants' },
   { href: '/for/hvac', label: 'HVAC' },
+  { href: '/for/lawn-care', label: 'Lawn Care' },
   { href: '/for/saas', label: 'SaaS' },
   { href: '/for/ecommerce', label: 'E-commerce' },
-  { href: '/for/dentist', label: 'Dentists' },
-  { href: '/for/real-estate', label: 'Real Estate' },
-  { href: '/for/law-firm', label: 'Law Firms' },
-  { href: '/for/plumbing', label: 'Plumbing' },
-  { href: '/for/cleaning', label: 'Cleaning' },
-  { href: '/for/roofing', label: 'Roofing' },
-  { href: '/for/auto-dealer', label: 'Auto Dealers' },
-  { href: '/for/lawn-care', label: 'Lawn Care' },
-  { href: '/for/agency', label: 'Agencies' },
-  { href: '/for/accounting', label: 'Accounting' },
-  { href: '/for/freelancer', label: 'Freelancers' },
 ]
 
 export default function Navbar() {
@@ -152,7 +142,7 @@ export default function Navbar() {
                       Industries
                     </p>
                   </div>
-                  <div className="max-h-80 overflow-y-auto py-1">
+                  <div className="py-1">
                     {businessVerticals.map((v) => {
                       const isVerticalActive = pathname === v.href
                       return (
@@ -171,6 +161,15 @@ export default function Navbar() {
                         </Link>
                       )
                     })}
+                  </div>
+                  <div className="border-t border-zinc-800/80 pt-1">
+                    <Link
+                      href="/discover"
+                      onClick={() => setBusinessOpen(false)}
+                      className="block px-3 py-2 text-sm font-medium text-emerald-400 hover:text-emerald-300 hover:bg-zinc-800/60 transition-colors"
+                    >
+                      All Verticals &rarr;
+                    </Link>
                   </div>
                 </div>
               )}
@@ -280,6 +279,13 @@ export default function Navbar() {
                     </Link>
                   )
                 })}
+                <Link
+                  href="/discover"
+                  onClick={closeMobile}
+                  className="block px-3 py-2 rounded-lg text-sm font-medium text-emerald-400 hover:text-emerald-300 hover:bg-zinc-800/40 transition-colors"
+                >
+                  All Verticals &rarr;
+                </Link>
               </div>
             )}
 
