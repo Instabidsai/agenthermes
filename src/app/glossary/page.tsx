@@ -351,14 +351,14 @@ export default function GlossaryPage() {
       </section>
 
       {/* ===== ALPHABET NAV ===== */}
-      <div className="sticky top-16 z-30 bg-[#09090b]/95 backdrop-blur-sm border-b border-zinc-800/60">
+      <div className="sticky top-16 z-30 bg-[#09090b]/95 backdrop-blur-md border-b border-zinc-800/60 shadow-lg shadow-black/20">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-1 py-3 overflow-x-auto scrollbar-hide" role="navigation" aria-label="Alphabet navigation">
+          <div className="glossary-alpha-nav flex items-center gap-0.5 sm:gap-1 py-3 overflow-x-auto scrollbar-hide" role="navigation" aria-label="Alphabet navigation">
             {usedLetters.map((letter) => (
               <a
                 key={letter}
                 href={`#letter-${letter}`}
-                className="flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-md text-sm font-mono font-semibold text-zinc-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+                className="flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-lg text-sm font-mono font-bold text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10 active:bg-emerald-500/20 transition-all duration-200"
               >
                 {letter}
               </a>
@@ -366,7 +366,7 @@ export default function GlossaryPage() {
             <div className="flex-1" />
             <Link
               href="/faq"
-              className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+              className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
             >
               FAQ
               <ArrowRight className="h-3 w-3" />
@@ -398,7 +398,7 @@ export default function GlossaryPage() {
                     <article
                       key={t.slug}
                       id={t.slug}
-                      className="group relative p-6 sm:p-8 rounded-2xl bg-zinc-900/50 border border-zinc-800/80 hover:border-emerald-500/30 transition-colors scroll-mt-28"
+                      className="group relative p-6 sm:p-8 rounded-2xl bg-zinc-900/50 border border-zinc-800/80 hover:border-emerald-500/30 transition-all duration-300 scroll-mt-28 hover:shadow-lg hover:shadow-emerald-500/5"
                     >
                       {/* Term name */}
                       <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-100 mb-3 flex items-center gap-3">

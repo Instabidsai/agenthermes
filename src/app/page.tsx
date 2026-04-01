@@ -16,10 +16,13 @@ import {
   Trophy,
   AlertTriangle,
   Clock,
+  Zap,
 } from 'lucide-react'
 import { getServiceClient } from '@/lib/supabase'
 import HeroScanForm from '@/components/HeroScanForm'
 import RecentlyScanned from '@/components/RecentlyScanned'
+import { FadeIn } from '@/components/FadeIn'
+import { ScrollCountUp } from '@/components/ScrollCountUp'
 
 export const revalidate = 60
 
@@ -274,55 +277,77 @@ export default async function HomePage() {
 
       {/* ===== SECTION 1: HERO ===== */}
       <section className="relative overflow-hidden">
-        {/* Subtle grid background */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.03)_1px,transparent_1px)] bg-[size:64px_64px]" />
+        {/* Animated gradient background */}
+        <div className="absolute inset-0 hero-gradient-bg" />
+        {/* Dot grid pattern */}
+        <div className="absolute inset-0 dot-grid-pattern" />
+        {/* Subtle grid lines */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.02)_1px,transparent_1px)] bg-[size:64px_64px]" />
+        {/* Bottom fade to page bg */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#09090b]" />
+        {/* Top radial glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.04),transparent)] rounded-full blur-3xl" />
 
         <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 pt-24 pb-20 sm:pt-32 sm:pb-28">
           <div className="text-center">
-            {/* Brand tagline */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-semibold mb-4">
-              The Shopify of the Agent Economy
-            </div>
+            {/* Brand tagline — glowing badge */}
+            <FadeIn>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-semibold mb-4 badge-glow">
+                <Zap className="h-3.5 w-3.5" />
+                The Shopify of the Agent Economy
+              </div>
+            </FadeIn>
 
             {/* Product tag */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-800/60 border border-zinc-700/40 text-zinc-400 text-xs font-medium mb-8">
-              <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-subtle-pulse" />
-              Score It &middot; Fix It &middot; Connect It
-            </div>
+            <FadeIn delay={100}>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-800/60 border border-zinc-700/40 text-zinc-400 text-xs font-medium mb-8">
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-subtle-pulse" />
+                Score It &middot; Fix It &middot; Connect It
+              </div>
+            </FadeIn>
 
-            <h1 className="hero-headline text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-5">
-              Is Your Business Ready for the{' '}
-              <span className="text-emerald-500">Agent Economy</span>?
-            </h1>
+            <FadeIn delay={200}>
+              <h1 className="hero-headline text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-5">
+                Is Your Business Ready for the{' '}
+                <span className="bg-gradient-to-r from-emerald-400 to-emerald-500 bg-clip-text text-transparent">Agent Economy</span>?
+              </h1>
+            </FadeIn>
 
-            <p className="hero-description text-lg sm:text-xl text-zinc-300 leading-relaxed tracking-tight max-w-2xl mx-auto mb-10">
-              AI agents are learning to discover, use, and pay for services
-              autonomously. Most businesses are invisible to them. Find out
-              where you stand.
-            </p>
+            <FadeIn delay={300}>
+              <p className="hero-description text-lg sm:text-xl text-zinc-400 leading-relaxed tracking-tight max-w-2xl mx-auto mb-10">
+                AI agents are learning to discover, use, and pay for services
+                autonomously. Most businesses are invisible to them. Find out
+                where you stand.
+              </p>
+            </FadeIn>
 
             {/* Scan input */}
-            <HeroScanForm />
+            <FadeIn delay={400}>
+              <HeroScanForm />
+            </FadeIn>
 
-            {/* Trust signals */}
-            <div className="flex flex-wrap items-center justify-center gap-6 mt-8">
-              <div className="flex items-center gap-2 text-sm text-zinc-500">
-                <CheckCircle className="h-4 w-4 text-emerald-500/60" />
-                <span>
-                  <strong className="text-zinc-400">{displayCount}+</strong>{' '}
-                  businesses scored
-                </span>
+            {/* Trust signals with animated counter */}
+            <FadeIn delay={500}>
+              <div className="flex flex-wrap items-center justify-center gap-6 mt-8">
+                <div className="flex items-center gap-2 text-sm text-zinc-500">
+                  <CheckCircle className="h-4 w-4 text-emerald-500/60" />
+                  <span>
+                    <strong className="text-zinc-300">
+                      <ScrollCountUp target={displayCount} suffix="+" />
+                    </strong>{' '}
+                    businesses scored
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-zinc-500">
+                  <CheckCircle className="h-4 w-4 text-emerald-500/60" />
+                  <span>Free forever</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-zinc-500">
+                  <CheckCircle className="h-4 w-4 text-emerald-500/60" />
+                  <span>Results in 30 seconds</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-sm text-zinc-500">
-                <CheckCircle className="h-4 w-4 text-emerald-500/60" />
-                <span>Free forever</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-zinc-500">
-                <CheckCircle className="h-4 w-4 text-emerald-500/60" />
-                <span>Results in 30 seconds</span>
-              </div>
-            </div>
+            </FadeIn>
           </div>
         </div>
       </section>
@@ -330,59 +355,68 @@ export default async function HomePage() {
       {/* ===== SECTION 2: THE AGENT ECONOMY IS COMING ===== */}
       <section className="py-20 sm:py-28 border-t border-zinc-800/50">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
-              The Agent Economy Is Coming
-            </h2>
-            <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
-              Every autonomous transaction follows the same{' '}
-              <Link
-                href="/what-is-agent-ready"
-                className="text-emerald-400 hover:text-emerald-300 underline decoration-emerald-400/30"
-              >
-                6-step journey
-              </Link>
-              . Your Agent Readiness Score measures how far agents can get with
-              your business.
-            </p>
-          </div>
+          <FadeIn>
+            <div className="text-center mb-16">
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+                The Agent Economy Is Coming
+              </h2>
+              <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
+                Every autonomous transaction follows the same{' '}
+                <Link
+                  href="/what-is-agent-ready"
+                  className="text-emerald-400 hover:text-emerald-300 underline decoration-emerald-400/30 transition-colors duration-300"
+                >
+                  6-step journey
+                </Link>
+                . Your Agent Readiness Score measures how far agents can get with
+                your business.
+              </p>
+            </div>
+          </FadeIn>
 
           {/* 6-step journey timeline */}
           <div className="relative">
-            {/* Connecting line (desktop) */}
-            <div className="hidden lg:block absolute top-10 left-[8.33%] right-[8.33%] h-px bg-gradient-to-r from-zinc-800 via-zinc-700 to-zinc-800" />
+            {/* Connecting line (desktop) — gradient pipeline */}
+            <div className="hidden lg:block absolute top-10 left-[8.33%] right-[8.33%] h-px bg-gradient-to-r from-emerald-500/10 via-emerald-500/30 to-emerald-500/10" />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 lg:gap-3">
-              {agentJourney.map((step) => (
-                <div key={step.label} className="relative text-center group">
-                  {/* Step circle */}
-                  <div className="relative inline-flex items-center justify-center h-20 w-20 rounded-full bg-zinc-900 border-2 border-zinc-800 group-hover:border-emerald-500/40 transition-colors mb-4">
-                    <step.icon className="h-8 w-8 text-zinc-400 group-hover:text-emerald-400 transition-colors" />
-                    <div className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-zinc-900 border border-zinc-700 flex items-center justify-center">
-                      <span className="text-[10px] font-mono font-bold text-zinc-500">
-                        {step.step}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-3">
+              {agentJourney.map((step, i) => (
+                <FadeIn key={step.label} delay={i * 80}>
+                  <div className="relative text-center group">
+                    {/* Pipeline connector (desktop only) */}
+                    {i < agentJourney.length - 1 && (
+                      <div className="hidden lg:block absolute top-10 -right-[6px] w-3 h-0.5 bg-gradient-to-r from-emerald-500/30 to-emerald-500/10 z-10" />
+                    )}
+
+                    {/* Step circle — lift + glow on hover */}
+                    <div className="relative inline-flex items-center justify-center h-14 w-14 sm:h-20 sm:w-20 rounded-full bg-zinc-900 border-2 border-zinc-800 group-hover:border-emerald-500/50 transition-all duration-300 mb-3 sm:mb-4 group-hover:shadow-[0_0_20px_rgba(16,185,129,0.15)]">
+                      <step.icon className="h-5 w-5 sm:h-8 sm:w-8 text-zinc-500 group-hover:text-emerald-400 transition-all duration-300 icon-hover-bounce" />
+                      <div className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-zinc-900 border border-zinc-700 group-hover:border-emerald-500/30 flex items-center justify-center transition-colors duration-300">
+                        <span className="text-[9px] sm:text-[10px] font-mono font-bold text-zinc-500 group-hover:text-emerald-400 transition-colors duration-300">
+                          {step.step}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Label */}
+                    <h3 className="text-xs sm:text-sm font-bold text-zinc-200 tracking-wide mb-1 group-hover:text-emerald-300 transition-colors duration-300">
+                      {step.label}
+                    </h3>
+
+                    {/* Question */}
+                    <p className="text-[11px] sm:text-xs text-zinc-500 leading-relaxed mb-2 sm:mb-3 group-hover:text-zinc-400 transition-colors duration-300">
+                      {step.question}
+                    </p>
+
+                    {/* Failure indicator */}
+                    <div className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-red-500/10 border border-red-500/20 group-hover:bg-red-500/15 group-hover:border-red-500/30 transition-all duration-300">
+                      <AlertTriangle className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-red-500/70" />
+                      <span className="text-[9px] sm:text-[10px] font-medium text-red-400/80">
+                        Most fail here
                       </span>
                     </div>
                   </div>
-
-                  {/* Label */}
-                  <h3 className="text-sm font-bold text-zinc-200 tracking-wide mb-1">
-                    {step.label}
-                  </h3>
-
-                  {/* Question */}
-                  <p className="text-xs text-zinc-400 leading-relaxed mb-3 px-1">
-                    {step.question}
-                  </p>
-
-                  {/* Failure indicator */}
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/20">
-                    <AlertTriangle className="h-3 w-3 text-red-500/70" />
-                    <span className="text-[10px] font-medium text-red-400/80">
-                      Most fail here
-                    </span>
-                  </div>
-                </div>
+                </FadeIn>
               ))}
             </div>
           </div>
@@ -392,53 +426,61 @@ export default async function HomePage() {
       {/* ===== SECTION 3: SCORE -> FIX -> CONNECT ===== */}
       <section className="py-20 sm:py-28 border-t border-zinc-800/50">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
-              Score{' '}
-              <span className="text-zinc-600">&rarr;</span> Fix{' '}
-              <span className="text-zinc-600">&rarr;</span> Connect
-            </h2>
-            <p className="text-zinc-400 text-lg max-w-xl mx-auto">
-              Three products. One path from invisible to agent-native.
-            </p>
-          </div>
+          <FadeIn>
+            <div className="text-center mb-16">
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+                Score{' '}
+                <span className="text-zinc-600">&rarr;</span> Fix{' '}
+                <span className="text-zinc-600">&rarr;</span> Connect
+              </h2>
+              <p className="text-zinc-400 text-lg max-w-xl mx-auto">
+                Three products. One path from invisible to agent-native.
+              </p>
+            </div>
+          </FadeIn>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {products.map((product) => (
-              <div
-                key={product.title}
-                className={`relative p-6 lg:p-8 rounded-xl ${product.bgColor} border ${product.borderColor} hover:border-opacity-60 transition-all group`}
-              >
-                {/* Icon */}
+            {products.map((product, i) => (
+              <FadeIn key={product.title} delay={i * 120}>
                 <div
-                  className={`flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-900/80 border border-zinc-700/50 mb-5`}
+                  className={`relative p-6 lg:p-8 rounded-xl ${product.bgColor} border ${product.borderColor} card-hover-lift card-glow-${product.color} group`}
                 >
-                  <product.icon
-                    className={`h-6 w-6 ${product.accentColor}`}
-                  />
+                  {/* Gradient border overlay */}
+                  <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" style={{
+                    background: `linear-gradient(135deg, ${product.color === 'emerald' ? 'rgba(16,185,129,0.08)' : product.color === 'blue' ? 'rgba(59,130,246,0.08)' : 'rgba(168,85,247,0.08)'}, transparent)`,
+                  }} />
+
+                  {/* Icon */}
+                  <div
+                    className="relative flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-900/80 border border-zinc-700/50 mb-5 group-hover:border-opacity-80 transition-all duration-300"
+                  >
+                    <product.icon
+                      className={`h-6 w-6 ${product.accentColor} icon-hover-bounce`}
+                    />
+                  </div>
+
+                  {/* Title */}
+                  <h3
+                    className={`relative text-xl font-bold mb-3 ${product.accentColor}`}
+                  >
+                    {product.title}
+                  </h3>
+
+                  {/* Description */}
+                  <p className="relative text-sm text-zinc-400 leading-relaxed mb-6">
+                    {product.description}
+                  </p>
+
+                  {/* CTA */}
+                  <Link
+                    href={product.href}
+                    className={`relative inline-flex items-center gap-2 px-5 py-2.5 rounded-lg ${product.buttonBg} text-white text-sm font-semibold transition-all duration-300`}
+                  >
+                    {product.cta}
+                    <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform duration-300" />
+                  </Link>
                 </div>
-
-                {/* Title */}
-                <h3
-                  className={`text-xl font-bold mb-3 ${product.accentColor}`}
-                >
-                  {product.title}
-                </h3>
-
-                {/* Description */}
-                <p className="text-sm text-zinc-400 leading-relaxed mb-6">
-                  {product.description}
-                </p>
-
-                {/* CTA */}
-                <Link
-                  href={product.href}
-                  className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg ${product.buttonBg} text-white text-sm font-semibold transition-colors`}
-                >
-                  {product.cta}
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
+              </FadeIn>
             ))}
           </div>
         </div>
@@ -452,101 +494,113 @@ export default async function HomePage() {
       {/* ===== SECTION 5: THE DATA ===== */}
       <section className="py-20 sm:py-28 border-t border-zinc-800/50">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
-              The Data Speaks for Itself
-            </h2>
-            <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
-              We&apos;ve scanned{' '}
-              <strong className="text-zinc-200">{displayCount}+</strong>{' '}
-              businesses. The average score is{' '}
-              <strong className="text-red-400">{displayAvg}/100</strong>.
-            </p>
-            <p className="text-zinc-500 text-base mt-2">
-              Even Stripe only scores 68. Slack: 70. Most companies are
-              invisible to agents.
-            </p>
-          </div>
+          <FadeIn>
+            <div className="text-center mb-12">
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+                The Data Speaks for Itself
+              </h2>
+              <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
+                We&apos;ve scanned{' '}
+                <strong className="text-zinc-200">
+                  <ScrollCountUp target={displayCount} suffix="+" />
+                </strong>{' '}
+                businesses. The average score is{' '}
+                <strong className="text-red-400">
+                  <ScrollCountUp target={displayAvg} suffix="/100" />
+                </strong>.
+              </p>
+              <p className="text-zinc-500 text-base mt-2">
+                Even Stripe only scores 68. Slack: 70. Most companies are
+                invisible to agents.
+              </p>
+            </div>
+          </FadeIn>
 
           {/* Mini leaderboard */}
           {leaderboard.topBusinesses.length > 0 && (
-            <div className="p-6 rounded-xl bg-zinc-900/50 border border-zinc-800/80 mb-8">
-              <div className="flex items-center gap-2 mb-5">
-                <Trophy className="h-4 w-4 text-yellow-500" />
-                <h3 className="text-sm font-semibold text-zinc-300">
-                  Top 5 Agent-Ready Businesses
-                </h3>
-              </div>
+            <FadeIn delay={100}>
+              <div className="p-6 rounded-xl bg-zinc-900/50 border border-zinc-800/80 mb-8 gradient-border">
+                <div className="flex items-center gap-2 mb-5">
+                  <Trophy className="h-4 w-4 text-yellow-500" />
+                  <h3 className="text-sm font-semibold text-zinc-300">
+                    Top 5 Agent-Ready Businesses
+                  </h3>
+                </div>
 
-              <div className="space-y-2">
-                {leaderboard.topBusinesses.map((biz, i) => (
-                  <Link
-                    key={biz.slug || biz.domain}
-                    href={`/business/${biz.slug}`}
-                    className="flex items-center gap-4 p-3 rounded-lg hover:bg-zinc-800/40 transition-colors group"
-                  >
-                    {/* Rank */}
-                    <span
-                      className={`text-sm font-mono font-bold w-6 text-center ${
-                        i === 0
-                          ? 'text-yellow-500'
-                          : i === 1
-                            ? 'text-zinc-400'
-                            : i === 2
-                              ? 'text-amber-600'
-                              : 'text-zinc-600'
-                      }`}
+                <div className="space-y-2">
+                  {leaderboard.topBusinesses.map((biz, i) => (
+                    <Link
+                      key={biz.slug || biz.domain}
+                      href={`/business/${biz.slug}`}
+                      className="flex items-center gap-4 p-3 rounded-lg hover:bg-zinc-800/40 border border-transparent hover:border-zinc-700/40 transition-all duration-300 group"
                     >
-                      {i + 1}
-                    </span>
-
-                    {/* Name / Domain */}
-                    <div className="flex-1 min-w-0">
-                      <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors truncate block">
-                        {biz.domain || biz.name}
+                      {/* Rank */}
+                      <span
+                        className={`text-sm font-mono font-bold w-6 text-center ${
+                          i === 0
+                            ? 'text-yellow-500'
+                            : i === 1
+                              ? 'text-zinc-400'
+                              : i === 2
+                                ? 'text-amber-600'
+                                : 'text-zinc-600'
+                        }`}
+                      >
+                        {i + 1}
                       </span>
-                    </div>
 
-                    {/* Score */}
-                    <span
-                      className={`text-sm font-mono font-bold tabular-nums ${getTierColor(biz.audit_tier)}`}
-                    >
-                      {biz.audit_score}
-                      <span className="text-zinc-600">/100</span>
-                    </span>
-                  </Link>
-                ))}
+                      {/* Name / Domain */}
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors duration-300 truncate block">
+                          {biz.domain || biz.name}
+                        </span>
+                      </div>
+
+                      {/* Score */}
+                      <span
+                        className={`text-sm font-mono font-bold tabular-nums ${getTierColor(biz.audit_tier)}`}
+                      >
+                        {biz.audit_score}
+                        <span className="text-zinc-600">/100</span>
+                      </span>
+                    </Link>
+                  ))}
+                </div>
               </div>
-            </div>
+            </FadeIn>
           )}
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              href="/leaderboard"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-sm font-semibold transition-colors"
-            >
-              See the Full Leaderboard
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="/blog"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-zinc-800/60 hover:bg-zinc-700/60 text-zinc-400 text-sm font-semibold transition-colors border border-zinc-700/50"
-            >
-              Read Our Research
-              <BookOpen className="h-4 w-4" />
-            </Link>
-          </div>
+          <FadeIn delay={200}>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link
+                href="/leaderboard"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-sm font-semibold transition-all duration-300 hover:translate-y-[-1px]"
+              >
+                See the Full Leaderboard
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/blog"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-zinc-800/60 hover:bg-zinc-700/60 text-zinc-400 text-sm font-semibold transition-all duration-300 border border-zinc-700/50 hover:border-zinc-600/50"
+              >
+                Read Our Research
+                <BookOpen className="h-4 w-4" />
+              </Link>
+            </div>
+          </FadeIn>
         </div>
       </section>
 
       {/* ===== SECTION 6: FAQ ===== */}
       <section className="faq-section py-20 sm:py-28 border-t border-zinc-800/50">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
-              Frequently Asked Questions
-            </h2>
-          </div>
+          <FadeIn>
+            <div className="text-center mb-12">
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+                Frequently Asked Questions
+              </h2>
+            </div>
+          </FadeIn>
 
           <div className="space-y-4">
             {[
@@ -570,68 +624,100 @@ export default async function HomePage() {
                 q: 'What are the score tiers?',
                 a: 'Platinum (90-100): Certified, zero-friction. Gold (75-89): Fully agent-native. Silver (60-74): Agent-usable with friction. Bronze (40-59): Partially discoverable. Below 40: Invisible to AI agents.',
               },
-            ].map((faq) => (
-              <details
-                key={faq.q}
-                className="group p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700/80 transition-colors"
-              >
-                <summary className="flex items-center justify-between cursor-pointer list-none">
-                  <h3 className="text-sm font-semibold text-zinc-200 pr-4">
-                    {faq.q}
-                  </h3>
-                  <span className="text-zinc-600 group-open:rotate-45 transition-transform text-lg flex-shrink-0">
-                    +
-                  </span>
-                </summary>
-                <p className="text-sm text-zinc-500 leading-relaxed mt-3 pt-3 border-t border-zinc-800/50">
-                  {faq.a}
-                </p>
-              </details>
+            ].map((faq, i) => (
+              <FadeIn key={faq.q} delay={i * 60}>
+                <details
+                  className="group p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700/60 transition-all duration-300"
+                >
+                  <summary className="flex items-center justify-between cursor-pointer list-none">
+                    <h3 className="text-sm font-semibold text-zinc-200 pr-4 group-hover:text-white transition-colors duration-300">
+                      {faq.q}
+                    </h3>
+                    <span className="text-zinc-600 group-open:rotate-45 transition-transform duration-300 text-lg flex-shrink-0">
+                      +
+                    </span>
+                  </summary>
+                  <p className="text-sm text-zinc-500 leading-relaxed mt-3 pt-3 border-t border-zinc-800/50">
+                    {faq.a}
+                  </p>
+                </details>
+              </FadeIn>
             ))}
           </div>
 
-          <div className="mt-8 text-center">
-            <p className="text-sm text-zinc-500 mb-3">
-              New to the agent economy? Explore key terms and concepts.
-            </p>
-            <Link
-              href="/glossary"
-              className="inline-flex items-center gap-2 text-sm text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
-            >
-              Agent Economy Glossary
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
+          <FadeIn delay={400}>
+            <div className="mt-8 text-center">
+              <p className="text-sm text-zinc-500 mb-3">
+                New to the agent economy? Explore key terms and concepts.
+              </p>
+              <Link
+                href="/glossary"
+                className="inline-flex items-center gap-2 text-sm text-emerald-400 hover:text-emerald-300 font-medium transition-colors duration-300"
+              >
+                Agent Economy Glossary
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          </FadeIn>
         </div>
       </section>
 
       {/* ===== BOTTOM CTA ===== */}
-      <section className="py-24 sm:py-32 border-t border-zinc-800/50">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
-            The agent economy is coming.{' '}
-            <span className="text-zinc-500">Will your business be ready?</span>
-          </h2>
-          <p className="text-zinc-400 text-lg mb-10 max-w-lg mx-auto">
-            The first businesses to become agent-native capture the market.
-            Start with your score.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              href="/audit"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors"
-            >
-              Get Your Score
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="/discover"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold transition-colors"
-            >
-              Explore the Network
-              <Compass className="h-4 w-4" />
-            </Link>
-          </div>
+      <section className="relative py-24 sm:py-32 border-t border-zinc-800/50 overflow-hidden">
+        {/* Gradient background */}
+        <div className="absolute inset-0 cta-gradient-bg" />
+        {/* Subtle radial glow */}
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.06),transparent)] rounded-full blur-3xl" />
+
+        <div className="relative mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 text-center">
+          <FadeIn>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+              The agent economy is coming.{' '}
+              <span className="bg-gradient-to-r from-zinc-400 to-zinc-600 bg-clip-text text-transparent">Will your business be ready?</span>
+            </h2>
+          </FadeIn>
+
+          <FadeIn delay={100}>
+            <p className="text-zinc-400 text-lg mb-6 max-w-lg mx-auto">
+              The first businesses to become agent-native capture the market.
+              Start with your score.
+            </p>
+          </FadeIn>
+
+          {/* Urgency progress bar */}
+          <FadeIn delay={200}>
+            <div className="max-w-sm mx-auto mb-10">
+              <div className="flex items-center justify-between text-xs text-zinc-500 mb-2">
+                <span>Agent adoption progress</span>
+                <span className="text-emerald-400 font-mono">73%</span>
+              </div>
+              <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full progress-bar-animate" />
+              </div>
+              <p className="text-[11px] text-zinc-600 mt-2">
+                73% of enterprise AI budgets now include autonomous agent workflows
+              </p>
+            </div>
+          </FadeIn>
+
+          <FadeIn delay={300}>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link
+                href="/audit"
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-all duration-300 cta-button-glow"
+              >
+                Get Your Score
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/discover"
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold transition-all duration-300 border border-zinc-700/50 hover:border-zinc-600/50"
+              >
+                Explore the Network
+                <Compass className="h-4 w-4" />
+              </Link>
+            </div>
+          </FadeIn>
         </div>
       </section>
     </div>

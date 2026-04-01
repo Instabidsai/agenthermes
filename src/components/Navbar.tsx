@@ -40,11 +40,22 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [businessOpen, setBusinessOpen] = useState(false)
   const [mobileBusinessOpen, setMobileBusinessOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const closeMobile = useCallback(() => {
     setMobileOpen(false)
     setMobileBusinessOpen(false)
+  }, [])
+
+  // Track scroll position for border/shadow effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 8)
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    handleScroll()
+    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   useEffect(() => {
@@ -72,10 +83,29 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [mobileOpen])
+
   const isBusinessActive = pathname?.startsWith('/for/')
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-zinc-800/80 bg-[#09090b]/90 backdrop-blur-md">
+    <nav
+      className={clsx(
+        'sticky top-0 z-50 bg-[#09090b]/90 backdrop-blur-md transition-shadow duration-300',
+        scrolled
+          ? 'border-b border-zinc-700/60 shadow-lg shadow-black/20'
+          : 'border-b border-zinc-800/80'
+      )}
+    >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
@@ -101,7 +131,7 @@ export default function Navbar() {
                   className={clsx(
                     'flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-colors',
                     isActive
-                      ? 'text-zinc-100 bg-zinc-800/80'
+                      ? 'text-emerald-400 bg-emerald-500/10'
                       : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
                   )}
                 >
@@ -119,7 +149,7 @@ export default function Navbar() {
                 className={clsx(
                   'flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium transition-colors',
                   isBusinessActive
-                    ? 'text-zinc-100 bg-zinc-800/80'
+                    ? 'text-emerald-400 bg-emerald-500/10'
                     : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
                 )}
                 aria-expanded={businessOpen}
@@ -129,7 +159,7 @@ export default function Navbar() {
                 For Business
                 <ChevronDown
                   className={clsx(
-                    'h-3.5 w-3.5 transition-transform',
+                    'h-3.5 w-3.5 transition-transform duration-200',
                     businessOpen && 'rotate-180'
                   )}
                 />
@@ -209,107 +239,125 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile menu */}
-      {mobileOpen && (
-        <div
-          id="mobile-nav-menu"
-          className="lg:hidden border-t border-zinc-800/80 bg-[#09090b]"
-        >
-          <div className="px-4 py-3 space-y-1">
-            {mainNav.map((link) => {
-              const isActive =
-                pathname === link.href ||
-                pathname?.startsWith(link.href + '/')
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={closeMobile}
-                  className={clsx(
-                    'flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                    isActive
-                      ? 'text-zinc-100 bg-zinc-800/80'
-                      : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
-                  )}
-                >
-                  <link.icon className="h-4 w-4" />
-                  {link.label}
-                </Link>
-              )
-            })}
+      {/* Mobile menu — slide-in overlay */}
+      {/* Backdrop */}
+      <div
+        className={clsx(
+          'lg:hidden fixed inset-0 top-16 z-40 bg-black/60 transition-opacity duration-300',
+          mobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        )}
+        onClick={closeMobile}
+        aria-hidden="true"
+      />
 
-            {/* Mobile: For Business expandable */}
-            <button
-              type="button"
-              onClick={() => setMobileBusinessOpen(!mobileBusinessOpen)}
-              className={clsx(
-                'flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                isBusinessActive
-                  ? 'text-zinc-100 bg-zinc-800/80'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
-              )}
-            >
-              <Building2 className="h-4 w-4" />
-              For Business
-              <ChevronDown
+      {/* Panel */}
+      <div
+        id="mobile-nav-menu"
+        className={clsx(
+          'lg:hidden fixed top-16 right-0 bottom-0 z-50 w-[min(320px,85vw)] bg-[#09090b] border-l border-zinc-800/80 transition-transform duration-300 ease-out overflow-y-auto',
+          mobileOpen ? 'translate-x-0' : 'translate-x-full'
+        )}
+      >
+        <div className="px-4 py-5 space-y-1">
+          {mainNav.map((link) => {
+            const isActive =
+              pathname === link.href ||
+              pathname?.startsWith(link.href + '/')
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={closeMobile}
                 className={clsx(
-                  'h-3.5 w-3.5 ml-auto transition-transform',
-                  mobileBusinessOpen && 'rotate-180'
+                  'flex items-center gap-2.5 px-3 py-3 rounded-lg text-sm font-medium transition-colors min-h-[44px]',
+                  isActive
+                    ? 'text-emerald-400 bg-emerald-500/10'
+                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
                 )}
-              />
-            </button>
-
-            {mobileBusinessOpen && (
-              <div className="pl-6 space-y-1">
-                {businessVerticals.map((v) => {
-                  const isVerticalActive = pathname === v.href
-                  return (
-                    <Link
-                      key={v.href}
-                      href={v.href}
-                      onClick={closeMobile}
-                      className={clsx(
-                        'block px-3 py-2 rounded-lg text-sm transition-colors',
-                        isVerticalActive
-                          ? 'text-emerald-400 bg-emerald-500/10'
-                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
-                      )}
-                    >
-                      {v.label}
-                    </Link>
-                  )
-                })}
-                <Link
-                  href="/discover"
-                  onClick={closeMobile}
-                  className="block px-3 py-2 rounded-lg text-sm font-medium text-emerald-400 hover:text-emerald-300 hover:bg-zinc-800/40 transition-colors"
-                >
-                  All Verticals &rarr;
-                </Link>
-              </div>
-            )}
-
-            <div className="pt-2 border-t border-zinc-800/80 space-y-1">
-              <Link
-                href="/login"
-                onClick={closeMobile}
-                className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg border border-zinc-700 hover:border-zinc-600 text-zinc-300 hover:text-zinc-100 text-sm font-medium transition-colors"
               >
-                <LogIn className="h-4 w-4" />
-                Sign In
+                <link.icon className="h-4 w-4" />
+                {link.label}
               </Link>
+            )
+          })}
+
+          {/* Mobile: For Business accordion */}
+          <button
+            type="button"
+            onClick={() => setMobileBusinessOpen(!mobileBusinessOpen)}
+            className={clsx(
+              'flex items-center gap-2.5 w-full px-3 py-3 rounded-lg text-sm font-medium transition-colors min-h-[44px]',
+              isBusinessActive
+                ? 'text-emerald-400 bg-emerald-500/10'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
+            )}
+          >
+            <Building2 className="h-4 w-4" />
+            For Business
+            <ChevronDown
+              className={clsx(
+                'h-3.5 w-3.5 ml-auto transition-transform duration-200',
+                mobileBusinessOpen && 'rotate-180'
+              )}
+            />
+          </button>
+
+          {/* Accordion content with smooth height animation */}
+          <div
+            className={clsx(
+              'overflow-hidden transition-all duration-300 ease-out',
+              mobileBusinessOpen ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'
+            )}
+          >
+            <div className="pl-6 space-y-1 pt-1 pb-2">
+              {businessVerticals.map((v) => {
+                const isVerticalActive = pathname === v.href
+                return (
+                  <Link
+                    key={v.href}
+                    href={v.href}
+                    onClick={closeMobile}
+                    className={clsx(
+                      'block px-3 py-2.5 rounded-lg text-sm transition-colors min-h-[44px] flex items-center',
+                      isVerticalActive
+                        ? 'text-emerald-400 bg-emerald-500/10'
+                        : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
+                    )}
+                  >
+                    {v.label}
+                  </Link>
+                )
+              })}
               <Link
-                href="/register"
+                href="/discover"
                 onClick={closeMobile}
-                className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors"
+                className="block px-3 py-2.5 rounded-lg text-sm font-medium text-emerald-400 hover:text-emerald-300 hover:bg-zinc-800/40 transition-colors min-h-[44px] flex items-center"
               >
-                <UserPlus className="h-4 w-4" />
-                Register
+                All Verticals &rarr;
               </Link>
             </div>
           </div>
+
+          <div className="pt-3 mt-2 border-t border-zinc-800/80 space-y-1">
+            <Link
+              href="/login"
+              onClick={closeMobile}
+              className="flex items-center gap-2.5 px-3 py-3 rounded-lg border border-zinc-700 hover:border-zinc-600 text-zinc-300 hover:text-zinc-100 text-sm font-medium transition-colors min-h-[44px]"
+            >
+              <LogIn className="h-4 w-4" />
+              Sign In
+            </Link>
+            <Link
+              href="/register"
+              onClick={closeMobile}
+              className="flex items-center gap-2.5 px-3 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors min-h-[44px]"
+            >
+              <UserPlus className="h-4 w-4" />
+              Register
+            </Link>
+          </div>
         </div>
-      )}
+      </div>
     </nav>
   )
 }

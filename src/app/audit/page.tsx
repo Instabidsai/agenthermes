@@ -378,17 +378,36 @@ function AuditPageContent() {
 
       {/* Results / Status Area */}
       <div aria-live="polite">
-      {/* Running State */}
+      {/* Running State — Scanner animation */}
       {audit.phase === 'running' && (
-        <div className="p-10 rounded-xl bg-zinc-900/50 border border-zinc-800/80 text-center">
-          <Loader2 className="h-10 w-10 text-emerald-500 animate-spin mx-auto mb-5" />
-          <p className="text-base font-medium text-zinc-300 mb-1">
-            Calculating score for {audit.domain}
+        <div className="p-10 rounded-xl bg-zinc-900/50 border border-zinc-800/80 text-center animate-in fade-in duration-300">
+          {/* Scanner icon with pulse ring */}
+          <div className="relative inline-flex items-center justify-center mb-6">
+            <div className="absolute h-16 w-16 rounded-full border-2 border-emerald-500/20 animate-ping" style={{ animationDuration: '2s' }} />
+            <div className="absolute h-20 w-20 rounded-full border border-emerald-500/10 animate-ping" style={{ animationDuration: '3s' }} />
+            <div className="relative h-14 w-14 rounded-full bg-emerald-500/10 border-2 border-emerald-500/30 flex items-center justify-center">
+              <Shield className="h-6 w-6 text-emerald-500 animate-pulse" />
+            </div>
+          </div>
+          <p className="text-lg font-semibold text-zinc-200 mb-2">
+            Scanning {audit.domain}
           </p>
-          <p className="text-xs text-zinc-500">
-            Scanning machine-readable profiles, API endpoints, onboarding flows, pricing, and payment capabilities...
+          <p className="text-sm text-zinc-500 mb-4">
+            Analyzing across 9 dimensions of agent readiness...
           </p>
-          <p className="text-xs text-zinc-600 mt-3">
+          {/* Progress dots */}
+          <div className="flex items-center justify-center gap-1.5">
+            {['Profiles', 'APIs', 'Onboarding', 'Pricing', 'Payments', 'Security', 'Reliability'].map((label, i) => (
+              <div key={label} className="flex flex-col items-center gap-1">
+                <div
+                  className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"
+                  style={{ animationDelay: `${i * 200}ms` }}
+                />
+                <span className="text-[9px] text-zinc-600 hidden sm:block">{label}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-[11px] text-zinc-600 mt-4">
             This usually takes 10-30 seconds.
           </p>
         </div>
@@ -414,24 +433,45 @@ function AuditPageContent() {
         </div>
       )}
 
-      {/* Results */}
+      {/* Results — fade in like opening a credit report */}
       {audit.phase === 'complete' && (
-        <div className="space-y-8">
-          {/* HUGE Score Display — Credit Karma style */}
-          <div className="p-10 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
-            <div className="flex flex-col items-center text-center">
-              {/* Giant score number */}
-              <div className="mb-6">
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          {/* HUGE Score Display — Credit report style with radial gradient */}
+          <div className="relative p-10 rounded-2xl bg-zinc-900/50 border border-zinc-800/80 overflow-hidden">
+            {/* Radial gradient behind score */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: audit.totalScore >= 90
+                  ? 'radial-gradient(ellipse at center top, rgba(16,185,129,0.15) 0%, transparent 60%)'
+                  : audit.totalScore >= 75
+                    ? 'radial-gradient(ellipse at center top, rgba(234,179,8,0.12) 0%, transparent 60%)'
+                    : audit.totalScore >= 60
+                      ? 'radial-gradient(ellipse at center top, rgba(161,161,170,0.10) 0%, transparent 60%)'
+                      : audit.totalScore >= 40
+                        ? 'radial-gradient(ellipse at center top, rgba(245,158,11,0.10) 0%, transparent 60%)'
+                        : 'radial-gradient(ellipse at center top, rgba(239,68,68,0.10) 0%, transparent 60%)',
+              }}
+            />
+            <div className="relative flex flex-col items-center text-center">
+              {/* Report header */}
+              <div className="flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full bg-zinc-800/50 border border-zinc-700/30">
+                <Shield className="h-3.5 w-3.5 text-emerald-500" />
+                <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Agent Readiness Report</span>
+              </div>
+
+              {/* Giant score gauge */}
+              <div className="mb-4">
                 <ScoreGauge score={audit.totalScore} size="lg" />
               </div>
 
               {/* Massive numeric score — animated count-up */}
-              <div className={clsx('text-6xl sm:text-7xl md:text-8xl font-black tabular-nums tracking-tight mb-2', getScoreColor(audit.totalScore))}>
+              <div className={clsx('text-7xl sm:text-8xl md:text-9xl font-black tabular-nums tracking-tighter mb-1', getScoreColor(audit.totalScore))}>
                 {displayScore}
               </div>
-              <div className="mb-4" />
+              <p className="text-sm text-zinc-600 mb-5 tabular-nums">out of 100</p>
 
-              {/* Tier badge — prominent */}
+              {/* Tier badge — prominent with glow */}
               <div className="mb-4">
                 <TierBadge tier={audit.tier} size="lg" />
               </div>

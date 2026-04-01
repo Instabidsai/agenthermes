@@ -659,13 +659,13 @@ export default function SupabaseVsFirebasePage() {
             different implications for agent operability.
           </p>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto -mx-2 px-2">
+            <table className="w-full text-sm min-w-[400px]">
               <thead>
                 <tr className="border-b border-zinc-800">
-                  <th className="text-left py-3 pr-4 text-zinc-400 font-medium">Feature</th>
-                  <th className="text-center py-3 px-4 text-emerald-400 font-medium">Supabase</th>
-                  <th className="text-center py-3 px-4 text-amber-400 font-medium">Firebase</th>
+                  <th className="text-left py-3 pr-4 text-zinc-400 font-medium whitespace-nowrap">Feature</th>
+                  <th className="text-center py-3 px-2 sm:px-4 text-emerald-400 font-medium whitespace-nowrap">Supabase</th>
+                  <th className="text-center py-3 px-2 sm:px-4 text-amber-400 font-medium whitespace-nowrap">Firebase</th>
                 </tr>
               </thead>
               <tbody>

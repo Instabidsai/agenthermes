@@ -259,40 +259,56 @@ export default function BlogPage() {
       {/* ===== FEATURED ARTICLE ===== */}
       <section className="pb-12 sm:pb-16 border-t border-zinc-800/50">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pt-16">
+          <div className="mb-6">
+            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Featured</span>
+          </div>
           <Link
             href={articles[0].href}
-            className="group relative block p-8 lg:p-10 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 hover:border-emerald-500/40 transition-all"
+            className="group relative block rounded-2xl border border-emerald-500/20 hover:border-emerald-500/40 transition-all overflow-hidden article-card-hover"
           >
-            <div className="flex items-center gap-3 mb-4">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
-                Featured
-              </span>
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full ${getTagClasses(articles[0].tagColor).bg} border ${getTagClasses(articles[0].tagColor).border} ${getTagClasses(articles[0].tagColor).text} text-xs font-medium`}>
-                {articles[0].tag}
-              </span>
+            {/* Hero gradient image area */}
+            <div className="relative h-48 sm:h-64 lg:h-72 featured-hero-gradient">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(16,185,129,0.15),transparent_60%)]" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_60%,rgba(59,130,246,0.1),transparent_50%)]" />
+              <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#09090b] to-transparent" />
+              {/* Floating score badge */}
+              <div className="absolute top-5 right-5 flex h-14 w-14 items-center justify-center rounded-full bg-zinc-900/80 border border-emerald-500/30 backdrop-blur-sm badge-glow">
+                {(() => { const FeaturedIcon = articles.at(0)!.icon; return <FeaturedIcon className="h-6 w-6 text-emerald-400" />; })()}
+              </div>
             </div>
 
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4 group-hover:text-emerald-400 transition-colors">
-              {articles[0].title}
-            </h2>
+            <div className="relative p-8 lg:p-10 bg-emerald-500/5">
+              <div className="flex flex-wrap items-center gap-3 mb-4">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
+                  Featured
+                </span>
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full ${getTagClasses(articles[0].tagColor).bg} border ${getTagClasses(articles[0].tagColor).border} ${getTagClasses(articles[0].tagColor).text} text-xs font-medium`}>
+                  {articles[0].tag}
+                </span>
+              </div>
 
-            <p className="text-zinc-400 leading-relaxed mb-6 max-w-3xl">
-              {articles[0].excerpt}
-            </p>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-4 group-hover:text-emerald-400 transition-colors">
+                {articles[0].title}
+              </h2>
 
-            <div className="flex items-center gap-6 text-sm text-zinc-500">
-              <span className="flex items-center gap-1.5">
-                <Calendar className="h-4 w-4" />
-                {formatDate(articles[0].date)}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Clock className="h-4 w-4" />
-                {articles[0].readTime}
-              </span>
-              <span className="flex items-center gap-1.5 text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity ml-auto">
-                Read article
-                <ArrowRight className="h-4 w-4" />
-              </span>
+              <p className="text-zinc-400 leading-relaxed mb-6 max-w-3xl text-base sm:text-lg">
+                {articles[0].excerpt}
+              </p>
+
+              <div className="flex flex-wrap items-center gap-6 text-sm text-zinc-500">
+                <span className="flex items-center gap-1.5">
+                  <Calendar className="h-4 w-4 text-zinc-600" />
+                  <span className="font-medium">{formatDate(articles[0].date)}</span>
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Clock className="h-4 w-4 text-zinc-600" />
+                  <span className="font-medium">{articles[0].readTime}</span>
+                </span>
+                <span className="flex items-center gap-1.5 text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity ml-auto">
+                  Read article
+                  <ArrowRight className="h-4 w-4" />
+                </span>
+              </div>
             </div>
           </Link>
         </div>
@@ -308,22 +324,25 @@ export default function BlogPage() {
                 <Link
                   key={article.title}
                   href={article.href}
-                  className="group relative flex flex-col p-6 rounded-xl bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700 transition-all"
+                  className="group relative flex flex-col p-6 rounded-xl bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-600/80 article-card-hover"
                 >
+                  {/* Small gradient accent at top */}
+                  <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-zinc-700/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
                   {/* Icon + Tag */}
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800/80 border border-zinc-700/50 group-hover:border-zinc-600/50 transition-colors">
-                      <article.icon className={`h-5 w-5 ${tagClasses.text}`} />
+                      <article.icon className={`h-5 w-5 ${tagClasses.text} icon-hover-bounce`} />
                     </div>
                     <span
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full ${tagClasses.bg} border ${tagClasses.border} ${tagClasses.text} text-xs font-medium`}
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full ${tagClasses.bg} border ${tagClasses.border} ${tagClasses.text} text-xs font-semibold`}
                     >
                       {article.tag}
                     </span>
                   </div>
 
                   {/* Title */}
-                  <h3 className="text-lg font-bold tracking-tight mb-3 group-hover:text-zinc-100 transition-colors leading-snug">
+                  <h3 className="text-lg font-bold tracking-tight mb-3 group-hover:text-emerald-400 transition-colors leading-snug">
                     {article.title}
                   </h3>
 
@@ -332,17 +351,17 @@ export default function BlogPage() {
                     {article.excerpt}
                   </p>
 
-                  {/* Meta */}
-                  <div className="flex items-center gap-4 text-xs text-zinc-600 mt-auto pt-4 border-t border-zinc-800/50">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="h-3.5 w-3.5" />
-                      {formatDate(article.date)}
+                  {/* Meta - more prominent date/time */}
+                  <div className="flex items-center gap-4 text-xs mt-auto pt-4 border-t border-zinc-800/50">
+                    <span className="flex items-center gap-1.5 text-zinc-500">
+                      <Calendar className="h-3.5 w-3.5 text-zinc-600" />
+                      <span className="font-medium">{formatDate(article.date)}</span>
                     </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3.5 w-3.5" />
-                      {article.readTime}
+                    <span className="flex items-center gap-1.5 text-zinc-500">
+                      <Clock className="h-3.5 w-3.5 text-zinc-600" />
+                      <span className="font-medium">{article.readTime}</span>
                     </span>
-                    <span className="flex items-center gap-1 text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity ml-auto">
+                    <span className="flex items-center gap-1 text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity ml-auto font-medium">
                       Read
                       <ArrowRight className="h-3.5 w-3.5" />
                     </span>

@@ -15,6 +15,7 @@ import {
   Wallet,
   Code2,
   Users,
+  ChevronRight,
 } from 'lucide-react'
 import { getServiceClient } from '@/lib/supabase'
 import { BreadcrumbJsonLd } from '@/components/Breadcrumbs'
@@ -113,7 +114,10 @@ export default async function GatewayMarketplacePage() {
         <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pt-20 pb-16 sm:pt-28 sm:pb-20 text-center">
           {/* Tag */}
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium mb-8">
-            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-subtle-pulse" />
+            <div className="relative flex h-1.5 w-1.5">
+              <span className="absolute inset-0 rounded-full bg-emerald-500/50 animate-ping" />
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+            </div>
             The Connect It Layer
           </div>
 
@@ -131,7 +135,7 @@ export default async function GatewayMarketplacePage() {
           </p>
 
           {/* Stats bar */}
-          <div className="flex flex-wrap justify-center gap-8 sm:gap-12">
+          <div className="inline-flex items-center gap-6 sm:gap-10 px-8 py-5 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 backdrop-blur-sm">
             <div className="text-center">
               <div className="text-3xl sm:text-4xl font-bold font-mono tabular-nums text-white">
                 {services.length}
@@ -140,7 +144,7 @@ export default async function GatewayMarketplacePage() {
                 services connected
               </div>
             </div>
-            <div className="hidden sm:block w-px h-12 bg-zinc-800" />
+            <div className="w-px h-12 bg-zinc-800" />
             <div className="text-center">
               <div className="text-3xl sm:text-4xl font-bold font-mono tabular-nums text-white">
                 {totalActions}
@@ -149,7 +153,7 @@ export default async function GatewayMarketplacePage() {
                 actions available
               </div>
             </div>
-            <div className="hidden sm:block w-px h-12 bg-zinc-800" />
+            <div className="w-px h-12 bg-zinc-800" />
             <div className="text-center">
               <div className="text-3xl sm:text-4xl font-bold font-mono tabular-nums text-emerald-400">
                 1
@@ -168,6 +172,9 @@ export default async function GatewayMarketplacePage() {
       <section className="relative py-20 sm:py-28">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-800/80 border border-zinc-700/50 text-zinc-400 text-xs font-medium mb-4">
+              3 Steps to Agent-Ready
+            </div>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
               How It Works
             </h2>
@@ -176,7 +183,27 @@ export default async function GatewayMarketplacePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-0">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-0 relative">
+            {/* Animated connector lines between steps (desktop only) */}
+            <div className="hidden md:block absolute top-[72px] left-[33.33%] right-[66.66%] h-px z-0">
+              <div className="w-full h-full overflow-hidden">
+                <div className="h-px w-full bg-gradient-to-r from-emerald-500/40 via-emerald-500/20 to-transparent animate-flow-right" />
+              </div>
+            </div>
+            <div className="hidden md:block absolute top-[72px] left-[66.66%] right-[33.33%] h-px z-0">
+              <div className="w-full h-full overflow-hidden">
+                <div className="h-px w-full bg-gradient-to-r from-emerald-500/40 via-emerald-500/20 to-transparent animate-flow-right" style={{ animationDelay: '0.5s' }} />
+              </div>
+            </div>
+
+            {/* Animated arrow chevrons between cards (desktop) */}
+            <div className="hidden md:flex absolute top-[64px] left-[calc(33.33%-8px)] z-20 items-center justify-center">
+              <ChevronRight className="h-4 w-4 text-emerald-500/60 animate-pulse" />
+            </div>
+            <div className="hidden md:flex absolute top-[64px] left-[calc(66.66%-8px)] z-20 items-center justify-center">
+              <ChevronRight className="h-4 w-4 text-emerald-500/60 animate-pulse" style={{ animationDelay: '0.5s' }} />
+            </div>
+
             {[
               {
                 step: '01',
@@ -202,16 +229,12 @@ export default async function GatewayMarketplacePage() {
                   'Agents pay through their AgentHermes wallet. You get paid. No integration needed.',
                 cta: null,
               },
-            ].map((item, i) => (
-              <div key={item.step} className="relative">
-                {/* Connector line between steps (desktop) */}
-                {i < 2 && (
-                  <div className="hidden md:block absolute top-12 right-0 w-full h-px bg-gradient-to-r from-zinc-800 via-emerald-500/20 to-zinc-800 translate-x-1/2 z-0" />
-                )}
-
-                <div className="relative z-10 p-6 lg:p-8 rounded-xl bg-zinc-900/50 border border-zinc-800/80 hover:border-emerald-500/30 transition-all md:mx-2">
+            ].map((item) => (
+              <div key={item.step} className="relative z-10">
+                <div className="p-6 lg:p-8 rounded-xl bg-zinc-900/50 border border-zinc-800/80 hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/5 transition-all duration-200 md:mx-2">
+                  {/* Step number badge */}
                   <div className="flex items-center gap-3 mb-5">
-                    <span className="text-xs font-mono font-bold text-emerald-500/60">
+                    <span className="inline-flex items-center justify-center h-7 w-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs font-mono font-bold text-emerald-500">
                       {item.step}
                     </span>
                     <div className="h-px flex-1 bg-zinc-800" />
@@ -255,7 +278,7 @@ export default async function GatewayMarketplacePage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* For Businesses */}
-            <div className="p-8 rounded-2xl bg-zinc-900/50 border border-zinc-800/80">
+            <div className="p-8 rounded-2xl bg-zinc-900/50 border border-zinc-800/80 hover:border-emerald-500/30 transition-all duration-200">
               <div className="flex items-center gap-3 mb-8">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                   <Globe className="h-5 w-5 text-emerald-400" />
@@ -289,8 +312,8 @@ export default async function GatewayMarketplacePage() {
                       'Your API keys are encrypted at rest. Agents never see your credentials. Zero-knowledge architecture.',
                   },
                 ].map((item) => (
-                  <div key={item.title} className="flex gap-4">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-800/80 border border-zinc-700/50 flex-shrink-0 mt-0.5">
+                  <div key={item.title} className="flex gap-4 group/item">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-800/80 border border-zinc-700/50 flex-shrink-0 mt-0.5 group-hover/item:border-emerald-500/30 group-hover/item:bg-emerald-500/5 transition-all duration-200">
                       <item.icon className="h-4 w-4 text-emerald-400" />
                     </div>
                     <div>
@@ -307,7 +330,7 @@ export default async function GatewayMarketplacePage() {
             </div>
 
             {/* For Agents */}
-            <div className="p-8 rounded-2xl bg-zinc-900/50 border border-zinc-800/80">
+            <div className="p-8 rounded-2xl bg-zinc-900/50 border border-zinc-800/80 hover:border-violet-500/30 transition-all duration-200">
               <div className="flex items-center gap-3 mb-8">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-500/10 border border-violet-500/20">
                   <Cpu className="h-5 w-5 text-violet-400" />
@@ -341,8 +364,8 @@ export default async function GatewayMarketplacePage() {
                       'The gateway handles auth, rate limiting, and retries. Your agent just calls the action.',
                   },
                 ].map((item) => (
-                  <div key={item.title} className="flex gap-4">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-800/80 border border-zinc-700/50 flex-shrink-0 mt-0.5">
+                  <div key={item.title} className="flex gap-4 group/item">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-800/80 border border-zinc-700/50 flex-shrink-0 mt-0.5 group-hover/item:border-violet-500/30 group-hover/item:bg-violet-500/5 transition-all duration-200">
                       <item.icon className="h-4 w-4 text-violet-400" />
                     </div>
                     <div>
@@ -380,7 +403,7 @@ export default async function GatewayMarketplacePage() {
             </div>
             <Link
               href="/connect"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-zinc-800/80 border border-zinc-700/50 text-sm font-medium text-zinc-300 hover:text-white hover:border-zinc-600 transition-all"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-all duration-200 shadow-lg shadow-emerald-500/10"
             >
               <Plug className="h-4 w-4" />
               List Your Service
@@ -415,14 +438,14 @@ export default async function GatewayMarketplacePage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/connect"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors shadow-lg shadow-emerald-500/10"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-all duration-200 shadow-lg shadow-emerald-500/10"
             >
               Connect Your Service
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/audit"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-zinc-800/80 border border-zinc-700/50 text-zinc-300 hover:text-white hover:border-zinc-600 font-semibold transition-all"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-zinc-800/80 border border-zinc-700/50 text-zinc-300 hover:text-white hover:border-zinc-600 font-semibold transition-all duration-200"
             >
               Get Your Agent Readiness Score
               <ArrowRight className="h-4 w-4" />

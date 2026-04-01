@@ -61,10 +61,23 @@ const categoryColors: Record<string, string> = {
   analytics: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20',
 }
 
-const statusConfig: Record<string, { label: string; dot: string }> = {
-  active: { label: 'Live', dot: 'bg-emerald-500' },
-  maintenance: { label: 'Maintenance', dot: 'bg-amber-500' },
-  inactive: { label: 'Offline', dot: 'bg-red-500' },
+/** Background color for the platform logo circle */
+const logoCircleColors: Record<string, string> = {
+  ai: 'bg-violet-500/20 text-violet-400 border-violet-500/30',
+  video: 'bg-pink-500/20 text-pink-400 border-pink-500/30',
+  voice: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
+  media: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+  database: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  payments: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+  communication: 'bg-sky-500/20 text-sky-400 border-sky-500/30',
+  analytics: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+}
+
+const statusConfig: Record<string, { label: string; dot: string; text: string }> = {
+  active: { label: 'Live', dot: 'bg-emerald-500', text: 'text-emerald-400' },
+  maintenance: { label: 'Maintenance', dot: 'bg-amber-500', text: 'text-amber-400' },
+  pending: { label: 'Pending', dot: 'bg-amber-500', text: 'text-amber-400' },
+  inactive: { label: 'Offline', dot: 'bg-red-500', text: 'text-red-400' },
 }
 
 // ---------------------------------------------------------------------------
@@ -83,6 +96,47 @@ function getCostRange(service: GatewayServiceCard): string {
   const withMargin = base + base * service.our_margin
   if (base === 0) return 'Free'
   return `${formatCost(base)} - ${formatCost(withMargin)}`
+}
+
+function getInitials(name: string): string {
+  return name
+    .split(/[\s-_]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join('')
+}
+
+// ---------------------------------------------------------------------------
+// Skeleton card for loading states
+// ---------------------------------------------------------------------------
+
+function SkeletonCard() {
+  return (
+    <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-6 animate-pulse">
+      <div className="flex items-start gap-4 mb-4">
+        <div className="h-11 w-11 rounded-full bg-zinc-800/80" />
+        <div className="flex-1 min-w-0">
+          <div className="h-5 w-32 bg-zinc-800 rounded mb-2" />
+          <div className="h-3 w-20 bg-zinc-800/60 rounded" />
+        </div>
+        <div className="h-5 w-12 bg-zinc-800/60 rounded-full" />
+      </div>
+      <div className="h-4 w-full bg-zinc-800/40 rounded mb-2" />
+      <div className="h-4 w-2/3 bg-zinc-800/30 rounded mb-5" />
+      <div className="flex items-center gap-3 mb-4">
+        <div className="h-4 w-16 bg-zinc-800/40 rounded" />
+        <div className="h-4 w-14 bg-zinc-800/30 rounded" />
+        <div className="h-4 w-12 bg-zinc-800/30 rounded" />
+      </div>
+      <div className="pt-4 border-t border-zinc-800/40">
+        <div className="flex items-center justify-between">
+          <div className="h-4 w-20 bg-zinc-800/40 rounded" />
+          <div className="h-4 w-14 bg-zinc-800/30 rounded" />
+        </div>
+      </div>
+    </div>
+  )
 }
 
 // ---------------------------------------------------------------------------
@@ -126,7 +180,7 @@ export default function GatewayFilter({ services }: GatewayFilterProps) {
               type="button"
               onClick={() => setActive(cat.key)}
               className={clsx(
-                'inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all',
+                'inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200',
                 isActive
                   ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20'
                   : 'bg-zinc-900/60 text-zinc-400 border border-zinc-800/80 hover:border-zinc-700 hover:text-zinc-200'
@@ -163,47 +217,65 @@ export default function GatewayFilter({ services }: GatewayFilterProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filtered.map((service) => {
             const status = statusConfig[service.status] || statusConfig.inactive
+            const catKey = service.category?.toLowerCase() || ''
             const catColor =
-              categoryColors[service.category?.toLowerCase() || ''] ||
+              categoryColors[catKey] ||
               'text-zinc-400 bg-zinc-500/10 border-zinc-500/20'
+            const logoColor =
+              logoCircleColors[catKey] ||
+              'bg-zinc-500/20 text-zinc-400 border-zinc-500/30'
             const actionCount = service.actions?.length || 0
+            const initials = getInitials(service.name)
 
             return (
               <Link
                 key={service.id}
                 href={`/gateway/${service.id}`}
-                className="group relative rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-6 hover:border-zinc-700/80 hover:bg-zinc-900/60 transition-all"
+                className="group relative rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-6 hover:border-emerald-500/50 hover:bg-zinc-900/70 hover:-translate-y-1 hover:shadow-lg hover:shadow-emerald-500/5 transition-all duration-200"
               >
-                {/* Status dot */}
-                <div className="absolute top-5 right-5">
-                  <span className="flex items-center gap-1.5 text-[11px] text-zinc-500">
-                    <span
-                      className={clsx(
-                        'h-2 w-2 rounded-full',
-                        status.dot,
-                        service.status === 'active' && 'animate-subtle-pulse'
+                {/* Top: Logo + name + status */}
+                <div className="flex items-start gap-3.5 mb-4">
+                  {/* Platform logo circle */}
+                  <div
+                    className={clsx(
+                      'flex h-11 w-11 items-center justify-center rounded-full border text-sm font-bold flex-shrink-0',
+                      logoColor
+                    )}
+                  >
+                    {initials}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base font-bold tracking-tight truncate group-hover:text-emerald-400 transition-colors duration-200">
+                      {service.name}
+                    </h3>
+                    {/* Category badge */}
+                    {service.category && (
+                      <span
+                        className={clsx(
+                          'inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider border mt-1',
+                          catColor
+                        )}
+                      >
+                        {service.category}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Status badge with pulse */}
+                  <span className={clsx('flex items-center gap-1.5 text-[11px] flex-shrink-0', status.text)}>
+                    <span className="relative flex h-2 w-2">
+                      {service.status === 'active' && (
+                        <span className="absolute inset-0 rounded-full bg-emerald-500/40 animate-ping" />
                       )}
-                    />
+                      {(service.status === 'pending' || service.status === 'maintenance') && (
+                        <span className="absolute inset-0 rounded-full bg-amber-500/40 animate-pulse" />
+                      )}
+                      <span className={clsx('relative inline-flex rounded-full h-2 w-2', status.dot)} />
+                    </span>
                     {status.label}
                   </span>
                 </div>
-
-                {/* Category badge */}
-                {service.category && (
-                  <span
-                    className={clsx(
-                      'inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-semibold uppercase tracking-wider border mb-4',
-                      catColor
-                    )}
-                  >
-                    {service.category}
-                  </span>
-                )}
-
-                {/* Name */}
-                <h3 className="text-lg font-bold tracking-tight mb-2 group-hover:text-emerald-400 transition-colors pr-16">
-                  {service.name}
-                </h3>
 
                 {/* Description */}
                 <p className="text-sm text-zinc-500 leading-relaxed mb-5 line-clamp-2">
@@ -249,9 +321,9 @@ export default function GatewayFilter({ services }: GatewayFilterProps) {
                     <span className="text-zinc-600 text-xs">/call</span>
                   </span>
 
-                  <span className="inline-flex items-center gap-1 text-xs text-zinc-600 group-hover:text-emerald-400 transition-colors">
+                  <span className="inline-flex items-center gap-1 text-xs text-zinc-600 group-hover:text-emerald-400 transition-colors duration-200">
                     Details
-                    <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
+                    <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform duration-200" />
                   </span>
                 </div>
               </Link>
@@ -262,3 +334,5 @@ export default function GatewayFilter({ services }: GatewayFilterProps) {
     </>
   )
 }
+
+export { SkeletonCard as GatewaySkeletonCard }

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import BlogArticleWrapper from '@/components/BlogArticleWrapper'
 import {
   ArrowRight,
   BarChart3,
@@ -162,6 +163,11 @@ export default function McpGapPage() {
   }
 
   return (
+    <BlogArticleWrapper
+      title="Zero MCP Servers for Local Businesses — The $6.2B Gap"
+      shareUrl="https://agenthermes.ai/blog/mcp-gap"
+      currentHref="/blog/mcp-gap"
+    >
     <div className="relative">
       <script
         type="application/ld+json"
@@ -206,20 +212,22 @@ export default function McpGapPage() {
             local businesses</strong>.
           </p>
 
-          {/* Meta */}
-          <div className="flex flex-wrap items-center gap-6 text-sm text-zinc-500">
-            <span className="flex items-center gap-1.5">
-              <User className="h-4 w-4" />
-              AgentHermes Research
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Calendar className="h-4 w-4" />
-              March 25, 2026
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Clock className="h-4 w-4" />
-              10 min read
-            </span>
+          {/* Author byline */}
+          <div className="flex items-center gap-4 pb-6 mb-6 border-b border-zinc-800/50">
+            <div className="author-avatar">AH</div>
+            <div>
+              <div className="text-sm font-semibold text-zinc-200">AgentHermes Research</div>
+              <div className="flex items-center gap-4 text-sm text-zinc-500">
+                <span className="flex items-center gap-1.5">
+                  <Calendar className="h-3.5 w-3.5" />
+                  March 25, 2026
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5" />
+                  10 min read
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -527,8 +535,9 @@ export default function McpGapPage() {
       </section>
 
       {/* ===== CTA ===== */}
-      <section className="pb-20 sm:pb-28 border-t border-zinc-800/50">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 pt-16 text-center">
+      <section className="pb-20 sm:pb-28">
+        <hr className="section-divider mb-16" />
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4">
             Be the first in your market
           </h2>
@@ -539,7 +548,7 @@ export default function McpGapPage() {
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
               href="/connect"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors cta-button-glow"
             >
               Connect My Business
               <ArrowRight className="h-4 w-4" />
@@ -555,5 +564,6 @@ export default function McpGapPage() {
         </div>
       </section>
     </div>
+    </BlogArticleWrapper>
   )
 }

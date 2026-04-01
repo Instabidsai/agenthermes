@@ -384,20 +384,20 @@ function FAQItemCard({ item }: { item: FAQItem }) {
   return (
     <details
       id={item.slug}
-      className="group scroll-mt-28 rounded-xl bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700/80 transition-colors open:border-zinc-700/80"
+      className="group scroll-mt-28 rounded-xl bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700/80 transition-all duration-300 open:border-emerald-500/20 open:bg-emerald-500/[0.02] open:shadow-lg open:shadow-emerald-500/5"
     >
-      <summary className="flex items-start gap-4 cursor-pointer p-5 sm:p-6 list-none [&::-webkit-details-marker]:hidden">
+      <summary className="flex items-start gap-4 cursor-pointer p-5 sm:p-6 list-none [&::-webkit-details-marker]:hidden select-none">
         <div className="flex-shrink-0 mt-0.5">
-          <HelpCircle className="h-5 w-5 text-zinc-500 group-open:text-emerald-400 transition-colors" />
+          <HelpCircle className="h-5 w-5 text-zinc-500 group-open:text-emerald-400 transition-colors duration-300" />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-base sm:text-lg font-semibold text-zinc-200 group-open:text-white transition-colors pr-8">
+          <h3 className="text-base sm:text-lg font-semibold text-zinc-200 group-open:text-white transition-colors duration-300 pr-8">
             {item.question}
           </h3>
         </div>
         <div className="flex-shrink-0 mt-1">
           <svg
-            className="h-5 w-5 text-zinc-600 group-open:rotate-180 transition-transform"
+            className="h-5 w-5 text-zinc-600 group-open:text-emerald-400 group-open:rotate-180 transition-all duration-300"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -409,13 +409,13 @@ function FAQItemCard({ item }: { item: FAQItem }) {
       </summary>
       <div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-0">
         <div className="pl-9">
-          <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
+          <p className="text-sm sm:text-base text-zinc-400 leading-relaxed" style={{ lineHeight: '1.8' }}>
             {item.answer}
           </p>
           {item.link && (
             <Link
               href={item.link.href}
-              className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-emerald-400 hover:text-emerald-300 transition-colors"
+              className="inline-flex items-center gap-1.5 mt-4 text-sm font-semibold text-emerald-400 hover:text-emerald-300 transition-colors"
             >
               {item.link.label}
               <ArrowRight className="h-3.5 w-3.5" />
@@ -491,14 +491,14 @@ export default function FAQPage() {
       </section>
 
       {/* ===== CATEGORY NAV ===== */}
-      <div className="sticky top-16 z-30 bg-[#09090b]/95 backdrop-blur-sm border-b border-zinc-800/60">
+      <div className="sticky top-16 z-30 bg-[#09090b]/95 backdrop-blur-md border-b border-zinc-800/60 shadow-lg shadow-black/20">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-2 py-3 overflow-x-auto scrollbar-hide" role="navigation" aria-label="FAQ categories">
+          <div className="flex items-center gap-1.5 sm:gap-2 py-3 overflow-x-auto scrollbar-hide" role="navigation" aria-label="FAQ categories">
             {faqCategories.map((cat) => (
               <a
                 key={cat.slug}
                 href={`#cat-${cat.slug}`}
-                className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60 transition-colors"
+                className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/80 active:bg-zinc-700/50 transition-all duration-200 border border-transparent hover:border-zinc-700/50`}
               >
                 <cat.icon className="h-3.5 w-3.5" />
                 {cat.title}
@@ -507,7 +507,7 @@ export default function FAQPage() {
             <div className="flex-1" />
             <Link
               href="/glossary"
-              className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+              className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
             >
               Glossary
               <ArrowRight className="h-3 w-3" />

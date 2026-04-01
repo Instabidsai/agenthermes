@@ -33,6 +33,7 @@ import {
   LayoutGrid,
   Store,
   Zap,
+  Check,
   type LucideIcon,
 } from 'lucide-react'
 import clsx from 'clsx'
@@ -156,6 +157,17 @@ const TOOL_CATEGORY_COLORS: Record<string, string> = {
   pay: 'text-violet-400 bg-violet-500/10 border-violet-500/20',
   follow_up: 'text-zinc-400 bg-zinc-500/10 border-zinc-500/20',
 }
+
+// ---------------------------------------------------------------------------
+// Shared input class
+// ---------------------------------------------------------------------------
+
+const INPUT_CLASS = 'w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition-all duration-200'
+const INPUT_MONO_CLASS = 'w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm font-mono text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition-all duration-200'
+const SELECT_CLASS = 'w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm text-zinc-100 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition-all duration-200'
+const ACTION_INPUT_CLASS = 'w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-mono text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition-all duration-200'
+const ACTION_SELECT_CLASS = 'w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition-all duration-200'
+const ACTION_TEXT_CLASS = 'w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition-all duration-200'
 
 // ---------------------------------------------------------------------------
 // Component
@@ -508,7 +520,7 @@ export default function ConnectPage() {
                 </code>
                 <button
                   onClick={copyId}
-                  className="flex-shrink-0 p-2 rounded-lg hover:bg-zinc-800 transition-colors"
+                  className="flex-shrink-0 p-2 rounded-lg hover:bg-zinc-800 transition-all duration-200"
                   aria-label="Copy service ID"
                 >
                   {copied ? (
@@ -523,14 +535,14 @@ export default function ConnectPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link
                 href={`/gateway/${result.id}`}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-all duration-200 shadow-lg shadow-emerald-500/10"
               >
                 View Service Page
                 <ExternalLink className="h-4 w-4" />
               </Link>
               <Link
                 href="/gateway"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-zinc-700 hover:border-zinc-600 text-zinc-300 text-sm font-medium transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-zinc-700 hover:border-zinc-600 text-zinc-300 text-sm font-medium transition-all duration-200"
               >
                 Browse Gateway
               </Link>
@@ -564,8 +576,8 @@ export default function ConnectPage() {
           </p>
         </div>
 
-        {/* Progress Steps */}
-        <div className="flex items-center justify-center gap-1 sm:gap-2 mb-10 overflow-x-auto">
+        {/* Progress Steps — circles with fill */}
+        <div className="flex items-center justify-center gap-0 mb-10">
           {STEPS.map((s, i) => {
             const isActive = step === s.number
             const isDone = step > s.number
@@ -576,26 +588,42 @@ export default function ConnectPage() {
                     if (isDone) setStep(s.number)
                   }}
                   disabled={!isDone}
-                  className={clsx(
-                    'flex items-center gap-1.5 px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors',
-                    isActive && 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
-                    isDone && 'text-zinc-300 hover:bg-zinc-800/60 cursor-pointer',
-                    !isActive && !isDone && 'text-zinc-600 cursor-default'
-                  )}
+                  className="flex flex-col items-center gap-1.5 group"
                 >
-                  {isDone ? (
-                    <CheckCircle className="h-4 w-4 text-emerald-500" />
-                  ) : (
-                    <s.icon className="h-4 w-4" />
-                  )}
-                  <span className="hidden sm:inline">{s.label}</span>
-                  <span className="sm:hidden">{s.number}</span>
+                  {/* Circle */}
+                  <div
+                    className={clsx(
+                      'flex items-center justify-center h-10 w-10 rounded-full border-2 transition-all duration-200',
+                      isDone && 'bg-emerald-500 border-emerald-500 cursor-pointer group-hover:bg-emerald-400 group-hover:border-emerald-400',
+                      isActive && 'border-emerald-500 bg-emerald-500/10',
+                      !isActive && !isDone && 'border-zinc-700 bg-zinc-900/50'
+                    )}
+                  >
+                    {isDone ? (
+                      <Check className="h-5 w-5 text-white" />
+                    ) : (
+                      <s.icon className={clsx('h-4 w-4', isActive ? 'text-emerald-400' : 'text-zinc-600')} />
+                    )}
+                  </div>
+                  {/* Label */}
+                  <span
+                    className={clsx(
+                      'text-[10px] sm:text-xs font-medium transition-colors duration-200',
+                      isActive && 'text-emerald-400',
+                      isDone && 'text-zinc-300',
+                      !isActive && !isDone && 'text-zinc-600'
+                    )}
+                  >
+                    <span className="hidden sm:inline">{s.label}</span>
+                    <span className="sm:hidden">{s.number + 1}</span>
+                  </span>
                 </button>
+                {/* Connector line */}
                 {i < STEPS.length - 1 && (
                   <div
                     className={clsx(
-                      'w-4 sm:w-8 h-px mx-0.5 sm:mx-1',
-                      step > s.number ? 'bg-emerald-500/40' : 'bg-zinc-800'
+                      'w-8 sm:w-16 h-0.5 mx-1 sm:mx-2 mb-6 rounded-full transition-all duration-200',
+                      step > s.number ? 'bg-emerald-500' : 'bg-zinc-800'
                     )}
                   />
                 )}
@@ -638,25 +666,32 @@ export default function ConnectPage() {
                           key={template.id}
                           onClick={() => selectVertical(template)}
                           className={clsx(
-                            'group relative text-left rounded-xl border p-4 transition-all',
+                            'group relative text-left rounded-xl border p-4 transition-all duration-200',
                             isSelected
-                              ? 'border-emerald-500/40 bg-emerald-500/5 ring-1 ring-emerald-500/20'
-                              : 'border-zinc-800/80 bg-zinc-900/60 hover:border-zinc-700 hover:bg-zinc-900/80'
+                              ? 'border-emerald-500 bg-emerald-500/5 ring-2 ring-emerald-500/30 shadow-lg shadow-emerald-500/10'
+                              : 'border-zinc-800/80 bg-zinc-900/60 hover:border-emerald-500/40 hover:bg-zinc-900/80 hover:-translate-y-0.5 hover:shadow-md hover:shadow-emerald-500/5'
                           )}
                         >
+                          {/* Checkmark badge for selected */}
+                          {isSelected && (
+                            <div className="absolute -top-2 -right-2 flex items-center justify-center h-6 w-6 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/30">
+                              <Check className="h-3.5 w-3.5 text-white" />
+                            </div>
+                          )}
+
                           <div className="flex items-start gap-3">
                             <div
                               className={clsx(
-                                'flex h-10 w-10 items-center justify-center rounded-lg border flex-shrink-0',
+                                'flex h-10 w-10 items-center justify-center rounded-lg border flex-shrink-0 transition-all duration-200',
                                 isSelected
-                                  ? 'bg-emerald-500/10 border-emerald-500/20'
-                                  : 'bg-zinc-800/50 border-zinc-700/50 group-hover:border-zinc-600/50'
+                                  ? 'bg-emerald-500/10 border-emerald-500/30'
+                                  : 'bg-zinc-800/50 border-zinc-700/50 group-hover:border-emerald-500/30 group-hover:bg-emerald-500/5'
                               )}
                             >
                               <Icon
                                 className={clsx(
-                                  'h-5 w-5',
-                                  isSelected ? 'text-emerald-400' : 'text-zinc-400 group-hover:text-zinc-300'
+                                  'h-5 w-5 transition-colors duration-200',
+                                  isSelected ? 'text-emerald-400' : 'text-zinc-400 group-hover:text-emerald-400'
                                 )}
                               />
                             </div>
@@ -714,30 +749,45 @@ export default function ConnectPage() {
                   </p>
                 </div>
 
-                {/* Preview tools */}
+                {/* Preview tools — code editor style */}
                 <div className="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold mb-2">
                   MCP Tools Generated ({previewTools.length})
                 </div>
-                <div className="space-y-1.5">
-                  {previewTools.map((tool) => (
-                    <div
-                      key={tool.name}
-                      className="flex items-center gap-3 rounded-lg border border-zinc-800/60 bg-zinc-950/30 px-3 py-2"
-                    >
-                      <span
-                        className={clsx(
-                          'inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase border',
-                          TOOL_CATEGORY_COLORS[tool.category] || TOOL_CATEGORY_COLORS.find
-                        )}
-                      >
-                        {tool.category}
-                      </span>
-                      <code className="text-xs font-mono text-emerald-400">{tool.name}</code>
-                      <span className="text-xs text-zinc-500 hidden sm:inline truncate">
-                        {tool.description}
-                      </span>
+                <div className="rounded-xl border border-zinc-800/80 bg-[#0d1117] overflow-hidden">
+                  {/* Title bar */}
+                  <div className="flex items-center gap-2 px-4 py-2.5 border-b border-zinc-800/60 bg-[#161b22]">
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-3 w-3 rounded-full bg-[#ff5f57]" />
+                      <div className="h-3 w-3 rounded-full bg-[#febc2e]" />
+                      <div className="h-3 w-3 rounded-full bg-[#28c840]" />
                     </div>
-                  ))}
+                    <span className="text-[11px] text-zinc-500 font-mono ml-2">
+                      mcp-tools.json
+                    </span>
+                  </div>
+                  {/* Tool list */}
+                  <div className="p-3 space-y-1 font-mono text-xs max-h-64 overflow-y-auto scrollbar-hide">
+                    {previewTools.map((tool, idx) => (
+                      <div
+                        key={tool.name}
+                        className="flex items-center gap-3 px-2 py-1.5 rounded-md hover:bg-zinc-800/40 transition-colors duration-200"
+                      >
+                        <span className="text-zinc-600 select-none w-5 text-right">{idx + 1}</span>
+                        <span
+                          className={clsx(
+                            'inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase border',
+                            TOOL_CATEGORY_COLORS[tool.category] || TOOL_CATEGORY_COLORS.find
+                          )}
+                        >
+                          {tool.category}
+                        </span>
+                        <code className="text-emerald-400">{tool.name}</code>
+                        <span className="text-zinc-600 hidden sm:inline truncate">
+                          // {tool.description}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Fulfillment options */}
@@ -765,14 +815,14 @@ export default function ConnectPage() {
               <div className="flex items-center gap-3">
                 <button
                   onClick={skipVertical}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-zinc-700 text-sm font-medium text-zinc-400 hover:border-zinc-600 hover:text-zinc-300 transition-colors"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-zinc-700 text-sm font-medium text-zinc-400 hover:border-zinc-600 hover:text-zinc-300 transition-all duration-200"
                 >
                   Skip — I have an API
                 </button>
                 {selectedTemplate && (
                   <button
                     onClick={() => setStep(1)}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-all duration-200 shadow-lg shadow-emerald-500/10"
                   >
                     Continue with {selectedTemplate.name}
                     <ArrowRight className="h-4 w-4" />
@@ -796,7 +846,7 @@ export default function ConnectPage() {
                 <span className="text-sm font-medium text-zinc-300">{selectedTemplate.name}</span>
                 <button
                   onClick={() => { setStep(0); setForm((prev) => ({ ...prev, vertical_id: null })) }}
-                  className="ml-auto text-xs text-zinc-500 hover:text-zinc-400 transition-colors"
+                  className="ml-auto text-xs text-zinc-500 hover:text-zinc-400 transition-colors duration-200"
                 >
                   Change
                 </button>
@@ -826,7 +876,7 @@ export default function ConnectPage() {
                       value={form.name}
                       onChange={(e) => updateField('name', e.target.value)}
                       placeholder={selectedTemplate ? `e.g., ${selectedTemplate.name.split('/')[0].trim()} Pro` : 'e.g., HeyGen'}
-                      className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 focus:outline-none transition-colors"
+                      className={INPUT_CLASS}
                     />
                   </div>
 
@@ -840,7 +890,7 @@ export default function ConnectPage() {
                       value={form.domain}
                       onChange={(e) => updateField('domain', e.target.value)}
                       placeholder="e.g., yourbusiness.com"
-                      className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 focus:outline-none transition-colors"
+                      className={INPUT_CLASS}
                     />
 
                     {/* Shopify detecting spinner */}
@@ -890,7 +940,7 @@ export default function ConnectPage() {
 
                             <button
                               onClick={acceptShopifyTools}
-                              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-colors"
+                              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-all duration-200"
                             >
                               <Sparkles className="h-3.5 w-3.5" />
                               Auto-Generate {shopifyDetection.toolCount} MCP Tools
@@ -918,7 +968,7 @@ export default function ConnectPage() {
                               auth_type: 'none',
                             }))
                           }}
-                          className="ml-auto text-[10px] text-zinc-500 hover:text-zinc-400 transition-colors"
+                          className="ml-auto text-[10px] text-zinc-500 hover:text-zinc-400 transition-colors duration-200"
                         >
                           Undo
                         </button>
@@ -936,7 +986,7 @@ export default function ConnectPage() {
                       onChange={(e) => updateField('description', e.target.value)}
                       rows={3}
                       placeholder="What does your service do? How would an agent use it?"
-                      className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 focus:outline-none transition-colors resize-none"
+                      className={clsx(INPUT_CLASS, 'resize-none')}
                     />
                   </div>
 
@@ -948,7 +998,7 @@ export default function ConnectPage() {
                       id="category"
                       value={form.category}
                       onChange={(e) => updateField('category', e.target.value)}
-                      className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm text-zinc-100 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 focus:outline-none transition-colors"
+                      className={SELECT_CLASS}
                     >
                       {CATEGORIES.map((c) => (
                         <option key={c.value} value={c.value}>
@@ -986,7 +1036,7 @@ export default function ConnectPage() {
                       value={form.api_base_url}
                       onChange={(e) => updateField('api_base_url', e.target.value)}
                       placeholder="https://api.yourservice.com"
-                      className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm font-mono text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 focus:outline-none transition-colors"
+                      className={INPUT_MONO_CLASS}
                     />
                     {selectedTemplate && (
                       <p className="mt-1.5 text-xs text-zinc-600">
@@ -1004,7 +1054,7 @@ export default function ConnectPage() {
                         id="auth_type"
                         value={form.auth_type}
                         onChange={(e) => updateField('auth_type', e.target.value)}
-                        className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm text-zinc-100 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 focus:outline-none transition-colors"
+                        className={SELECT_CLASS}
                       >
                         {AUTH_TYPES.map((a) => (
                           <option key={a.value} value={a.value}>
@@ -1025,7 +1075,7 @@ export default function ConnectPage() {
                           value={form.auth_header}
                           onChange={(e) => updateField('auth_header', e.target.value)}
                           placeholder="Authorization"
-                          className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm font-mono text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 focus:outline-none transition-colors"
+                          className={INPUT_MONO_CLASS}
                         />
                       </div>
                     )}
@@ -1043,7 +1093,7 @@ export default function ConnectPage() {
                           value={form.api_key}
                           onChange={(e) => updateField('api_key', e.target.value)}
                           placeholder="sk-..."
-                          className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm font-mono text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 focus:outline-none transition-colors"
+                          className={INPUT_MONO_CLASS}
                         />
                       </div>
                       <p className="mt-1.5 text-xs text-zinc-600">
@@ -1073,7 +1123,7 @@ export default function ConnectPage() {
                   {form.actions.map((action, i) => (
                     <div
                       key={i}
-                      className="rounded-xl border border-zinc-800/80 bg-zinc-950/50 p-4 space-y-3"
+                      className="rounded-xl border border-zinc-800/80 bg-zinc-950/50 p-4 space-y-3 hover:border-zinc-700/80 transition-all duration-200"
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">
@@ -1082,7 +1132,7 @@ export default function ConnectPage() {
                         {form.actions.length > 1 && (
                           <button
                             onClick={() => removeAction(i)}
-                            className="p-1.5 rounded-lg text-zinc-600 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                            className="p-1.5 rounded-lg text-zinc-600 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200"
                             aria-label={`Remove action ${i + 1}`}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -1100,7 +1150,7 @@ export default function ConnectPage() {
                             value={action.name}
                             onChange={(e) => updateAction(i, 'name', e.target.value)}
                             placeholder="create_video"
-                            className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-mono text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 focus:outline-none transition-colors"
+                            className={ACTION_INPUT_CLASS}
                           />
                         </div>
 
@@ -1111,7 +1161,7 @@ export default function ConnectPage() {
                           <select
                             value={action.method}
                             onChange={(e) => updateAction(i, 'method', e.target.value)}
-                            className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 focus:outline-none transition-colors"
+                            className={ACTION_SELECT_CLASS}
                           >
                             {HTTP_METHODS.map((m) => (
                               <option key={m} value={m}>
@@ -1132,7 +1182,7 @@ export default function ConnectPage() {
                             value={action.path}
                             onChange={(e) => updateAction(i, 'path', e.target.value)}
                             placeholder="/v1/videos"
-                            className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-mono text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 focus:outline-none transition-colors"
+                            className={ACTION_INPUT_CLASS}
                           />
                         </div>
 
@@ -1147,7 +1197,7 @@ export default function ConnectPage() {
                             value={action.cost_per_call}
                             onChange={(e) => updateAction(i, 'cost_per_call', e.target.value)}
                             placeholder="0.00"
-                            className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-mono text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 focus:outline-none transition-colors"
+                            className={ACTION_INPUT_CLASS}
                           />
                         </div>
                       </div>
@@ -1161,7 +1211,7 @@ export default function ConnectPage() {
                           value={action.description}
                           onChange={(e) => updateAction(i, 'description', e.target.value)}
                           placeholder="What does this action do?"
-                          className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 focus:outline-none transition-colors"
+                          className={ACTION_TEXT_CLASS}
                         />
                       </div>
                     </div>
@@ -1169,7 +1219,7 @@ export default function ConnectPage() {
 
                   <button
                     onClick={addAction}
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-zinc-700 text-sm text-zinc-500 hover:text-zinc-300 hover:border-zinc-600 transition-colors"
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-zinc-700 text-sm text-zinc-500 hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-all duration-200"
                   >
                     <Plus className="h-4 w-4" />
                     Add Action
@@ -1205,7 +1255,7 @@ export default function ConnectPage() {
                     </div>
                     <button
                       onClick={() => setStep(0)}
-                      className="ml-auto text-xs text-emerald-500 hover:text-emerald-400 transition-colors"
+                      className="ml-auto text-xs text-emerald-500 hover:text-emerald-400 transition-colors duration-200"
                     >
                       Change
                     </button>
@@ -1218,7 +1268,7 @@ export default function ConnectPage() {
                     <span className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Service</span>
                     <button
                       onClick={() => setStep(1)}
-                      className="text-xs text-emerald-500 hover:text-emerald-400 transition-colors"
+                      className="text-xs text-emerald-500 hover:text-emerald-400 transition-colors duration-200"
                     >
                       Edit
                     </button>
@@ -1253,7 +1303,7 @@ export default function ConnectPage() {
                     <span className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">API Configuration</span>
                     <button
                       onClick={() => setStep(2)}
-                      className="text-xs text-emerald-500 hover:text-emerald-400 transition-colors"
+                      className="text-xs text-emerald-500 hover:text-emerald-400 transition-colors duration-200"
                     >
                       Edit
                     </button>
@@ -1296,7 +1346,7 @@ export default function ConnectPage() {
                     </span>
                     <button
                       onClick={() => setStep(3)}
-                      className="text-xs text-emerald-500 hover:text-emerald-400 transition-colors"
+                      className="text-xs text-emerald-500 hover:text-emerald-400 transition-colors duration-200"
                     >
                       Edit
                     </button>
@@ -1342,7 +1392,7 @@ export default function ConnectPage() {
                     setStep(step - 1)
                     setError(null)
                   }}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-zinc-700 text-sm font-medium text-zinc-300 hover:border-zinc-600 hover:text-zinc-100 transition-colors"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-zinc-700 text-sm font-medium text-zinc-300 hover:border-zinc-600 hover:text-zinc-100 transition-all duration-200"
                 >
                   <ArrowLeft className="h-4 w-4" />
                   Back
@@ -1359,9 +1409,9 @@ export default function ConnectPage() {
                   }}
                   disabled={!canAdvance()}
                   className={clsx(
-                    'inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors',
+                    'inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200',
                     canAdvance()
-                      ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                      ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/10'
                       : 'bg-zinc-800 text-zinc-600 cursor-not-allowed'
                   )}
                 >
@@ -1373,10 +1423,10 @@ export default function ConnectPage() {
                   onClick={handleSubmit}
                   disabled={submitting}
                   className={clsx(
-                    'inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-colors',
+                    'inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200',
                     submitting
                       ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
-                      : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                      : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/10'
                   )}
                 >
                   {submitting ? (

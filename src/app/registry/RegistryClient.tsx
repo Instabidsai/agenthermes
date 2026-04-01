@@ -15,6 +15,7 @@ import {
   Cpu,
   Plug,
   ArrowRight,
+  Loader2,
 } from 'lucide-react'
 import clsx from 'clsx'
 import TierBadge from '@/components/TierBadge'
@@ -44,10 +45,25 @@ const PROTOCOL_FILTERS = [
 const LIMIT = 20
 
 function ProtocolBadge({ protocol }: { protocol: string }) {
-  const config: Record<string, { icon: typeof Zap; color: string; bg: string }> = {
-    mcp: { icon: Server, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
-    a2a: { icon: Cpu, color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20' },
-    rest: { icon: Plug, color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
+  const config: Record<string, { icon: typeof Zap; color: string; bg: string; label: string }> = {
+    mcp: {
+      icon: Server,
+      color: 'text-emerald-400',
+      bg: 'bg-emerald-500/10 border-emerald-500/20',
+      label: 'MCP',
+    },
+    a2a: {
+      icon: Cpu,
+      color: 'text-blue-400',
+      bg: 'bg-blue-500/10 border-blue-500/20',
+      label: 'A2A',
+    },
+    rest: {
+      icon: Plug,
+      color: 'text-amber-400',
+      bg: 'bg-amber-500/10 border-amber-500/20',
+      label: 'REST',
+    },
   }
   const c = config[protocol] || config.rest
   const Icon = c.icon
@@ -55,29 +71,57 @@ function ProtocolBadge({ protocol }: { protocol: string }) {
   return (
     <span
       className={clsx(
-        'inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded border',
+        'inline-flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1 rounded-md border transition-all duration-200',
         c.color,
         c.bg
       )}
     >
-      <Icon className="h-2.5 w-2.5" />
-      {protocol.toUpperCase()}
+      <Icon className="h-3 w-3" />
+      {c.label}
     </span>
   )
 }
 
 function ScorePill({ score }: { score: number }) {
   let color = 'text-zinc-500'
-  if (score >= 90) color = 'text-emerald-400'
-  else if (score >= 75) color = 'text-yellow-400'
-  else if (score >= 60) color = 'text-zinc-300'
-  else if (score >= 40) color = 'text-amber-400'
-  else if (score > 0) color = 'text-red-400'
+  let bg = 'bg-zinc-500/10'
+  if (score >= 90) { color = 'text-emerald-400'; bg = 'bg-emerald-500/10' }
+  else if (score >= 75) { color = 'text-yellow-400'; bg = 'bg-yellow-500/10' }
+  else if (score >= 60) { color = 'text-zinc-300'; bg = 'bg-zinc-500/10' }
+  else if (score >= 40) { color = 'text-amber-400'; bg = 'bg-amber-500/10' }
+  else if (score > 0) { color = 'text-red-400'; bg = 'bg-red-500/10' }
 
   return (
-    <span className={clsx('text-lg font-bold tabular-nums', color)}>
+    <span className={clsx('inline-flex items-center justify-center h-9 w-9 rounded-lg text-sm font-bold tabular-nums', color, bg)}>
       {score}
     </span>
+  )
+}
+
+function RegistrySkeleton() {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div
+          key={i}
+          className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/80 animate-pulse"
+        >
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div className="min-w-0 flex-1">
+              <div className="h-5 w-36 bg-zinc-800 rounded mb-2" />
+              <div className="h-3 w-28 bg-zinc-800/50 rounded" />
+            </div>
+            <div className="h-9 w-9 bg-zinc-800/60 rounded-lg" />
+          </div>
+          <div className="flex items-center gap-2 mb-3">
+            <div className="h-6 w-16 bg-zinc-800/60 rounded-md" />
+            <div className="h-6 w-14 bg-zinc-800/40 rounded-md" />
+            <div className="h-6 w-14 bg-zinc-800/40 rounded-md" />
+          </div>
+          <div className="h-4 w-24 bg-zinc-800/40 rounded" />
+        </div>
+      ))}
+    </div>
   )
 }
 
@@ -118,7 +162,7 @@ function SubmitForm() {
   }
 
   return (
-    <div className="mt-16 p-6 sm:p-8 rounded-2xl bg-zinc-900/50 border border-zinc-800/80">
+    <div className="p-6 sm:p-8 rounded-2xl bg-zinc-900/50 border border-zinc-800/80 hover:border-emerald-500/30 transition-all duration-200">
       <div className="flex items-start gap-4">
         <div className="hidden sm:flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex-shrink-0">
           <Plus className="h-6 w-6 text-emerald-400" />
@@ -138,13 +182,13 @@ function SubmitForm() {
                 aria-label="Domain URL to submit"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-lg bg-zinc-800/80 border border-zinc-700 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-colors"
+                className="w-full pl-10 pr-4 py-3 rounded-lg bg-zinc-800/80 border border-zinc-700 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
               />
             </div>
             <button
               type="submit"
               disabled={submitting || !url.trim()}
-              className="flex items-center gap-2 px-5 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-5 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/10"
             >
               {submitting ? (
                 <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -273,24 +317,30 @@ export default function RegistryClient({
     <>
       {/* Search bar */}
       <div className="mb-6">
-        <div className="relative">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+        <div className="relative group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-emerald-400 transition-colors duration-200" />
           <input
             type="text"
             placeholder="Search businesses, protocols, domains..."
             aria-label="Search the registry"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full pl-10 pr-10 py-3 rounded-lg bg-zinc-900/80 border border-zinc-800 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-colors"
+            className="w-full pl-11 pr-10 py-3.5 rounded-xl bg-zinc-900/80 border border-zinc-800 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 focus:bg-zinc-900 transition-all duration-200"
           />
-          {query && (
+          {/* Search indicator */}
+          {query && !loading && (
             <button
               type="button"
               onClick={() => setQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded text-zinc-500 hover:text-zinc-300"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/80 transition-all duration-200"
             >
               <X className="h-4 w-4" />
             </button>
+          )}
+          {loading && query && (
+            <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
+              <Loader2 className="h-4 w-4 text-emerald-400 animate-spin" />
+            </div>
           )}
         </div>
       </div>
@@ -298,21 +348,26 @@ export default function RegistryClient({
       {/* Filter pills */}
       <div className="mb-6 flex flex-wrap items-center gap-2">
         {/* Protocol pills */}
-        {PROTOCOL_FILTERS.map((p) => (
-          <button
-            key={p.key}
-            type="button"
-            onClick={() => setProtocolFilter(p.key)}
-            className={clsx(
-              'px-3 py-1.5 rounded-full text-xs font-medium border transition-colors',
-              protocolFilter === p.key
-                ? 'border-emerald-500/50 text-emerald-400 bg-emerald-500/10'
-                : 'border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
-            )}
-          >
-            {p.label}
-          </button>
-        ))}
+        {PROTOCOL_FILTERS.map((p) => {
+          const iconMap: Record<string, typeof Zap> = { mcp: Server, a2a: Cpu, rest: Plug }
+          const Icon = iconMap[p.key]
+          return (
+            <button
+              key={p.key}
+              type="button"
+              onClick={() => setProtocolFilter(p.key)}
+              className={clsx(
+                'inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all duration-200',
+                protocolFilter === p.key
+                  ? 'border-emerald-500/50 text-emerald-400 bg-emerald-500/10 shadow-sm shadow-emerald-500/10'
+                  : 'border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
+              )}
+            >
+              {Icon && <Icon className="h-3 w-3" />}
+              {p.label}
+            </button>
+          )
+        })}
 
         {/* Divider */}
         <div className="w-px h-5 bg-zinc-800 mx-1" />
@@ -322,7 +377,7 @@ export default function RegistryClient({
           type="button"
           onClick={() => setVerticalFilter('')}
           className={clsx(
-            'px-3 py-1.5 rounded-full text-xs font-medium border transition-colors',
+            'px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200',
             verticalFilter === ''
               ? 'border-emerald-500/50 text-emerald-400 bg-emerald-500/10'
               : 'border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
@@ -336,7 +391,7 @@ export default function RegistryClient({
             type="button"
             onClick={() => setVerticalFilter(v)}
             className={clsx(
-              'px-3 py-1.5 rounded-full text-xs font-medium border transition-colors',
+              'px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200',
               verticalFilter === v
                 ? 'border-emerald-500/50 text-emerald-400 bg-emerald-500/10'
                 : 'border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
@@ -350,7 +405,7 @@ export default function RegistryClient({
         <select
           value={tierFilter}
           onChange={(e) => setTierFilter(e.target.value)}
-          className="px-3 py-1.5 rounded-full text-xs font-medium border border-zinc-800 bg-transparent text-zinc-400 hover:border-zinc-700 focus:outline-none focus:border-emerald-500/50 cursor-pointer"
+          className="px-3 py-1.5 rounded-full text-xs font-medium border border-zinc-800 bg-transparent text-zinc-400 hover:border-zinc-700 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 cursor-pointer transition-all duration-200"
         >
           <option value="">Any Tier</option>
           <option value="platinum">Platinum</option>
@@ -361,8 +416,15 @@ export default function RegistryClient({
       </div>
 
       {/* Result count */}
-      <div className="mb-4 text-xs text-zinc-500" aria-live="polite">
-        {loading ? 'Searching...' : `${total} business${total !== 1 ? 'es' : ''} in the registry`}
+      <div className="mb-4 flex items-center gap-2 text-xs text-zinc-500" aria-live="polite">
+        {loading ? (
+          <>
+            <Loader2 className="h-3 w-3 animate-spin text-emerald-400" />
+            <span>Searching...</span>
+          </>
+        ) : (
+          <span>{total} business{total !== 1 ? 'es' : ''} in the registry</span>
+        )}
       </div>
 
       {/* Error banner */}
@@ -376,7 +438,7 @@ export default function RegistryClient({
               setError('')
               fetchRegistry(false)
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-medium transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-medium transition-all duration-200"
           >
             <RotateCcw className="h-3 w-3" />
             Retry
@@ -386,28 +448,7 @@ export default function RegistryClient({
 
       {/* Loading skeleton */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={i}
-              className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/80 animate-pulse"
-            >
-              <div className="flex items-start justify-between gap-3 mb-4">
-                <div className="min-w-0 flex-1">
-                  <div className="h-5 w-36 bg-zinc-800 rounded mb-2" />
-                  <div className="h-3 w-28 bg-zinc-800/50 rounded" />
-                </div>
-                <div className="h-8 w-10 bg-zinc-800/60 rounded" />
-              </div>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="h-5 w-14 bg-zinc-800/60 rounded-full" />
-                <div className="h-5 w-12 bg-zinc-800/40 rounded" />
-                <div className="h-5 w-12 bg-zinc-800/40 rounded" />
-              </div>
-              <div className="h-4 w-24 bg-zinc-800/40 rounded" />
-            </div>
-          ))}
-        </div>
+        <RegistrySkeleton />
       ) : businesses.length === 0 && !error ? (
         <div className="text-center py-20 rounded-xl bg-zinc-900/30 border border-zinc-800/50">
           <Search className="h-10 w-10 text-zinc-700 mx-auto mb-4" />
@@ -426,12 +467,12 @@ export default function RegistryClient({
               <Link
                 key={biz.id}
                 href={biz.profile_url}
-                className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700/80 hover:-translate-y-1 transition-all duration-200 group flex flex-col"
+                className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/80 hover:border-emerald-500/50 hover:-translate-y-1 hover:shadow-lg hover:shadow-emerald-500/5 transition-all duration-200 group flex flex-col"
               >
                 {/* Top row: name + score */}
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="min-w-0">
-                    <h3 className="font-semibold text-zinc-100 truncate group-hover:text-white transition-colors">
+                    <h3 className="font-semibold text-zinc-100 truncate group-hover:text-emerald-400 transition-colors duration-200">
                       {biz.name}
                     </h3>
                     {biz.domain && (
@@ -478,7 +519,7 @@ export default function RegistryClient({
                 type="button"
                 onClick={() => fetchRegistry(true)}
                 disabled={loadingMore}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-zinc-700 hover:border-zinc-600 text-zinc-300 hover:text-zinc-100 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-zinc-700 hover:border-emerald-500/50 text-zinc-300 hover:text-emerald-400 text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loadingMore ? (
                   <>
@@ -497,8 +538,25 @@ export default function RegistryClient({
         </>
       )}
 
-      {/* Submit CTA */}
-      <SubmitForm />
+      {/* Submit CTA - sticky bottom bar on mobile, inline on desktop */}
+      <div className="mt-16">
+        <SubmitForm />
+      </div>
+
+      {/* Sticky mobile CTA bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden p-3 bg-zinc-950/90 backdrop-blur-lg border-t border-zinc-800/80">
+        <Link
+          href="#submit-agent-card"
+          onClick={(e) => {
+            e.preventDefault()
+            document.querySelector('.mt-16')?.scrollIntoView({ behavior: 'smooth' })
+          }}
+          className="flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-all duration-200 shadow-lg shadow-emerald-500/20"
+        >
+          <Plus className="h-4 w-4" />
+          Submit Your Agent Card
+        </Link>
+      </div>
     </>
   )
 }

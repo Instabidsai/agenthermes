@@ -450,11 +450,34 @@ export default async function StateOfReadinessPage() {
               </span>{' '}
               across the AgentHermes network.
             </p>
-            <p className="text-sm text-zinc-600 max-w-xl mx-auto">
+            <p className="text-sm text-zinc-600 max-w-xl mx-auto mb-8">
               How ready are businesses for the AI agent economy? We scanned every
               business in our network across 9 dimensions and 6 journey steps to
               find out.
             </p>
+
+            {/* Share/Download CTA */}
+            <div className="inline-flex items-center gap-3">
+              <a
+                href="https://twitter.com/intent/tweet?text=State%20of%20Agent%20Readiness%20Q1%202026%20%E2%80%94%20Most%20businesses%20score%20under%2040&url=https://agenthermes.ai/report/state-of-readiness"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="report-share-cta inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-emerald-400"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+                Share Report
+              </a>
+              <a
+                href="https://www.linkedin.com/sharing/share-offsite/?url=https://agenthermes.ai/report/state-of-readiness"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="report-share-cta inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-blue-400"
+                style={{ borderColor: 'rgba(59, 130, 246, 0.2)', background: 'rgba(59, 130, 246, 0.06)' }}
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg>
+                LinkedIn
+              </a>
+            </div>
           </div>
         </div>
       </section>
@@ -508,7 +531,7 @@ export default async function StateOfReadinessPage() {
       {/* 3. BY INDUSTRY                                                    */}
       {/* ================================================================== */}
       {industries.length > 0 && (
-        <section className="py-10 sm:py-14 border-t border-zinc-800/50">
+        <section className="py-10 sm:py-14"><hr className="section-divider mb-10" />
           <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
             <SectionHeading
               title="By Industry"
@@ -538,7 +561,7 @@ export default async function StateOfReadinessPage() {
                   <div className="flex items-center justify-end gap-2">
                     <div className="w-16 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
                       <div
-                        className={`h-full rounded-full ${scoreBarColor(row.avgScore)}`}
+                        className={`h-full rounded-full bar-animate ${scoreBarColor(row.avgScore)}`}
                         style={{ width: `${row.avgScore}%` }}
                       />
                     </div>
@@ -848,7 +871,7 @@ export default async function StateOfReadinessPage() {
       {/* 6. LEADERBOARD PREVIEW                                            */}
       {/* ================================================================== */}
       {top10.length > 0 && (
-        <section className="py-10 sm:py-14 border-t border-zinc-800/50">
+        <section className="py-10 sm:py-14"><hr className="section-divider mb-10" />
           <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between mb-8">
               <SectionHeading
@@ -959,7 +982,8 @@ export default async function StateOfReadinessPage() {
       {/* ================================================================== */}
       {/* 7. CTA                                                            */}
       {/* ================================================================== */}
-      <section className="py-20 sm:py-28 border-t border-zinc-800/50">
+      <section className="py-20 sm:py-28">
+        <hr className="section-divider mb-16" />
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
             Check Your{' '}
@@ -1008,18 +1032,18 @@ function StatCard({
   subtext?: string
 }) {
   return (
-    <div className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
-      <div className="flex items-center gap-3 mb-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-zinc-800/80 border border-zinc-700/50">
+    <div className="stat-card-enhanced p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-800/80 border border-zinc-700/50">
           {icon}
         </div>
       </div>
-      <div className="text-2xl sm:text-3xl font-bold tracking-tight">
+      <div className="text-3xl sm:text-4xl font-black tracking-tight tabular-nums">
         {value}
       </div>
-      <div className="text-xs text-zinc-500 font-medium mt-1">{label}</div>
+      <div className="text-xs text-zinc-400 font-semibold mt-2 uppercase tracking-wider">{label}</div>
       {subtext && (
-        <div className="text-[10px] text-zinc-600 mt-0.5">{subtext}</div>
+        <div className="text-[11px] text-zinc-500 mt-1 leading-snug">{subtext}</div>
       )}
     </div>
   )

@@ -177,6 +177,17 @@ function getVerdictColor(verdict: string) {
 // Page
 // ---------------------------------------------------------------------------
 
+// Table of Contents sections for sidebar navigation
+const tocSections = [
+  { id: 'score-summary', label: 'Score Summary' },
+  { id: 'the-journey', label: 'The Journey: 40 to 56 to 68' },
+  { id: 'scoring-insight', label: 'Why a 401 Proves a Good API' },
+  { id: 'dimension-breakdown', label: 'Dimension Breakdown' },
+  { id: 'what-stripe-needs', label: 'What Stripe Needs for Gold' },
+  { id: 'arl-level', label: 'ARL-4: Transactable' },
+  { id: 'lessons', label: 'Lessons for SaaS Companies' },
+]
+
 export default function WhyStripeScores68Page() {
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -239,14 +250,14 @@ export default function WhyStripeScores68Page() {
 
           {/* Tags */}
           <div className="flex flex-wrap items-center gap-3 mb-6">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-medium">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold">
               <TrendingUp className="h-3.5 w-3.5" />
               Case Study
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-500/10 border border-zinc-500/20 text-zinc-400 text-xs font-medium">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-500/10 border border-zinc-500/20 text-zinc-400 text-xs font-semibold">
               Silver Tier
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-medium">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-semibold">
               ARL-4 Transactable
             </span>
           </div>
@@ -256,32 +267,46 @@ export default function WhyStripeScores68Page() {
             <span className="text-zinc-400">68 Silver</span>
           </h1>
 
-          <p className="text-lg sm:text-xl text-zinc-300 leading-relaxed tracking-tight max-w-3xl mb-6">
+          <p className="text-lg sm:text-xl text-zinc-300 leading-relaxed tracking-tight max-w-3xl mb-8">
             Stripe is one of the best APIs in the world. But &ldquo;best API&rdquo; does not mean &ldquo;agent-ready.&rdquo;
             Here is a dimension-by-dimension breakdown of how the world&apos;s most developer-friendly
             payment platform earns a Silver-tier Agent Readiness Score — and what it would take to reach Gold.
           </p>
 
-          {/* Meta */}
-          <div className="flex flex-wrap items-center gap-6 text-sm text-zinc-500">
-            <span className="flex items-center gap-1.5">
-              <User className="h-4 w-4" />
-              AgentHermes Research
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Calendar className="h-4 w-4" />
-              March 27, 2026
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Clock className="h-4 w-4" />
-              12 min read
-            </span>
+          {/* Author byline */}
+          <div className="flex items-center gap-4 pb-6 mb-6 border-b border-zinc-800/50">
+            <div className="author-avatar">AH</div>
+            <div>
+              <div className="text-sm font-semibold text-zinc-200">AgentHermes Research</div>
+              <div className="flex items-center gap-4 text-sm text-zinc-500">
+                <span className="flex items-center gap-1.5">
+                  <Calendar className="h-3.5 w-3.5" />
+                  March 27, 2026
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5" />
+                  12 min read
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
+      {/* ===== TABLE OF CONTENTS (desktop sidebar) ===== */}
+      <div className="hidden xl:block fixed right-[max(1rem,calc((100vw-64rem)/2-14rem))] top-28 w-52 z-20">
+        <nav className="toc-sidebar">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-600 mb-3 pl-3">On this page</div>
+          {tocSections.map((section) => (
+            <a key={section.id} href={`#${section.id}`} className="block">
+              {section.label}
+            </a>
+          ))}
+        </nav>
+      </div>
+
       {/* ===== SCORE SUMMARY ===== */}
-      <section className="pb-12 sm:pb-16 border-t border-zinc-800/50">
+      <section id="score-summary" className="pb-12 sm:pb-16 border-t border-zinc-800/50 scroll-mt-20">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 pt-12">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-12">
             <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/80 text-center">
@@ -303,9 +328,9 @@ export default function WhyStripeScores68Page() {
           </div>
 
           {/* The Journey Section */}
-          <div className="prose-section mb-12">
-            <h2 className="text-2xl font-bold tracking-tight mb-4 flex items-center gap-2">
-              <ArrowUp className="h-5 w-5 text-emerald-500" />
+          <div id="the-journey" className="prose-section mb-12 scroll-mt-20">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-6 flex items-center gap-3">
+              <ArrowUp className="h-6 w-6 text-emerald-500" />
               The Journey: 40 to 56 to 68
             </h2>
             <div className="space-y-4 text-zinc-300 leading-relaxed">
@@ -332,9 +357,9 @@ export default function WhyStripeScores68Page() {
             </div>
           </div>
 
-          {/* 401 Insight Box */}
-          <div className="p-6 rounded-xl bg-emerald-500/5 border border-emerald-500/20 mb-12">
-            <h3 className="text-lg font-bold text-emerald-400 mb-3 flex items-center gap-2">
+          {/* 401 Insight Box — styled as a callout */}
+          <div id="scoring-insight" className="callout-box mb-12 scroll-mt-20">
+            <h3 className="text-lg font-bold text-emerald-400 mb-3 flex items-center gap-2 !mt-0">
               <Lock className="h-5 w-5" />
               Our Scoring Insight: Why a 401 PROVES a Good API
             </h3>
@@ -376,9 +401,10 @@ export default function WhyStripeScores68Page() {
       </section>
 
       {/* ===== DIMENSION BREAKDOWN ===== */}
-      <section className="pb-12 sm:pb-16 border-t border-zinc-800/50">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 pt-12">
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-8 flex items-center gap-2">
+      <section id="dimension-breakdown" className="pb-12 sm:pb-16 scroll-mt-20">
+        <hr className="section-divider mb-12" />
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-8 flex items-center gap-3">
             <BarChart3 className="h-6 w-6 text-emerald-500" />
             Dimension-by-Dimension Breakdown
           </h2>
@@ -417,11 +443,11 @@ export default function WhyStripeScores68Page() {
                   {/* Score bar */}
                   <div className="w-full h-2 rounded-full bg-zinc-800 mb-4">
                     <div
-                      className={`h-2 rounded-full ${dim.score >= 75 ? 'bg-emerald-500' : dim.score >= 60 ? 'bg-blue-500' : dim.score >= 45 ? 'bg-amber-500' : 'bg-red-500'}`}
+                      className={`h-2 rounded-full bar-animate ${dim.score >= 75 ? 'bg-emerald-500' : dim.score >= 60 ? 'bg-blue-500' : dim.score >= 45 ? 'bg-amber-500' : 'bg-red-500'}`}
                       style={{ width: `${dim.score}%` }}
                     />
                   </div>
-                  <p className="text-sm text-zinc-400 leading-relaxed">{dim.analysis}</p>
+                  <p className="text-sm text-zinc-400 leading-relaxed" style={{ lineHeight: '1.75' }}>{dim.analysis}</p>
                 </div>
               )
             })}
@@ -430,9 +456,10 @@ export default function WhyStripeScores68Page() {
       </section>
 
       {/* ===== WHAT STRIPE NEEDS FOR GOLD ===== */}
-      <section className="pb-12 sm:pb-16 border-t border-zinc-800/50">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 pt-12">
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4 flex items-center gap-2">
+      <section id="what-stripe-needs" className="pb-12 sm:pb-16 scroll-mt-20">
+        <hr className="section-divider mb-12" />
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4 flex items-center gap-3">
             <TrophyIcon className="h-6 w-6 text-yellow-500" />
             What Stripe Needs for Gold (75+)
           </h2>
@@ -504,10 +531,11 @@ export default function WhyStripeScores68Page() {
       </section>
 
       {/* ===== ARL LEVEL ===== */}
-      <section className="pb-12 sm:pb-16 border-t border-zinc-800/50">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 pt-12">
-          <h2 className="text-2xl font-bold tracking-tight mb-4 flex items-center gap-2">
-            <Key className="h-5 w-5 text-purple-500" />
+      <section id="arl-level" className="pb-12 sm:pb-16 scroll-mt-20">
+        <hr className="section-divider mb-12" />
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4 flex items-center gap-3">
+            <Key className="h-6 w-6 text-purple-500" />
             ARL-4: Transactable
           </h2>
           <div className="space-y-4 text-zinc-300 leading-relaxed">
@@ -528,10 +556,11 @@ export default function WhyStripeScores68Page() {
       </section>
 
       {/* ===== LESSONS ===== */}
-      <section className="pb-12 sm:pb-16 border-t border-zinc-800/50">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 pt-12">
-          <h2 className="text-2xl font-bold tracking-tight mb-6 flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-emerald-500" />
+      <section id="lessons" className="pb-12 sm:pb-16 scroll-mt-20">
+        <hr className="section-divider mb-12" />
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-6 flex items-center gap-3">
+            <Sparkles className="h-6 w-6 text-emerald-500" />
             Lessons for Other SaaS Companies
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -573,9 +602,83 @@ export default function WhyStripeScores68Page() {
         </div>
       </section>
 
+      {/* ===== SHARE BUTTONS ===== */}
+      <section className="pb-12">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <hr className="section-divider mb-8" />
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-sm text-zinc-500 font-medium">Share this analysis:</span>
+            <a
+              href="https://twitter.com/intent/tweet?text=Why%20Stripe%20Scores%2068%20Silver%20%E2%80%94%20A%20Deep%20Agent%20Readiness%20Analysis&url=https://agenthermes.ai/blog/why-stripe-scores-68"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="share-btn"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+              Twitter
+            </a>
+            <a
+              href="https://www.linkedin.com/sharing/share-offsite/?url=https://agenthermes.ai/blog/why-stripe-scores-68"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="share-btn"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg>
+              LinkedIn
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== RELATED ARTICLES ===== */}
+      <section className="pb-12 sm:pb-16">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <h2 className="text-xl font-bold tracking-tight mb-6 text-zinc-300">Related Articles</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {[
+              {
+                title: 'State of Agent Readiness: Most Businesses Score Under 40',
+                href: '/report/state-of-readiness',
+                tag: 'Research',
+                tagColor: 'emerald',
+              },
+              {
+                title: 'Agent Readiness Levels Explained',
+                href: '/blog/arl-levels-explained',
+                tag: 'Framework',
+                tagColor: 'purple',
+              },
+              {
+                title: 'Zero MCP Servers for Local Businesses',
+                href: '/blog/mcp-gap',
+                tag: 'Market Analysis',
+                tagColor: 'amber',
+              },
+            ].map((related) => {
+              const tc = getVerdictColor(related.tagColor === 'emerald' ? 'excellent' : related.tagColor === 'purple' ? 'partial' : 'partial')
+              return (
+                <Link
+                  key={related.href}
+                  href={related.href}
+                  className="group p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700 article-card-hover"
+                >
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold mb-3 ${related.tagColor === 'emerald' ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : related.tagColor === 'purple' ? 'bg-purple-500/10 border border-purple-500/20 text-purple-400' : 'bg-amber-500/10 border border-amber-500/20 text-amber-400'}`}>
+                    {related.tag}
+                  </span>
+                  <h3 className="text-sm font-semibold text-zinc-300 group-hover:text-emerald-400 transition-colors leading-snug">
+                    {related.title}
+                  </h3>
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* ===== CTA ===== */}
-      <section className="pb-20 sm:pb-28 border-t border-zinc-800/50">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 pt-16 text-center">
+      <section className="pb-20 sm:pb-28">
+        <hr className="section-divider mb-16" />
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4">
             How does your platform compare?
           </h2>
@@ -586,7 +689,7 @@ export default function WhyStripeScores68Page() {
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
               href="/audit"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors cta-button-glow"
             >
               Score My Business
               <ArrowRight className="h-4 w-4" />

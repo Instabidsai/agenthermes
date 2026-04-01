@@ -347,34 +347,55 @@ function EmbedBadgeSection({ domain }: { domain: string }) {
         <Copy className="h-4 w-4 text-zinc-400" />
         Embeddable Badge
       </h2>
-      <p className="text-sm text-zinc-500 mb-4">
+      <p className="text-sm text-zinc-500 mb-5">
         Add this badge to your website to show your Agent Readiness Score.
       </p>
 
-      {/* Badge preview */}
-      <div className="mb-4 flex items-center justify-center rounded-lg bg-zinc-950 border border-zinc-800 p-4">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={badgeUrl}
-          alt={`Agent Readiness badge for ${domain}`}
-          height={28}
-        />
+      {/* Live badge preview — polished card */}
+      <div className="mb-6">
+        <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-2">Live Preview</p>
+        <div className="flex flex-col gap-3">
+          {/* Light background preview */}
+          <div className="flex items-center justify-center rounded-xl bg-white p-6 border border-zinc-200">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={badgeUrl}
+              alt={`Agent Readiness badge for ${domain}`}
+              height={28}
+              loading="lazy"
+            />
+          </div>
+          {/* Dark background preview */}
+          <div className="flex items-center justify-center rounded-xl bg-zinc-950 p-6 border border-zinc-800">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={badgeUrl}
+              alt={`Agent Readiness badge for ${domain}`}
+              height={28}
+              loading="lazy"
+            />
+          </div>
+        </div>
       </div>
 
       {/* HTML embed */}
-      <div className="mb-3">
-        <p className="text-xs text-zinc-500 mb-1.5 font-medium">HTML</p>
-        <pre className="rounded-lg bg-zinc-950 border border-zinc-800 p-3 text-xs text-zinc-400 font-mono overflow-x-auto whitespace-pre-wrap break-all">
-          {embedCode}
-        </pre>
+      <div className="mb-4">
+        <p className="text-xs text-zinc-500 mb-1.5 font-medium">HTML Embed</p>
+        <div className="relative group">
+          <pre className="rounded-lg bg-zinc-950 border border-zinc-800 p-3 text-xs text-zinc-400 font-mono overflow-x-auto whitespace-pre-wrap break-all">
+            {embedCode}
+          </pre>
+        </div>
       </div>
 
       {/* iframe embed */}
       <div>
-        <p className="text-xs text-zinc-500 mb-1.5 font-medium">iframe</p>
-        <pre className="rounded-lg bg-zinc-950 border border-zinc-800 p-3 text-xs text-zinc-400 font-mono overflow-x-auto whitespace-pre-wrap break-all">
-          {iframeCode}
-        </pre>
+        <p className="text-xs text-zinc-500 mb-1.5 font-medium">iframe Embed</p>
+        <div className="relative group">
+          <pre className="rounded-lg bg-zinc-950 border border-zinc-800 p-3 text-xs text-zinc-400 font-mono overflow-x-auto whitespace-pre-wrap break-all">
+            {iframeCode}
+          </pre>
+        </div>
       </div>
     </div>
   )
@@ -451,53 +472,108 @@ export default async function ScorePage({
         }) }}
       />
 
-      {/* ---- Hero: Score + Tier ---- */}
-      <div className="flex flex-col items-center text-center mb-12">
-        <div className="mb-4">
+      {/* ---- Hero: Score + Tier with radial gradient ---- */}
+      <div className="relative flex flex-col items-center text-center mb-12 py-8 rounded-2xl overflow-hidden">
+        {/* Radial gradient background */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: isUnaudited
+              ? 'radial-gradient(ellipse at center, rgba(113,113,122,0.08) 0%, transparent 70%)'
+              : score >= 90
+                ? 'radial-gradient(ellipse at center, rgba(16,185,129,0.12) 0%, transparent 70%)'
+                : score >= 75
+                  ? 'radial-gradient(ellipse at center, rgba(234,179,8,0.10) 0%, transparent 70%)'
+                  : score >= 60
+                    ? 'radial-gradient(ellipse at center, rgba(161,161,170,0.08) 0%, transparent 70%)'
+                    : score >= 40
+                      ? 'radial-gradient(ellipse at center, rgba(245,158,11,0.08) 0%, transparent 70%)'
+                      : 'radial-gradient(ellipse at center, rgba(239,68,68,0.08) 0%, transparent 70%)',
+          }}
+        />
+
+        {/* BIG centered score gauge */}
+        <div className="relative mb-6">
           <ScoreGauge score={isUnaudited ? 0 : score} size="lg" />
         </div>
 
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2">
+        {/* Large numeric score */}
+        <div className={clsx(
+          'relative text-6xl sm:text-7xl font-black tabular-nums tracking-tight mb-3',
+          score >= 90 ? 'text-emerald-400' :
+          score >= 75 ? 'text-yellow-500' :
+          score >= 60 ? 'text-zinc-300' :
+          score >= 40 ? 'text-amber-500' :
+          isUnaudited ? 'text-zinc-600' : 'text-red-500',
+        )}>
+          {isUnaudited ? '--' : score}
+          <span className="text-2xl text-zinc-600 font-semibold">/100</span>
+        </div>
+
+        <h1 className="relative text-2xl sm:text-3xl font-bold tracking-tight mb-3">
           {displayName}
         </h1>
 
-        <div className="flex items-center gap-3 mb-3 flex-wrap justify-center">
-          <TierBadge tier={data.tier} size="md" />
+        {/* Tier badge with glow */}
+        <div className="relative flex items-center gap-3 mb-4 flex-wrap justify-center">
+          <TierBadge tier={data.tier} size="lg" />
+
+          {/* ARL level visual meter */}
           {data.arl && (
-            <span className={clsx(
-              'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold border',
+            <div className={clsx(
+              'inline-flex items-center gap-2.5 px-4 py-2 rounded-full border',
               data.arl.level >= 5 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' :
               data.arl.level >= 3 ? 'text-amber-400 bg-amber-500/10 border-amber-500/30' :
               data.arl.level >= 1 ? 'text-blue-400 bg-blue-500/10 border-blue-500/30' :
               'text-zinc-400 bg-zinc-500/10 border-zinc-500/30',
             )}>
-              <Shield className="h-3.5 w-3.5" />
-              ARL-{data.arl.level} {data.arl.name}
-            </span>
+              <Shield className="h-4 w-4" />
+              <span className="text-sm font-bold">ARL-{data.arl.level}</span>
+              {/* Mini progress meter */}
+              <div className="flex items-center gap-0.5">
+                {Array.from({ length: 7 }, (_, i) => {
+                  const arlColor = data.arl!.level >= 5 ? '#34d399' :
+                    data.arl!.level >= 3 ? '#fbbf24' :
+                    data.arl!.level >= 1 ? '#60a5fa' : '#71717a'
+                  return (
+                    <div
+                      key={i}
+                      className="h-2 w-2.5 rounded-sm"
+                      style={i <= data.arl!.level
+                        ? { backgroundColor: arlColor, opacity: 0.4 + (i / 6) * 0.6 }
+                        : { backgroundColor: '#27272a' }
+                      }
+                    />
+                  )
+                })}
+              </div>
+              <span className="text-xs font-semibold">{data.arl.name}</span>
+            </div>
           )}
-          <a
-            href={`https://${decodedDomain}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-sm text-zinc-400 hover:text-zinc-200 transition-colors"
-          >
-            {decodedDomain}
-            <ExternalLink className="h-3 w-3" />
-          </a>
         </div>
 
-        <p className="max-w-lg text-sm text-zinc-500 leading-relaxed">
+        <a
+          href={`https://${decodedDomain}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="relative inline-flex items-center gap-1 text-sm text-zinc-400 hover:text-zinc-200 transition-colors mb-3"
+        >
+          {decodedDomain}
+          <ExternalLink className="h-3 w-3" />
+        </a>
+
+        <p className="relative max-w-lg text-sm text-zinc-500 leading-relaxed">
           {TIER_DESCRIPTIONS[data.tier] || TIER_DESCRIPTIONS.unaudited}
         </p>
 
         {data.arl?.verticalContext && (
-          <p className="mt-2 max-w-lg text-sm text-zinc-400 leading-relaxed italic">
+          <p className="relative mt-2 max-w-lg text-sm text-zinc-400 leading-relaxed italic">
             {data.arl.verticalContext}
           </p>
         )}
 
         {data.lastAudited && (
-          <p className="mt-3 flex items-center gap-1.5 text-xs text-zinc-600">
+          <p className="relative mt-3 flex items-center gap-1.5 text-xs text-zinc-600">
             <Clock className="h-3 w-3" />
             Last scanned{' '}
             {new Date(data.lastAudited).toLocaleDateString('en-US', {
@@ -577,24 +653,33 @@ export default async function ScorePage({
         <EmbedBadgeSection domain={decodedDomain} />
       </section>
 
-      {/* ---- Claim CTA ---- */}
+      {/* ---- Claim CTA — Prominent card ---- */}
       <section className="mb-10">
-        <div className="rounded-xl border border-emerald-900/50 bg-emerald-950/20 p-6 text-center">
-          <UserCheck className="h-6 w-6 text-emerald-500 mx-auto mb-2" />
-          <h2 className="text-lg font-semibold text-zinc-200 mb-1">
-            Is this your business?
-          </h2>
-          <p className="text-sm text-zinc-500 mb-4 max-w-md mx-auto">
-            Claim your profile to manage your score, access detailed
-            recommendations, and show verified status to AI agents.
-          </p>
-          <Link
-            href={`/register?domain=${encodeURIComponent(decodedDomain)}`}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors"
-          >
-            <UserCheck className="h-4 w-4" />
-            Claim this profile
-          </Link>
+        <div className="relative rounded-xl border-2 border-emerald-800/60 bg-gradient-to-br from-emerald-950/30 to-zinc-950 p-8 text-center overflow-hidden">
+          {/* Subtle gradient glow */}
+          <div
+            className="absolute inset-0 pointer-events-none opacity-30"
+            style={{ background: 'radial-gradient(ellipse at top, rgba(16,185,129,0.15) 0%, transparent 60%)' }}
+          />
+          <div className="relative">
+            <div className="inline-flex items-center justify-center h-14 w-14 rounded-xl bg-emerald-600/20 border border-emerald-600/30 mb-4">
+              <UserCheck className="h-7 w-7 text-emerald-500" />
+            </div>
+            <h2 className="text-xl font-bold text-zinc-100 mb-2">
+              Is this your business?
+            </h2>
+            <p className="text-sm text-zinc-400 mb-6 max-w-md mx-auto leading-relaxed">
+              Claim your profile to manage your score, access detailed
+              recommendations, and show verified status to AI agents.
+            </p>
+            <Link
+              href={`/register?domain=${encodeURIComponent(decodedDomain)}`}
+              className="inline-flex items-center gap-2 px-7 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold transition-all hover:shadow-lg hover:shadow-emerald-600/20"
+            >
+              <UserCheck className="h-4 w-4" />
+              Claim this profile
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -603,14 +688,14 @@ export default async function ScorePage({
         <div className="flex flex-wrap gap-3 justify-center">
           <Link
             href={`/audit?domain=${encodeURIComponent(decodedDomain)}`}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors min-h-[44px]"
           >
             <BarChart3 className="h-4 w-4" />
             {isUnaudited ? 'Scan this business' : 'Re-scan'}
           </Link>
           <Link
             href="/leaderboard"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-zinc-700 hover:border-zinc-600 text-zinc-300 hover:text-zinc-100 text-sm font-medium transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-lg border border-zinc-700 hover:border-zinc-600 text-zinc-300 hover:text-zinc-100 text-sm font-medium transition-colors min-h-[44px]"
           >
             <Search className="h-4 w-4" />
             Browse leaderboard
@@ -618,7 +703,7 @@ export default async function ScorePage({
           {!isUnaudited && (
             <Link
               href={`/remediate?domain=${encodeURIComponent(decodedDomain)}`}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-zinc-700 hover:border-zinc-600 text-zinc-300 hover:text-zinc-100 text-sm font-medium transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-lg border border-zinc-700 hover:border-zinc-600 text-zinc-300 hover:text-zinc-100 text-sm font-medium transition-colors min-h-[44px]"
             >
               <Wrench className="h-4 w-4" />
               Improve this score

@@ -311,7 +311,7 @@ export default function ComparePage() {
                 onChange={(e) => setDomainA(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="e.g. stripe.com"
-                className="flex-1 px-3 py-2.5 rounded-lg bg-zinc-800/80 border border-zinc-700 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                className="flex-1 px-3 py-3 rounded-lg bg-zinc-800/80 border border-zinc-700 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 transition-colors min-h-[44px]"
               />
             </div>
           </div>
@@ -336,7 +336,7 @@ export default function ComparePage() {
                 onChange={(e) => setDomainB(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="e.g. shopify.com"
-                className="flex-1 px-3 py-2.5 rounded-lg bg-zinc-800/80 border border-zinc-700 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                className="flex-1 px-3 py-3 rounded-lg bg-zinc-800/80 border border-zinc-700 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 transition-colors min-h-[44px]"
               />
             </div>
           </div>
@@ -528,22 +528,22 @@ export default function ComparePage() {
 
               {/* Summary row */}
               <div className="mt-8 pt-6 border-t border-zinc-800/80">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-4 sm:gap-6">
                     <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-                      <span className="text-xs text-zinc-500">
+                      <span className="w-2.5 h-2.5 rounded-full bg-blue-500 flex-shrink-0" />
+                      <span className="text-xs text-zinc-500 truncate max-w-[120px] sm:max-w-none">
                         {dataA.domain}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-violet-500" />
-                      <span className="text-xs text-zinc-500">
+                      <span className="w-2.5 h-2.5 rounded-full bg-violet-500 flex-shrink-0" />
+                      <span className="text-xs text-zinc-500 truncate max-w-[120px] sm:max-w-none">
                         {dataB.domain}
                       </span>
                     </div>
                   </div>
-                  <div className="text-xs text-zinc-600">
+                  <div className="text-xs text-zinc-600 flex-shrink-0">
                     {DIMENSIONS.filter(
                       (d) => dimWinner(dataA, dataB, d.key) === 'a'
                     ).length}{' '}
