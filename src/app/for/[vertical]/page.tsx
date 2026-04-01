@@ -67,7 +67,7 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
 
 function ToolCard({ tool, index }: { tool: VerticalTool; index: number }) {
   return (
-    <div className="relative p-5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 hover:border-emerald-500/30 transition-colors group">
+    <div className="relative p-5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 hover:border-emerald-500/30 transition-all duration-200 group hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-500/5">
       {/* Number badge */}
       <div className="absolute -top-3 -left-2 h-6 w-6 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
         <span className="text-[10px] font-mono font-bold text-emerald-400">
@@ -88,20 +88,34 @@ function ToolCard({ tool, index }: { tool: VerticalTool; index: number }) {
         {tool.description}
       </p>
 
-      {/* Schema preview */}
-      <div className="p-3 rounded-lg bg-zinc-950/80 border border-zinc-800/50 font-mono text-xs">
-        <div className="text-zinc-500 mb-1">// Parameters</div>
-        {tool.params.map((param) => (
-          <div key={param} className="text-zinc-400">
-            <span className="text-emerald-400/70">
-              {param.split(':')[0]}
-            </span>
-            <span className="text-zinc-600">:</span>
-            <span className="text-blue-400/70">
-              {param.split(':').slice(1).join(':')}
-            </span>
+      {/* Schema preview — code-editor style */}
+      <div className="rounded-lg bg-[#0d1117] border border-zinc-800/60 overflow-hidden">
+        {/* Editor title bar */}
+        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800/50 border-b border-zinc-800/60">
+          <div className="h-2 w-2 rounded-full bg-red-500/50" />
+          <div className="h-2 w-2 rounded-full bg-amber-500/50" />
+          <div className="h-2 w-2 rounded-full bg-emerald-500/50" />
+          <span className="ml-2 text-[10px] font-mono text-zinc-600">params.ts</span>
+        </div>
+        {/* Code content */}
+        <div className="p-3 font-mono text-xs">
+          <div className="text-zinc-600 mb-1">
+            <span className="text-zinc-700 select-none mr-3">1</span>
+            <span className="text-zinc-500">// Parameters</span>
           </div>
-        ))}
+          {tool.params.map((param, i) => (
+            <div key={param} className="text-zinc-400">
+              <span className="text-zinc-700 select-none mr-3">{i + 2}</span>
+              <span className="text-emerald-400/80">
+                {param.split(':')[0]}
+              </span>
+              <span className="text-zinc-600">:</span>
+              <span className="text-blue-400/80">
+                {param.split(':').slice(1).join(':')}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -136,38 +150,44 @@ function BeforeAfter({ vertical }: { vertical: VerticalData }) {
         </div>
       </div>
 
-      {/* After */}
-      <div className="p-6 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
-        <div className="flex items-center gap-2 mb-4">
-          <CheckCircle className="h-5 w-5 text-emerald-500" />
-          <h3 className="text-lg font-bold text-emerald-400">
-            After AgentHermes
-          </h3>
-        </div>
-        <div className="space-y-3">
-          <div className="flex items-start gap-3">
-            <CheckCircle className="h-4 w-4 text-emerald-500/60 mt-0.5 flex-shrink-0" />
-            <p className="text-sm text-zinc-400">
-              AI agents discover and recommend your business
-            </p>
+      {/* After — premium emerald */}
+      <div className="relative p-6 rounded-xl bg-emerald-500/5 border border-emerald-500/30 shadow-lg shadow-emerald-500/5 overflow-hidden">
+        {/* Subtle radial glow */}
+        <div className="absolute -top-12 -right-12 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/20 border border-emerald-500/30">
+              <CheckCircle className="h-5 w-5 text-emerald-400" />
+            </div>
+            <h3 className="text-lg font-bold text-emerald-400">
+              After AgentHermes
+            </h3>
           </div>
-          <div className="flex items-start gap-3">
-            <CheckCircle className="h-4 w-4 text-emerald-500/60 mt-0.5 flex-shrink-0" />
-            <p className="text-sm text-zinc-400">
-              Customers book through any AI assistant
-            </p>
-          </div>
-          <div className="flex items-start gap-3">
-            <CheckCircle className="h-4 w-4 text-emerald-500/60 mt-0.5 flex-shrink-0" />
-            <p className="text-sm text-zinc-400">
-              Machine-readable tools expose your full service catalog
-            </p>
-          </div>
-          <div className="flex items-start gap-3">
-            <CheckCircle className="h-4 w-4 text-emerald-500/60 mt-0.5 flex-shrink-0" />
-            <p className="text-sm text-zinc-400">
-              First-mover advantage in the agent economy
-            </p>
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <CheckCircle className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-zinc-300">
+                AI agents discover and recommend your business
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <CheckCircle className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-zinc-300">
+                Customers book through any AI assistant
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <CheckCircle className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-zinc-300">
+                Machine-readable tools expose your full service catalog
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <CheckCircle className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-zinc-300">
+                First-mover advantage in the agent economy
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -228,6 +248,14 @@ export default async function VerticalLandingPage(props: PageProps) {
               <span className="text-zinc-400">For {vertical.name}</span>
             </div>
 
+            {/* Radial glow behind vertical icon */}
+            <div className="relative inline-block mb-6">
+              <div className="absolute inset-0 -m-8 rounded-full bg-emerald-500/10 blur-2xl" />
+              <div className="relative inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+                <Sparkles className="h-7 w-7 text-emerald-400" />
+              </div>
+            </div>
+
             {/* Tag */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium mb-8">
               <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-subtle-pulse" />
@@ -279,14 +307,14 @@ export default async function VerticalLandingPage(props: PageProps) {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 href={`/connect?vertical=${vertical.slug}`}
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors"
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-all duration-300 cta-button-glow"
               >
                 Get Started Free
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 href="/audit"
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold transition-colors"
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold transition-all duration-200 shadow-lg shadow-emerald-500/5 hover:shadow-emerald-500/10"
               >
                 Check Your Score
               </Link>
@@ -307,47 +335,48 @@ export default async function VerticalLandingPage(props: PageProps) {
             </p>
           </div>
 
-          {/* Agent conversation mockup */}
-          <div className="mx-auto max-w-2xl p-6 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
-            {/* User message */}
-            <div className="flex items-start gap-3 mb-6">
+          {/* Agent conversation mockup — chat bubbles */}
+          <div className="mx-auto max-w-2xl space-y-4">
+            {/* User message bubble */}
+            <div className="flex items-end gap-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500/20 border border-blue-500/30 flex-shrink-0">
                 <MessageSquare className="h-4 w-4 text-blue-400" />
               </div>
-              <div>
-                <div className="text-xs font-medium text-zinc-500 mb-1">
+              <div className="flex-1 max-w-[85%]">
+                <div className="text-[10px] font-medium text-zinc-600 mb-1 ml-1">
                   Customer
                 </div>
-                <p className="text-sm text-zinc-200 leading-relaxed">
-                  &ldquo;{vertical.agentQuery}&rdquo;
-                </p>
+                <div className="p-4 rounded-2xl rounded-bl-md bg-blue-500/10 border border-blue-500/20">
+                  <p className="text-sm text-zinc-200 leading-relaxed">
+                    &ldquo;{vertical.agentQuery}&rdquo;
+                  </p>
+                </div>
               </div>
             </div>
 
-            {/* Divider */}
-            <div className="border-t border-zinc-800/50 my-4" />
-
-            {/* Agent response */}
-            <div className="flex items-start gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/20 border border-emerald-500/30 flex-shrink-0">
-                <Bot className="h-4 w-4 text-emerald-400" />
-              </div>
-              <div>
-                <div className="text-xs font-medium text-zinc-500 mb-1">
+            {/* Agent response bubble */}
+            <div className="flex items-end gap-3 justify-end">
+              <div className="flex-1 max-w-[85%]">
+                <div className="text-[10px] font-medium text-zinc-600 mb-1 mr-1 text-right">
                   AI Agent
                 </div>
-                <p className="text-sm text-zinc-400 leading-relaxed">
-                  Searching for agent-ready {vertical.name.toLowerCase()}{' '}
-                  businesses... Found{' '}
-                  <span className="text-emerald-400 font-medium">
-                    your business
-                  </span>{' '}
-                  via MCP endpoint. Calling{' '}
-                  <span className="font-mono text-emerald-400/80 text-xs">
-                    {vertical.tools[0].name}()
-                  </span>{' '}
-                  now...
-                </p>
+                <div className="p-4 rounded-2xl rounded-br-md bg-emerald-500/10 border border-emerald-500/20">
+                  <p className="text-sm text-zinc-400 leading-relaxed">
+                    Searching for agent-ready {vertical.name.toLowerCase()}{' '}
+                    businesses... Found{' '}
+                    <span className="text-emerald-400 font-medium">
+                      your business
+                    </span>{' '}
+                    via MCP endpoint. Calling{' '}
+                    <span className="font-mono text-emerald-400/80 text-xs bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                      {vertical.tools[0].name}()
+                    </span>{' '}
+                    now...
+                  </p>
+                </div>
+              </div>
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/20 border border-emerald-500/30 flex-shrink-0">
+                <Bot className="h-4 w-4 text-emerald-400" />
               </div>
             </div>
           </div>
@@ -410,7 +439,7 @@ export default async function VerticalLandingPage(props: PageProps) {
               return (
                 <div
                   key={item}
-                  className="p-6 rounded-xl bg-emerald-500/5 border border-emerald-500/20 text-center"
+                  className="p-6 rounded-xl bg-emerald-500/5 border border-emerald-500/20 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-emerald-500/10 hover:border-emerald-500/40"
                 >
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-500/20 mx-auto mb-4">
                     <Icon className="h-6 w-6 text-emerald-400" />
@@ -458,14 +487,14 @@ export default async function VerticalLandingPage(props: PageProps) {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href={`/connect?vertical=${vertical.slug}`}
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-all duration-300 cta-button-glow"
             >
               Get Started Free
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/audit"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold transition-colors"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold transition-all duration-200 shadow-lg shadow-emerald-500/5 hover:shadow-emerald-500/10"
             >
               Check Your Score First
             </Link>

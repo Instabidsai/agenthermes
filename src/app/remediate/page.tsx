@@ -308,14 +308,15 @@ function FixStepCard({
 
   return (
     <div className={clsx(
-      'rounded-xl border overflow-hidden transition-all duration-300',
+      'rounded-xl border overflow-hidden transition-all duration-300 ease-in-out',
       isExpanded ? step.borderColor : 'border-zinc-800/60',
       isExpanded ? step.bgColor : 'bg-zinc-900/30',
+      isExpanded && 'shadow-lg shadow-zinc-950/50',
     )}>
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center gap-4 p-5 text-left hover:bg-zinc-800/20 transition-colors"
+        className="w-full flex items-center gap-4 p-5 text-left hover:bg-zinc-800/20 transition-all duration-200"
       >
         {/* Step Number */}
         <div className={clsx(
@@ -348,7 +349,7 @@ function FixStepCard({
 
       {/* Expanded Content */}
       {isExpanded && (
-        <div className="px-5 pb-5 space-y-4">
+        <div className="px-5 pb-5 space-y-4 animate-in-accordion">
           <p className="text-xs text-zinc-500 pl-14">{step.description}</p>
 
           {/* Auto Fixes */}
@@ -361,7 +362,7 @@ function FixStepCard({
               {step.autoFixes.map((fix) => (
                 <div
                   key={fix.label}
-                  className="flex items-start gap-3 p-3 rounded-lg bg-zinc-800/40 border border-emerald-800/20"
+                  className="flex items-start gap-3 p-3 rounded-lg bg-zinc-800/40 border border-emerald-800/20 transition-all duration-200 hover:border-emerald-700/30 hover:bg-zinc-800/60"
                 >
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-zinc-200 mb-0.5">{fix.label}</p>
@@ -372,7 +373,7 @@ function FixStepCard({
                       type="button"
                       onClick={() => onAutoFix(fix.generator, fix.scrollTo)}
                       disabled={generating === fix.generator}
-                      className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 text-white text-xs font-semibold transition-colors"
+                      className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 text-white text-xs font-semibold transition-all duration-200 shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 autofix-glow"
                     >
                       {generating === fix.generator ? (
                         <Loader2 className="h-3 w-3 animate-spin" />
@@ -385,7 +386,7 @@ function FixStepCard({
                     <button
                       type="button"
                       onClick={() => onAutoFix(null, fix.scrollTo)}
-                      className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-zinc-700 hover:bg-zinc-600 text-zinc-200 text-xs font-semibold transition-colors"
+                      className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-zinc-700 hover:bg-zinc-600 text-zinc-200 text-xs font-semibold transition-all duration-200 hover:shadow-md"
                     >
                       <ArrowRight className="h-3 w-3" />
                       Open Tool
@@ -986,7 +987,7 @@ function RemediatePageContent() {
         <FadeIn>
           <div className="space-y-8 mb-12">
             {/* Score Card */}
-            <div className="p-8 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
+            <div className="p-8 rounded-xl bg-zinc-900/50 border border-zinc-800/80 shadow-lg shadow-zinc-950/30">
               <div className="flex flex-col sm:flex-row items-center gap-8">
                 <ScoreGauge score={audit.total_score} size="lg" />
                 <div className="text-center sm:text-left">

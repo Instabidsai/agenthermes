@@ -348,7 +348,7 @@ export default function ComparePage() {
             type="button"
             onClick={handleCompare}
             disabled={loading}
-            className="inline-flex items-center gap-2 px-8 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-8 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-all duration-200 shadow-lg shadow-emerald-500/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
           >
             {loading ? (
               <>
@@ -489,7 +489,7 @@ export default function ComparePage() {
                           <div className="flex-1 h-3 bg-zinc-800 rounded-full overflow-hidden">
                             <div
                               className={clsx(
-                                'h-full rounded-full transition-all duration-700',
+                                'h-full rounded-full bar-animate',
                                 sa !== null
                                   ? scoreBarColor(sa)
                                   : 'bg-zinc-700'
@@ -508,7 +508,7 @@ export default function ComparePage() {
                           <div className="flex-1 h-3 bg-zinc-800 rounded-full overflow-hidden">
                             <div
                               className={clsx(
-                                'h-full rounded-full transition-all duration-700',
+                                'h-full rounded-full bar-animate',
                                 sb !== null
                                   ? scoreBarColor(sb)
                                   : 'bg-zinc-700'
@@ -626,27 +626,40 @@ export default function ComparePage() {
               colorA: 'text-pink-400',
               colorB: 'text-indigo-400',
             },
-          ].map((c) => (
-            <Link
-              key={c.href}
-              href={c.href}
-              className="group p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/80 hover:border-emerald-500/30 transition-colors"
-            >
-              <h3 className="text-sm font-bold text-zinc-100 mb-1 group-hover:text-emerald-400 transition-colors">
-                {c.title}
-              </h3>
-              <p className="text-xs text-zinc-500 mb-3">{c.desc}</p>
-              <div className="flex items-center justify-between text-xs">
-                <span className={c.colorA}>
-                  {c.labelA}: <span className="font-bold">{c.scoreA}</span>
-                </span>
-                <span className="text-zinc-600">vs</span>
-                <span className={c.colorB}>
-                  {c.labelB}: <span className="font-bold">{c.scoreB}</span>
-                </span>
-              </div>
-            </Link>
-          ))}
+          ].map((c) => {
+            const scoreBadgeColor = (score: number) => {
+              if (score >= 60) return 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+              if (score >= 40) return 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+              return 'bg-red-500/15 text-red-400 border-red-500/30'
+            }
+            return (
+              <Link
+                key={c.href}
+                href={c.href}
+                className="group p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/80 hover:border-emerald-500/30 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-emerald-500/5"
+              >
+                <h3 className="text-sm font-bold text-zinc-100 mb-1 group-hover:text-emerald-400 transition-colors">
+                  {c.title}
+                </h3>
+                <p className="text-xs text-zinc-500 mb-3">{c.desc}</p>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="flex items-center gap-1.5">
+                    <span className={c.colorA}>{c.labelA}</span>
+                    <span className={clsx('inline-flex items-center px-1.5 py-0.5 rounded-full border text-[10px] font-bold', scoreBadgeColor(c.scoreA))}>
+                      {c.scoreA}
+                    </span>
+                  </span>
+                  <span className="text-zinc-600 font-medium">vs</span>
+                  <span className="flex items-center gap-1.5">
+                    <span className={clsx('inline-flex items-center px-1.5 py-0.5 rounded-full border text-[10px] font-bold', scoreBadgeColor(c.scoreB))}>
+                      {c.scoreB}
+                    </span>
+                    <span className={c.colorB}>{c.labelB}</span>
+                  </span>
+                </div>
+              </Link>
+            )
+          })}
         </div>
       </div>
 

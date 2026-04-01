@@ -264,7 +264,7 @@ export default function StripeVsOpenAIPage() {
         {/* ----------------------------------------------------------------- */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
           {/* Stripe */}
-          <div className="flex flex-col items-center gap-4 p-8 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
+          <div className="flex flex-col items-center gap-4 p-8 rounded-xl bg-zinc-900/50 border border-blue-500/20 shadow-lg shadow-blue-500/5">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
               <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
@@ -286,7 +286,7 @@ export default function StripeVsOpenAIPage() {
           </div>
 
           {/* OpenAI */}
-          <div className="flex flex-col items-center gap-4 p-8 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
+          <div className="flex flex-col items-center gap-4 p-8 rounded-xl bg-zinc-900/50 border border-violet-500/20 shadow-lg shadow-violet-500/5">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-violet-500" />
               <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
@@ -423,13 +423,16 @@ export default function StripeVsOpenAIPage() {
                       <span className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />
                       <div className="flex-1 h-3 bg-zinc-800 rounded-full overflow-hidden">
                         <div
-                          className={`h-full rounded-full ${barColor(dim.score)}`}
+                          className={`h-full rounded-full bar-animate ${barColor(dim.score)}`}
                           style={{ width: `${dim.score}%` }}
                         />
                       </div>
                       <span className="text-xs font-mono font-medium text-zinc-400 w-8 text-right tabular-nums">
                         {dim.score}
                       </span>
+                      {stripeWinsDim && (
+                        <Trophy className="h-3 w-3 text-emerald-400 flex-shrink-0" />
+                      )}
                     </div>
 
                     {/* OpenAI bar */}
@@ -437,13 +440,16 @@ export default function StripeVsOpenAIPage() {
                       <span className="w-2 h-2 rounded-full bg-violet-500 flex-shrink-0" />
                       <div className="flex-1 h-3 bg-zinc-800 rounded-full overflow-hidden">
                         <div
-                          className={`h-full rounded-full ${barColor(openaiDim.score)}`}
+                          className={`h-full rounded-full bar-animate ${barColor(openaiDim.score)}`}
                           style={{ width: `${openaiDim.score}%` }}
                         />
                       </div>
                       <span className="text-xs font-mono font-medium text-zinc-400 w-8 text-right tabular-nums">
                         {openaiDim.score}
                       </span>
+                      {openaiWinsDim && (
+                        <Trophy className="h-3 w-3 text-emerald-400 flex-shrink-0" />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -662,14 +668,14 @@ export default function StripeVsOpenAIPage() {
           <div className="flex items-center justify-center gap-4 flex-wrap">
             <Link
               href="/audit"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-all duration-300 cta-button-glow"
             >
               Scan Your Site
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/compare"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-semibold transition-colors border border-zinc-700"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-semibold transition-all duration-200 border border-zinc-700 shadow-lg shadow-emerald-500/5 hover:shadow-emerald-500/10"
             >
               Compare Two Businesses
               <Scale className="h-4 w-4" />

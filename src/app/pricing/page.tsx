@@ -225,6 +225,8 @@ export default function PricingPage() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.03)_1px,transparent_1px)] bg-[size:64px_64px]" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#09090b]" />
+        {/* Radial emerald glow behind title */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-emerald-500/[0.07] rounded-full blur-[120px] pointer-events-none" />
 
         <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pt-24 pb-16 sm:pt-32 sm:pb-20">
           <div className="text-center">
@@ -253,10 +255,10 @@ export default function PricingPage() {
             {tiers.map((tier) => (
               <div
                 key={tier.name}
-                className={`relative flex flex-col rounded-xl border p-6 lg:p-8 transition-all duration-200 ${
+                className={`relative flex flex-col rounded-xl border p-6 lg:p-8 transition-all duration-200 hover:-translate-y-1 ${
                   tier.highlighted
-                    ? 'border-emerald-500/50 bg-emerald-500/[0.04] shadow-[0_0_40px_-12px_rgba(16,185,129,0.15)] hover:shadow-lg hover:shadow-emerald-500/5'
-                    : 'border-zinc-800/80 bg-zinc-900/50 hover:border-zinc-700/80 hover:shadow-lg hover:shadow-zinc-500/5'
+                    ? 'border-emerald-500/50 bg-emerald-500/[0.04] shadow-[0_0_40px_-12px_rgba(16,185,129,0.2)] hover:shadow-[0_0_60px_-12px_rgba(16,185,129,0.25)] ring-1 ring-emerald-500/20'
+                    : 'border-zinc-800/80 bg-zinc-900/50 hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/5'
                 }`}
               >
                 {/* Most Popular badge */}
@@ -306,10 +308,10 @@ export default function PricingPage() {
                 {/* CTA */}
                 <Link
                   href={tier.ctaHref}
-                  className={`flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg text-sm font-semibold transition-colors mb-8 ${
+                  className={`flex items-center justify-center gap-2 w-full px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-200 mb-8 ${
                     tier.highlighted
-                      ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                      : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700/50'
+                      ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/10'
+                      : 'border border-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white'
                   }`}
                 >
                   {tier.cta}
@@ -327,11 +329,7 @@ export default function PricingPage() {
                       className="flex items-start gap-3 text-sm"
                     >
                       <Check
-                        className={`h-4 w-4 mt-0.5 flex-shrink-0 ${
-                          tier.highlighted
-                            ? 'text-emerald-500'
-                            : 'text-zinc-500'
-                        }`}
+                        className="h-4 w-4 mt-0.5 flex-shrink-0 text-emerald-500"
                       />
                       <span className="text-zinc-300">{feature}</span>
                     </li>
@@ -347,10 +345,10 @@ export default function PricingPage() {
       <section className="py-20 sm:py-28 border-t border-zinc-800/50">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-4">
               Compare Plans
             </h2>
-            <p className="text-zinc-400 text-lg max-w-xl mx-auto">
+            <p className="text-zinc-400 leading-relaxed text-lg max-w-xl mx-auto">
               Full feature breakdown across all tiers.
             </p>
           </div>
@@ -462,16 +460,16 @@ export default function PricingPage() {
       {/* Bottom CTA */}
       <section className="py-24 sm:py-32 border-t border-zinc-800/50">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-4">
             Start Free &mdash; No credit card required
           </h2>
-          <p className="text-zinc-400 text-lg mb-10 max-w-lg mx-auto">
+          <p className="text-zinc-400 leading-relaxed text-lg mb-10 max-w-lg mx-auto">
             Get your Agent Readiness Score in 60 seconds. Upgrade whenever
             you&apos;re ready for continuous monitoring.
           </p>
           <Link
             href="/audit"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors"
+            className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg px-8 py-4 shadow-lg shadow-emerald-500/10 font-semibold transition-all duration-200"
           >
             Get Your Score Now
             <ArrowRight className="h-4 w-4" />

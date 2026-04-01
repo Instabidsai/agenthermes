@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { CopyButton } from '@/components/CopyButton'
 import {
   Code2,
   Terminal,
@@ -52,13 +53,16 @@ function CodeBlock({
   children: string
 }) {
   return (
-    <div className="rounded-xl border border-zinc-800/80 bg-zinc-950 overflow-hidden">
+    <div className="rounded-xl border border-zinc-800/80 bg-[#0d1117] overflow-hidden group/code">
       {label && (
-        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-zinc-800/80 bg-zinc-900/50">
-          <span className="text-[11px] font-mono font-semibold text-emerald-400 uppercase tracking-wider">
-            {language}
-          </span>
-          <span className="text-[11px] text-zinc-600 font-mono">{label}</span>
+        <div className="flex items-center justify-between px-4 py-2.5 border-b border-zinc-800/80 bg-zinc-900/50">
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-mono font-semibold text-emerald-400 uppercase tracking-wider">
+              {language}
+            </span>
+            <span className="text-[11px] text-zinc-600 font-mono">{label}</span>
+          </div>
+          <CopyButton text={children} />
         </div>
       )}
       <pre className="p-4 overflow-x-auto text-sm leading-relaxed">
@@ -118,10 +122,10 @@ function ApiCategory({
   children: React.ReactNode
 }) {
   return (
-    <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/30 overflow-hidden">
+    <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/30 overflow-hidden hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/5 hover:-translate-y-0.5 transition-all duration-200 group">
       <div className="flex items-center gap-3 px-5 py-4 border-b border-zinc-800/80 bg-zinc-900/50">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-800/80 border border-zinc-700/50">
-          <Icon className="h-4 w-4 text-zinc-300" />
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-800/80 border border-zinc-700/50 group-hover:bg-emerald-500/10 group-hover:border-emerald-500/20 transition-all duration-200">
+          <Icon className="h-4 w-4 text-zinc-300 group-hover:text-emerald-400 transition-colors duration-200" />
         </div>
         <h3 className="text-sm font-semibold text-zinc-200">{title}</h3>
       </div>
@@ -194,6 +198,8 @@ export default function DevelopersPage() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.03)_1px,transparent_1px)] bg-[size:64px_64px]" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#09090b]" />
+        {/* Radial emerald glow behind title */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-emerald-500/[0.07] rounded-full blur-[120px] pointer-events-none" />
 
         <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 pt-24 pb-16 sm:pt-32 sm:pb-20">
           <div className="text-center">
@@ -218,7 +224,7 @@ export default function DevelopersPage() {
                 <a
                   key={item.id}
                   href={`#${item.id}`}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium text-zinc-400 bg-zinc-900/60 border border-zinc-800/80 hover:text-zinc-200 hover:border-zinc-700 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium text-zinc-400 bg-zinc-900/60 border border-zinc-800/80 hover:text-emerald-400 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all duration-200"
                 >
                   {item.label}
                 </a>
@@ -306,7 +312,7 @@ print(results.businesses)`}
 
           <div className="grid gap-5">
             {/* Endpoints */}
-            <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/30 p-5">
+            <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/50 p-5 hover:border-emerald-500/30 transition-all duration-200">
               <h3 className="text-sm font-semibold text-zinc-200 mb-4">Endpoints</h3>
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
@@ -327,7 +333,7 @@ print(results.businesses)`}
             </div>
 
             {/* Tools */}
-            <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/30 p-5">
+            <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/50 p-5 hover:border-emerald-500/30 transition-all duration-200">
               <h3 className="text-sm font-semibold text-zinc-200 mb-4">7 Tools</h3>
               <div className="space-y-2">
                 {[
@@ -351,7 +357,7 @@ print(results.businesses)`}
 
             {/* Resources & Prompts */}
             <div className="grid sm:grid-cols-2 gap-5">
-              <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/30 p-5">
+              <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/50 p-5 hover:border-emerald-500/30 transition-all duration-200">
                 <h3 className="text-sm font-semibold text-zinc-200 mb-4">4 Resources</h3>
                 <div className="space-y-2">
                   {[
@@ -368,7 +374,7 @@ print(results.businesses)`}
                 </div>
               </div>
 
-              <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/30 p-5">
+              <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/50 p-5 hover:border-emerald-500/30 transition-all duration-200">
                 <h3 className="text-sm font-semibold text-zinc-200 mb-4">3 Prompts</h3>
                 <div className="space-y-2">
                   {[
@@ -533,7 +539,7 @@ print(results.businesses)`}
           </p>
 
           <div className="grid gap-5">
-            <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/30 p-5">
+            <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/50 p-5 hover:border-emerald-500/30 transition-all duration-200">
               <h3 className="text-sm font-semibold text-zinc-200 mb-3">How it works</h3>
               <ol className="space-y-3 text-sm text-zinc-400">
                 <li className="flex gap-3">
@@ -596,7 +602,7 @@ const keys = await hermes.apiKeys.list()`}
 
           <div className="grid sm:grid-cols-2 gap-5">
             {/* TypeScript */}
-            <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/30 p-5">
+            <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/50 p-5 hover:border-emerald-500/30 hover:-translate-y-0.5 transition-all duration-200">
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 border border-blue-500/20">
                   <Terminal className="h-4 w-4 text-blue-400" />
@@ -612,7 +618,7 @@ const keys = await hermes.apiKeys.list()`}
             </div>
 
             {/* Python */}
-            <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/30 p-5">
+            <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/50 p-5 hover:border-emerald-500/30 hover:-translate-y-0.5 transition-all duration-200">
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-yellow-500/10 border border-yellow-500/20">
                   <Terminal className="h-4 w-4 text-yellow-400" />
@@ -628,7 +634,7 @@ const keys = await hermes.apiKeys.list()`}
             </div>
 
             {/* LangChain */}
-            <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/30 p-5">
+            <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/50 p-5 hover:border-emerald-500/30 hover:-translate-y-0.5 transition-all duration-200">
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                   <Globe className="h-4 w-4 text-emerald-400" />
@@ -650,7 +656,7 @@ agent = initialize_agent(tools, llm)`}
             </div>
 
             {/* CrewAI */}
-            <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/30 p-5">
+            <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/50 p-5 hover:border-emerald-500/30 hover:-translate-y-0.5 transition-all duration-200">
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/10 border border-purple-500/20">
                   <Globe className="h-4 w-4 text-purple-400" />
@@ -714,7 +720,7 @@ researcher = Agent(
               <Link
                 key={file.path}
                 href={file.path}
-                className="flex items-center gap-4 p-4 rounded-xl border border-zinc-800/80 bg-zinc-900/30 hover:border-zinc-700/80 hover:bg-zinc-900/50 transition-colors group"
+                className="flex items-center gap-4 p-4 rounded-xl border border-zinc-800/80 bg-zinc-900/30 hover:border-emerald-500/30 hover:bg-zinc-900/50 hover:shadow-lg hover:shadow-emerald-500/5 hover:-translate-y-0.5 transition-all duration-200 group"
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-800/80 border border-zinc-700/50 flex-shrink-0">
                   <FileText className="h-5 w-5 text-zinc-400 group-hover:text-emerald-400 transition-colors" />
@@ -748,8 +754,8 @@ researcher = Agent(
             headers.
           </p>
 
-          <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/30 overflow-hidden">
-            <div className="grid grid-cols-[1fr_auto] gap-4 px-5 py-3 border-b border-zinc-800/80 bg-zinc-900/50">
+          <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/50 overflow-hidden hover:border-emerald-500/30 transition-all duration-200">
+            <div className="grid grid-cols-[1fr_auto] gap-4 px-5 py-3 border-b border-zinc-800/80 bg-zinc-900/60">
               <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Endpoint</span>
               <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Limit</span>
             </div>
@@ -774,7 +780,7 @@ researcher = Agent(
             </div>
           </div>
 
-          <div className="mt-5 rounded-xl border border-zinc-800/80 bg-zinc-900/30 p-5">
+          <div className="mt-5 rounded-xl border border-zinc-800/80 bg-zinc-900/50 p-5 hover:border-emerald-500/30 transition-all duration-200">
             <h3 className="text-sm font-semibold text-zinc-200 mb-3">Response Headers</h3>
             <div className="space-y-2 text-sm">
               {[
@@ -799,30 +805,30 @@ researcher = Agent(
         {/* ============================================================ */}
         <section className="pt-8 border-t border-zinc-800/50">
           <div className="text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-4">
               Ready to integrate?
             </h2>
-            <p className="text-zinc-400 mb-8 max-w-lg mx-auto">
+            <p className="text-zinc-400 leading-relaxed mb-8 max-w-lg mx-auto">
               Start with a free score lookup. No API key required.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3">
               <Link
                 href="/audit"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors"
+                className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg px-6 py-3 shadow-lg shadow-emerald-500/10 font-semibold transition-all duration-200"
               >
                 Try the Scanner
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 href="/openapi.json"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold border border-zinc-700/50 transition-colors"
+                className="inline-flex items-center gap-2 border border-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white rounded-lg px-6 py-3 font-semibold transition-all duration-200"
               >
                 <FileText className="h-4 w-4" />
                 OpenAPI Spec
               </Link>
               <Link
                 href="/register"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold border border-zinc-700/50 transition-colors"
+                className="inline-flex items-center gap-2 border border-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white rounded-lg px-6 py-3 font-semibold transition-all duration-200"
               >
                 <Shield className="h-4 w-4" />
                 Register Your Business

@@ -149,6 +149,8 @@ export default function AboutPage() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.03)_1px,transparent_1px)] bg-[size:64px_64px]" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#09090b]" />
+        {/* Radial emerald glow behind title */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-emerald-500/[0.07] rounded-full blur-[120px] pointer-events-none" />
 
         <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 pt-24 pb-20 sm:pt-32 sm:pb-28">
           <div className="text-center">
@@ -210,15 +212,15 @@ export default function AboutPage() {
             {problemStats.map((stat) => (
               <div
                 key={stat.label}
-                className="relative p-6 rounded-xl bg-zinc-900/50 border border-zinc-800/80 hover:border-red-500/30 transition-colors text-center group"
+                className="relative p-6 rounded-xl bg-zinc-900/50 border border-zinc-800/80 hover:border-red-500/30 hover:shadow-lg hover:shadow-red-500/5 hover:-translate-y-0.5 transition-all duration-200 text-center group"
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-500/10 border border-red-500/20 mx-auto mb-4 group-hover:bg-red-500/15 transition-colors">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-500/10 border border-red-500/20 mx-auto mb-4 group-hover:bg-red-500/15 group-hover:scale-110 transition-all duration-200">
                   <stat.icon className="h-6 w-6 text-red-400" />
                 </div>
                 <div className="text-3xl sm:text-4xl font-bold text-zinc-100 mb-2 font-mono tabular-nums">
                   {stat.value}
                 </div>
-                <p className="text-sm text-zinc-500">{stat.label}</p>
+                <p className="text-sm text-zinc-500 leading-relaxed">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -249,7 +251,7 @@ export default function AboutPage() {
             {products.map((product, idx) => (
               <div
                 key={product.title}
-                className={`relative p-8 lg:p-10 rounded-2xl ${product.bgColor} border ${product.borderColor} hover:border-opacity-60 transition-all`}
+                className={`relative p-8 lg:p-10 rounded-2xl ${product.bgColor} border ${product.borderColor} hover:shadow-lg hover:shadow-${product.color}-500/5 hover:-translate-y-0.5 transition-all duration-200`}
               >
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                   <div>
@@ -280,12 +282,12 @@ export default function AboutPage() {
 
                     <Link
                       href={product.href}
-                      className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-white text-sm font-semibold transition-colors ${
+                      className={`inline-flex items-center gap-2 px-6 py-3 rounded-lg text-white text-sm font-semibold transition-all duration-200 ${
                         product.color === 'emerald'
-                          ? 'bg-emerald-600 hover:bg-emerald-500'
+                          ? 'bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-500/10'
                           : product.color === 'blue'
-                            ? 'bg-blue-600 hover:bg-blue-500'
-                            : 'bg-purple-600 hover:bg-purple-500'
+                            ? 'bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-500/10'
+                            : 'bg-purple-600 hover:bg-purple-500 shadow-lg shadow-purple-500/10'
                       }`}
                     >
                       Learn More
@@ -341,10 +343,10 @@ export default function AboutPage() {
             {techStack.map((tech) => (
               <div
                 key={tech.label}
-                className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/80 hover:border-emerald-500/30 transition-colors"
+                className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/80 hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/5 hover:-translate-y-0.5 transition-all duration-200 group"
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <Plug className="h-4 w-4 text-emerald-500/70" />
+                  <Plug className="h-4 w-4 text-emerald-500/70 group-hover:text-emerald-400 group-hover:scale-110 transition-all duration-200" />
                   <h3 className="text-sm font-semibold text-zinc-200">
                     {tech.label}
                   </h3>
@@ -398,14 +400,14 @@ export default function AboutPage() {
             <div className="flex flex-wrap items-center justify-center gap-4 mt-6">
               <Link
                 href="/blog/mcp-gap"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-800/60 hover:bg-zinc-700/60 text-zinc-300 text-sm font-medium transition-colors border border-zinc-700/50"
+                className="inline-flex items-center gap-2 border border-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white rounded-lg px-6 py-3 text-sm font-medium transition-all duration-200"
               >
                 Read: The MCP Gap
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
               <Link
                 href="/compare"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-800/60 hover:bg-zinc-700/60 text-zinc-300 text-sm font-medium transition-colors border border-zinc-700/50"
+                className="inline-flex items-center gap-2 border border-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white rounded-lg px-6 py-3 text-sm font-medium transition-all duration-200"
               >
                 Compare Platforms
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -428,14 +430,14 @@ export default function AboutPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/audit"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors"
+              className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg px-8 py-4 shadow-lg shadow-emerald-500/10 font-semibold transition-all duration-200"
             >
               Check Your Score
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/register"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold transition-colors"
+              className="inline-flex items-center gap-2 border border-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white rounded-lg px-8 py-4 font-semibold transition-all duration-200"
             >
               Get Started Free
               <Zap className="h-4 w-4" />

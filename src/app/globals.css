@@ -569,6 +569,38 @@ details[open] > summary ~ * {
   }
 }
 
+/* Accordion smooth expand for fix-step cards */
+.animate-in-accordion {
+  animation: accordion-expand 0.3s ease-out;
+}
+
+@keyframes accordion-expand {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    max-height: 1000px;
+    transform: translateY(0);
+  }
+}
+
+/* Auto-fix button subtle glow pulse */
+.autofix-glow {
+  animation: autofix-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes autofix-pulse {
+  0%, 100% {
+    box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+  }
+  50% {
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35), 0 0 20px rgba(16, 185, 129, 0.1);
+  }
+}
+
 /* Section divider with gradient */
 .section-divider {
   position: relative;
@@ -650,7 +682,9 @@ details[open] > summary ~ * {
   .animate-subtle-pulse,
   .animate-pulse,
   .badge-glow,
-  .hero-gradient-bg {
+  .hero-gradient-bg,
+  .autofix-glow,
+  .animate-in-accordion {
     animation: none !important;
   }
   .card-hover-lift:hover {
