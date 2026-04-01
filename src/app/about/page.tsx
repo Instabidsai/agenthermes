@@ -381,15 +381,36 @@ export default function AboutPage() {
             <p className="text-zinc-400 leading-relaxed max-w-2xl mx-auto mb-4">
               The businesses that are agent-ready first will capture the market.
               The ones that aren&apos;t will become invisible to an entire
-              generation of buyers.
+              generation of buyers. Our{' '}
+              <Link href="/report/state-of-readiness" className="text-emerald-400 hover:text-emerald-300 underline decoration-emerald-400/30">
+                State of Readiness Report
+              </Link>{' '}
+              shows where the industry stands today — and it&apos;s not pretty.
             </p>
 
-            <p className="text-zinc-400 leading-relaxed max-w-2xl mx-auto">
+            <p className="text-zinc-400 leading-relaxed max-w-2xl mx-auto mb-4">
               We&apos;re building the infrastructure layer that makes this
               transition simple for everyone — not just the companies with
               engineering teams and AI budgets. Score your readiness, fix your
               gaps, connect to the network. That&apos;s it.
             </p>
+
+            <div className="flex flex-wrap items-center justify-center gap-4 mt-6">
+              <Link
+                href="/blog/mcp-gap"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-800/60 hover:bg-zinc-700/60 text-zinc-300 text-sm font-medium transition-colors border border-zinc-700/50"
+              >
+                Read: The MCP Gap
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+              <Link
+                href="/compare"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-800/60 hover:bg-zinc-700/60 text-zinc-300 text-sm font-medium transition-colors border border-zinc-700/50"
+              >
+                Compare Platforms
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
           </div>
         </div>
       </section>

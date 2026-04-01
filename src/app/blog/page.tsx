@@ -7,9 +7,11 @@ import {
   Calendar,
   Clock,
   FileText,
+  Globe,
   Layers,
   Lightbulb,
   TrendingUp,
+  UtensilsCrossed,
   Zap,
 } from 'lucide-react'
 
@@ -45,6 +47,28 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'What Is Agent Readiness? The Complete Guide',
+    excerpt:
+      'The definitive explainer: why agent readiness matters, the 7 ARL levels, the 6-step agent journey, 9 scoring dimensions, and data from scanning 238+ businesses. If you read one article about agent readiness, make it this one.',
+    date: '2026-03-30',
+    readTime: '18 min read',
+    href: '/blog/what-is-agent-readiness',
+    tag: 'Complete Guide',
+    tagColor: 'emerald',
+    icon: Globe,
+  },
+  {
+    title: 'What Agent-Ready Means for Restaurants — From PDF Menus to AI Agents',
+    excerpt:
+      '60% of restaurants are invisible to AI agents. Learn the 5-level progression from PDF menus and phone reservations to a restaurant with its own AI agent that negotiates group bookings and fills empty tables automatically.',
+    date: '2026-03-30',
+    readTime: '14 min read',
+    href: '/blog/agent-ready-restaurants',
+    tag: 'Industry Analysis',
+    tagColor: 'amber',
+    icon: UtensilsCrossed,
+  },
   {
     title: 'State of Agent Readiness: Most Businesses Score Under 40',
     excerpt:

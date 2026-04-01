@@ -335,9 +335,15 @@ export default async function HomePage() {
               The Agent Economy Is Coming
             </h2>
             <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
-              Every autonomous transaction follows the same 6-step journey. Your
-              Agent Readiness Score measures how far agents can get with your
-              business.
+              Every autonomous transaction follows the same{' '}
+              <Link
+                href="/what-is-agent-ready"
+                className="text-emerald-400 hover:text-emerald-300 underline decoration-emerald-400/30"
+              >
+                6-step journey
+              </Link>
+              . Your Agent Readiness Score measures how far agents can get with
+              your business.
             </p>
           </div>
 
@@ -514,13 +520,20 @@ export default async function HomePage() {
             </div>
           )}
 
-          <div className="text-center">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/leaderboard"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-sm font-semibold transition-colors"
             >
               See the Full Leaderboard
               <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              href="/blog"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-zinc-800/60 hover:bg-zinc-700/60 text-zinc-400 text-sm font-semibold transition-colors border border-zinc-700/50"
+            >
+              Read Our Research
+              <BookOpen className="h-4 w-4" />
             </Link>
           </div>
         </div>
@@ -575,6 +588,19 @@ export default async function HomePage() {
                 </p>
               </details>
             ))}
+          </div>
+
+          <div className="mt-8 text-center">
+            <p className="text-sm text-zinc-500 mb-3">
+              New to the agent economy? Explore key terms and concepts.
+            </p>
+            <Link
+              href="/glossary"
+              className="inline-flex items-center gap-2 text-sm text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
+            >
+              Agent Economy Glossary
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
           </div>
         </div>
       </section>

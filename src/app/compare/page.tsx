@@ -569,8 +569,30 @@ export default function ComparePage() {
         <h2 className="text-lg font-semibold text-zinc-100 mb-4">
           Featured Comparisons
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[
+            {
+              title: 'Supabase vs Firebase',
+              href: '/compare/supabase-vs-firebase',
+              desc: 'Our #1 scorer (69 Silver) vs Google\'s BaaS. Which database platform is more agent-operable?',
+              scoreA: 69,
+              scoreB: 51,
+              labelA: 'Supabase',
+              labelB: 'Firebase',
+              colorA: 'text-emerald-400',
+              colorB: 'text-amber-400',
+            },
+            {
+              title: 'GitHub vs GitLab',
+              href: '/compare/github-vs-gitlab',
+              desc: 'MCP server, Copilot, Actions — which dev platform is more agent-ready?',
+              scoreA: 62,
+              scoreB: 54,
+              labelA: 'GitHub',
+              labelB: 'GitLab',
+              colorA: 'text-blue-400',
+              colorB: 'text-orange-400',
+            },
             {
               title: 'Stripe vs OpenAI',
               href: '/compare/stripe-vs-openai',
