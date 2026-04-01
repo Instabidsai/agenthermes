@@ -15,7 +15,7 @@ Make any business discoverable, usable, and payable by AI agents.
 - Detects: MCP, A2A, agent-card.json, llms.txt, AGENTS.md, UCP, ACP, x402, OpenAPI
 - Detects platforms: Shopify, WooCommerce, Square (src/lib/adapters/)
 - AgentJourneyScore component: "X of 6 steps ready" with pass/partial/fail
-- 139 businesses scored, avg 39/100. Top: Supabase 69, Vercel 69, Slack 68, Stripe 68
+- 238+ businesses scored, avg ~42/100. Top: Supabase 69, Vercel 69, Slack 68, Stripe 68
 
 ### Fix It (freemium) — /remediate, /connect, /for/{vertical}
 - 15 vertical templates with 5 MCP tools each (src/lib/verticals/templates.ts)
@@ -60,8 +60,8 @@ Make any business discoverable, usable, and payable by AI agents.
 /compare, /changelog, /status, /developers, /pricing, /analytics, /discover
 
 ## Stats
-- 243 pages | 204 TS files | 104 routes | 139 businesses | 61 commits
-- 6 research docs | 15 verticals | 3 e-commerce adapters | 27 scoring profiles
+- 387 pages | 204 TS files | 105 routes | 238+ businesses | 61 commits
+- 6 research docs | 50 verticals | 3 e-commerce adapters | 27 scoring profiles
 
 ## Hard Rules
 1. verify_jwt = false on all Supabase functions

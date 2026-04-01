@@ -564,6 +564,70 @@ export default function ComparePage() {
         </div>
       )}
 
+      {/* Featured Comparisons */}
+      <div className="mt-10">
+        <h2 className="text-lg font-semibold text-zinc-100 mb-4">
+          Featured Comparisons
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {[
+            {
+              title: 'Stripe vs OpenAI',
+              href: '/compare/stripe-vs-openai',
+              desc: 'Payment platform vs AI platform — who is more agent-ready?',
+              scoreA: 55,
+              scoreB: 50,
+              labelA: 'Stripe',
+              labelB: 'OpenAI',
+              colorA: 'text-blue-400',
+              colorB: 'text-violet-400',
+            },
+            {
+              title: 'Shopify vs WooCommerce',
+              href: '/compare/shopify-vs-woocommerce',
+              desc: 'Hosted vs self-hosted e-commerce for agent readiness.',
+              scoreA: 50,
+              scoreB: 38,
+              labelA: 'Shopify',
+              labelB: 'WooCommerce',
+              colorA: 'text-green-400',
+              colorB: 'text-purple-400',
+            },
+            {
+              title: 'Slack vs Discord',
+              href: '/compare/slack-vs-discord',
+              desc: 'Enterprise vs community — which bot ecosystem is agent-native?',
+              scoreA: 64,
+              scoreB: 52,
+              labelA: 'Slack',
+              labelB: 'Discord',
+              colorA: 'text-pink-400',
+              colorB: 'text-indigo-400',
+            },
+          ].map((c) => (
+            <Link
+              key={c.href}
+              href={c.href}
+              className="group p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/80 hover:border-emerald-500/30 transition-colors"
+            >
+              <h3 className="text-sm font-bold text-zinc-100 mb-1 group-hover:text-emerald-400 transition-colors">
+                {c.title}
+              </h3>
+              <p className="text-xs text-zinc-500 mb-3">{c.desc}</p>
+              <div className="flex items-center justify-between text-xs">
+                <span className={c.colorA}>
+                  {c.labelA}: <span className="font-bold">{c.scoreA}</span>
+                </span>
+                <span className="text-zinc-600">vs</span>
+                <span className={c.colorB}>
+                  {c.labelB}: <span className="font-bold">{c.scoreB}</span>
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+
       {/* Empty state — before any comparison */}
       {!compared && !loading && (
         <div className="text-center py-16 rounded-xl bg-zinc-900/30 border border-zinc-800/50">

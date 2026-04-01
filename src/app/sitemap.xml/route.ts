@@ -20,13 +20,57 @@ export async function GET() {
     { loc: '/report', priority: '0.7', changefreq: 'weekly' },
     { loc: '/analytics', priority: '0.6', changefreq: 'weekly' },
     { loc: '/changelog', priority: '0.5', changefreq: 'weekly' },
+    { loc: '/glossary', priority: '0.8', changefreq: 'weekly' },
+    { loc: '/faq', priority: '0.7', changefreq: 'weekly' },
+    { loc: '/what-is-agent-ready', priority: '0.8', changefreq: 'monthly' },
+    { loc: '/commerce', priority: '0.7', changefreq: 'weekly' },
+    { loc: '/integrations', priority: '0.7', changefreq: 'weekly' },
+    { loc: '/blog', priority: '0.8', changefreq: 'daily' },
+    { loc: '/pricing', priority: '0.7', changefreq: 'monthly' },
+    { loc: '/developers', priority: '0.7', changefreq: 'weekly' },
+    { loc: '/stats', priority: '0.6', changefreq: 'daily' },
+    { loc: '/standard', priority: '0.7', changefreq: 'monthly' },
+    { loc: '/about', priority: '0.5', changefreq: 'monthly' },
+    { loc: '/connect', priority: '0.7', changefreq: 'weekly' },
+    { loc: '/playground', priority: '0.6', changefreq: 'weekly' },
+    { loc: '/status', priority: '0.5', changefreq: 'daily' },
+    { loc: '/digest', priority: '0.6', changefreq: 'daily' },
   ]
 
-  // Vertical landing pages
+  // Comparison pages
+  const comparePages = [
+    { loc: '/compare/stripe-vs-openai', priority: '0.7', changefreq: 'weekly' },
+    { loc: '/compare/shopify-vs-woocommerce', priority: '0.7', changefreq: 'weekly' },
+    { loc: '/compare/slack-vs-discord', priority: '0.7', changefreq: 'weekly' },
+  ]
+
+  // Report pages
+  const reportPages = [
+    { loc: '/report/state-of-readiness', priority: '0.8', changefreq: 'weekly' },
+    { loc: '/report/saas-readiness', priority: '0.7', changefreq: 'weekly' },
+    { loc: '/report/retail-readiness', priority: '0.7', changefreq: 'weekly' },
+    { loc: '/report/enterprise-readiness', priority: '0.7', changefreq: 'weekly' },
+  ]
+
+  // Blog posts
+  const blogPages = [
+    { loc: '/blog/why-stripe-scores-68', priority: '0.7', changefreq: 'monthly' },
+    { loc: '/blog/mcp-gap', priority: '0.7', changefreq: 'monthly' },
+    { loc: '/blog/arl-levels-explained', priority: '0.7', changefreq: 'monthly' },
+  ]
+
+  // All 50 vertical landing pages
   const verticals = [
-    'restaurants', 'hvac', 'plumbing', 'electricians', 'roofing',
-    'dental', 'legal', 'real-estate', 'auto-repair', 'landscaping',
-    'fitness', 'salons', 'insurance', 'accounting', 'veterinary',
+    'restaurants', 'hvac', 'lawn-care', 'plumbing', 'cleaning',
+    'roofing', 'dentist', 'auto-dealer', 'law-firm', 'real-estate',
+    'saas', 'ecommerce', 'agency', 'accounting', 'freelancer',
+    'telehealth', 'pharmacy', 'mental-health', 'insurance', 'mortgage',
+    'financial-advisor', 'hotel', 'car-rental', 'tour-guide', 'online-courses',
+    'tutoring', 'shipping', 'moving', 'electrician', 'pest-control',
+    'locksmith', 'photographer', 'veterinarian', 'grocery', 'florist',
+    'event-venue', 'music-teacher', 'fitness', 'auto-repair', 'car-wash',
+    'salon', 'spa', 'nail-salon', 'bakery', 'catering',
+    'property-management', 'storage', 'painter', 'landscaper', 'pool-service',
   ]
 
   // Dynamic business profile pages + score pages
@@ -44,16 +88,18 @@ export async function GET() {
     console.error('[sitemap] Failed to fetch businesses:', err instanceof Error ? err.message : err)
   }
 
-  const staticEntries = staticPages
-    .map(
-      (p) => `  <url>
+  const toEntry = (p: { loc: string; priority: string; changefreq: string }, lastmod?: string) =>
+    `  <url>
     <loc>${baseUrl}${p.loc}</loc>
-    <lastmod>${now}</lastmod>
+    <lastmod>${lastmod || now}</lastmod>
     <changefreq>${p.changefreq}</changefreq>
     <priority>${p.priority}</priority>
   </url>`
-    )
-    .join('\n')
+
+  const staticEntries = staticPages.map((p) => toEntry(p)).join('\n')
+  const compareEntries = comparePages.map((p) => toEntry(p)).join('\n')
+  const reportEntries = reportPages.map((p) => toEntry(p)).join('\n')
+  const blogEntries = blogPages.map((p) => toEntry(p)).join('\n')
 
   const businessEntries = businessSlugs
     .map(
@@ -92,6 +138,9 @@ export async function GET() {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${staticEntries}
+${compareEntries}
+${reportEntries}
+${blogEntries}
 ${verticalEntries}
 ${businessEntries}
 ${scoreEntries}

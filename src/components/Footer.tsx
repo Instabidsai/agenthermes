@@ -18,6 +18,8 @@ const footerLinks = {
       { href: '/developers', label: 'Developers' },
       { href: '/leaderboard', label: 'Leaderboard' },
       { href: '/pricing', label: 'Pricing' },
+      { href: '/glossary', label: 'Glossary' },
+      { href: '/faq', label: 'FAQ' },
     ],
   },
   forBusiness: {

@@ -1,0 +1,607 @@
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import {
+  ArrowRight,
+  ArrowUp,
+  BarChart3,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  CreditCard,
+  Globe,
+  Key,
+  Layers,
+  Lock,
+  Shield,
+  Sparkles,
+  Target,
+  TrendingUp,
+  Trophy as TrophyIcon,
+  User,
+  XCircle,
+  Zap,
+} from 'lucide-react'
+
+// ---------------------------------------------------------------------------
+// Metadata
+// ---------------------------------------------------------------------------
+
+export const metadata: Metadata = {
+  title: 'Why Stripe Scores 68 Silver — A Deep Agent Readiness Analysis | AgentHermes',
+  description:
+    'A dimension-by-dimension analysis of Stripe\'s Agent Readiness Score. From API quality (82) to pricing transparency (45), we break down what makes Stripe a Silver-tier platform and what it needs for Gold.',
+  openGraph: {
+    title: 'Why Stripe Scores 68 Silver — A Deep Agent Readiness Analysis',
+    description:
+      'Stripe earned a Silver-tier Agent Readiness Score of 68. Here\'s exactly why — dimension by dimension — and what it needs for Gold.',
+    url: 'https://agenthermes.ai/blog/why-stripe-scores-68',
+    siteName: 'AgentHermes',
+    locale: 'en_US',
+    type: 'article',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Why Stripe Scores 68 Silver — AgentHermes Analysis',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Why Stripe Scores 68 Silver — A Deep Agent Readiness Analysis',
+    description:
+      'Stripe earned a Silver-tier Agent Readiness Score of 68. Here\'s exactly why — dimension by dimension.',
+  },
+  authors: [{ name: 'AgentHermes Research', url: 'https://agenthermes.ai' }],
+  alternates: {
+    canonical: 'https://agenthermes.ai/blog/why-stripe-scores-68',
+  },
+}
+
+// ---------------------------------------------------------------------------
+// Dimension Scores Data
+// ---------------------------------------------------------------------------
+
+const dimensions = [
+  {
+    id: 'D1',
+    label: 'Discovery',
+    score: 58,
+    weight: 0.12,
+    verdict: 'partial',
+    icon: Globe,
+    analysis:
+      'Stripe has OpenAPI specs and rich documentation, but no agent-card.json, no llms.txt, and no AGENTS.md. An agent can find Stripe through search, but there is no machine-optimized discovery channel. Stripe relies on its brand — not structured agent discovery.',
+  },
+  {
+    id: 'D2',
+    label: 'API Quality',
+    score: 82,
+    weight: 0.15,
+    verdict: 'strong',
+    icon: Zap,
+    analysis:
+      'This is where Stripe shines. Clean REST endpoints, consistent JSON responses, proper error objects with machine-readable error codes, idempotency support, and versioned APIs. An agent calling Stripe\'s API gets predictable, parseable responses every time. The 401 response to unauthenticated requests is itself a quality signal — it returns structured JSON with a clear error type, not an HTML login page.',
+  },
+  {
+    id: 'D3',
+    label: 'Onboarding',
+    score: 55,
+    weight: 0.08,
+    verdict: 'partial',
+    icon: User,
+    analysis:
+      'Stripe requires human-driven signup: email verification, identity checks, business documentation. There is no API endpoint to programmatically create a Stripe account. An agent cannot autonomously sign up a new merchant. This is Stripe\'s most significant gap for agent readiness — and it is partly by design (KYC requirements).',
+  },
+  {
+    id: 'D4',
+    label: 'Pricing Transparency',
+    score: 45,
+    weight: 0.05,
+    verdict: 'weak',
+    icon: CreditCard,
+    analysis:
+      'Stripe publishes pricing on its website (2.9% + 30 cents), but there is no API endpoint to query current pricing, compare plans, or calculate fees programmatically. An agent must scrape the pricing page. Volume discounts are negotiated through sales — completely opaque to agents.',
+  },
+  {
+    id: 'D5',
+    label: 'Payment',
+    score: 72,
+    weight: 0.08,
+    verdict: 'strong',
+    icon: CreditCard,
+    analysis:
+      'Ironic for a payment company, but Stripe\'s own payment system scores well — not perfectly. Agents can create payment intents, manage subscriptions, and handle refunds programmatically. But paying FOR Stripe (the merchant\'s bill to Stripe) is less transparent than paying THROUGH Stripe.',
+  },
+  {
+    id: 'D6',
+    label: 'Data Quality',
+    score: 75,
+    weight: 0.10,
+    verdict: 'strong',
+    icon: Layers,
+    analysis:
+      'Stripe returns clean, well-documented JSON with consistent field naming, proper types, and pagination. Every object has an id, created timestamp, and metadata support. The data model is one of the most agent-friendly in SaaS.',
+  },
+  {
+    id: 'D7',
+    label: 'Security',
+    score: 68,
+    weight: 0.12,
+    verdict: 'good',
+    icon: Shield,
+    analysis:
+      'TLS everywhere, API key authentication, webhook signature verification, and PCI DSS compliance. Rate limiting is well-documented. The score is not higher because there is no OAuth2 flow for agent-to-agent delegation — it is API key only, which limits agent autonomy patterns.',
+  },
+  {
+    id: 'D8',
+    label: 'Reliability',
+    score: 78,
+    weight: 0.13,
+    verdict: 'strong',
+    icon: Target,
+    analysis:
+      'Stripe publishes a status page, has historical uptime above 99.99%, and provides idempotency keys to safely retry requests. Response times are consistently fast. Webhook retry logic is built-in. This is the kind of reliability agents need to trust a service.',
+  },
+  {
+    id: 'D9',
+    label: 'Agent Experience',
+    score: 90,
+    weight: 0.10,
+    verdict: 'excellent',
+    icon: Sparkles,
+    analysis:
+      'The highest-scoring dimension. Stripe has official SDKs in 7+ languages, interactive API explorers, test mode with realistic fixtures, and extensive error documentation. If an agent is already authenticated, the developer experience of calling Stripe is exceptional. This is the gold standard for API developer experience.',
+  },
+]
+
+function getVerdictColor(verdict: string) {
+  switch (verdict) {
+    case 'excellent':
+      return { text: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' }
+    case 'strong':
+      return { text: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20' }
+    case 'good':
+      return { text: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20' }
+    case 'partial':
+      return { text: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20' }
+    case 'weak':
+      return { text: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20' }
+    default:
+      return { text: 'text-zinc-400', bg: 'bg-zinc-500/10', border: 'border-zinc-500/20' }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
+
+export default function WhyStripeScores68Page() {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: 'Why Stripe Scores 68 Silver — A Deep Agent Readiness Analysis',
+    description:
+      'A dimension-by-dimension analysis of Stripe\'s Agent Readiness Score of 68 (Silver tier).',
+    datePublished: '2026-03-27',
+    dateModified: '2026-03-30',
+    author: {
+      '@type': 'Organization',
+      name: 'AgentHermes Research',
+      url: 'https://agenthermes.ai',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'AgentHermes',
+      url: 'https://agenthermes.ai',
+    },
+    mainEntityOfPage: 'https://agenthermes.ai/blog/why-stripe-scores-68',
+    image: 'https://agenthermes.ai/og-image.png',
+    articleSection: 'Case Study',
+    wordCount: 1800,
+    breadcrumb: {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://agenthermes.ai' },
+        { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://agenthermes.ai/blog' },
+        {
+          '@type': 'ListItem',
+          position: 3,
+          name: 'Why Stripe Scores 68 Silver',
+          item: 'https://agenthermes.ai/blog/why-stripe-scores-68',
+        },
+      ],
+    },
+  }
+
+  return (
+    <div className="relative">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
+      {/* ===== HERO ===== */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.03)_1px,transparent_1px)] bg-[size:64px_64px]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#09090b]" />
+
+        <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 pt-24 pb-16 sm:pt-32 sm:pb-20">
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-2 text-sm text-zinc-500 mb-8">
+            <Link href="/" className="hover:text-zinc-300 transition-colors">Home</Link>
+            <span>/</span>
+            <Link href="/blog" className="hover:text-zinc-300 transition-colors">Blog</Link>
+            <span>/</span>
+            <span className="text-zinc-400">Stripe Analysis</span>
+          </nav>
+
+          {/* Tags */}
+          <div className="flex flex-wrap items-center gap-3 mb-6">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-medium">
+              <TrendingUp className="h-3.5 w-3.5" />
+              Case Study
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-500/10 border border-zinc-500/20 text-zinc-400 text-xs font-medium">
+              Silver Tier
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-medium">
+              ARL-4 Transactable
+            </span>
+          </div>
+
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.1] mb-6">
+            Why Stripe Scores{' '}
+            <span className="text-zinc-400">68 Silver</span>
+          </h1>
+
+          <p className="text-lg sm:text-xl text-zinc-300 leading-relaxed tracking-tight max-w-3xl mb-6">
+            Stripe is one of the best APIs in the world. But &ldquo;best API&rdquo; does not mean &ldquo;agent-ready.&rdquo;
+            Here is a dimension-by-dimension breakdown of how the world&apos;s most developer-friendly
+            payment platform earns a Silver-tier Agent Readiness Score — and what it would take to reach Gold.
+          </p>
+
+          {/* Meta */}
+          <div className="flex flex-wrap items-center gap-6 text-sm text-zinc-500">
+            <span className="flex items-center gap-1.5">
+              <User className="h-4 w-4" />
+              AgentHermes Research
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Calendar className="h-4 w-4" />
+              March 27, 2026
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Clock className="h-4 w-4" />
+              12 min read
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== SCORE SUMMARY ===== */}
+      <section className="pb-12 sm:pb-16 border-t border-zinc-800/50">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 pt-12">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-12">
+            <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/80 text-center">
+              <div className="text-3xl font-bold text-zinc-400">68</div>
+              <div className="text-xs text-zinc-500 mt-1">Overall Score</div>
+            </div>
+            <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/80 text-center">
+              <div className="text-3xl font-bold text-zinc-400">Silver</div>
+              <div className="text-xs text-zinc-500 mt-1">Tier (60-74)</div>
+            </div>
+            <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/80 text-center">
+              <div className="text-3xl font-bold text-purple-400">ARL-4</div>
+              <div className="text-xs text-zinc-500 mt-1">Transactable</div>
+            </div>
+            <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/80 text-center">
+              <div className="text-3xl font-bold text-emerald-400">90</div>
+              <div className="text-xs text-zinc-500 mt-1">Best: Agent Exp</div>
+            </div>
+          </div>
+
+          {/* The Journey Section */}
+          <div className="prose-section mb-12">
+            <h2 className="text-2xl font-bold tracking-tight mb-4 flex items-center gap-2">
+              <ArrowUp className="h-5 w-5 text-emerald-500" />
+              The Journey: 40 to 56 to 68
+            </h2>
+            <div className="space-y-4 text-zinc-300 leading-relaxed">
+              <p>
+                When we first scanned Stripe with our early scanner, it scored <strong className="text-zinc-100">40 (Bronze)</strong>.
+                That initial score was dominated by what the scanner could not reach: Stripe&apos;s API requires
+                authentication, so unauthenticated probes saw mostly 401 responses and HTML documentation pages.
+                The scanner interpreted &ldquo;no accessible data&rdquo; as &ldquo;no data.&rdquo;
+              </p>
+              <p>
+                The second calibration pushed Stripe to <strong className="text-zinc-100">56</strong>. We taught the scanner
+                that an API returning a well-formed JSON error with a machine-readable error code is itself evidence
+                of quality. A 401 with <code className="text-emerald-400 bg-zinc-800/50 px-1.5 py-0.5 rounded text-sm">
+                {`{"error":{"type":"invalid_request_error"}}`}</code> is dramatically more
+                agent-friendly than a 200 HTML login page.
+              </p>
+              <p>
+                The current score of <strong className="text-zinc-100">68</strong> reflects our v4 scoring engine with auth-aware
+                calibration. A 401 response with structured JSON now earns 87% of what a full 200 response
+                would score. This is our key insight: <em className="text-zinc-200">an API that rejects you cleanly is proving
+                it is well-built</em>. The authentication wall is not a failure — it is a signal of a mature,
+                agent-ready API hiding behind a human onboarding gate.
+              </p>
+            </div>
+          </div>
+
+          {/* 401 Insight Box */}
+          <div className="p-6 rounded-xl bg-emerald-500/5 border border-emerald-500/20 mb-12">
+            <h3 className="text-lg font-bold text-emerald-400 mb-3 flex items-center gap-2">
+              <Lock className="h-5 w-5" />
+              Our Scoring Insight: Why a 401 PROVES a Good API
+            </h3>
+            <div className="space-y-3 text-zinc-300 leading-relaxed text-sm">
+              <p>
+                Most scanning tools penalize APIs that return 401 Unauthorized. We do the opposite. When
+                Stripe returns <code className="text-emerald-400 bg-zinc-800/50 px-1 py-0.5 rounded text-xs">
+                401 + Content-Type: application/json + structured error body</code>, that tells us:
+              </p>
+              <ul className="space-y-2 ml-4">
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400 mt-0.5 shrink-0" />
+                  <span>The endpoint exists and is actively maintained</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400 mt-0.5 shrink-0" />
+                  <span>It returns JSON (agent-parseable) not HTML (human-only)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400 mt-0.5 shrink-0" />
+                  <span>It uses proper HTTP status codes (semantic correctness)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400 mt-0.5 shrink-0" />
+                  <span>Error responses are machine-readable with typed error objects</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400 mt-0.5 shrink-0" />
+                  <span>An agent with valid credentials would get a clean response</span>
+                </li>
+              </ul>
+              <p>
+                This means a 401 from Stripe is worth ~87% of a 200. A 200 HTML page from a brochure
+                website is worth ~10%. The auth wall hides quality, it does not indicate the absence of it.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== DIMENSION BREAKDOWN ===== */}
+      <section className="pb-12 sm:pb-16 border-t border-zinc-800/50">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 pt-12">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-8 flex items-center gap-2">
+            <BarChart3 className="h-6 w-6 text-emerald-500" />
+            Dimension-by-Dimension Breakdown
+          </h2>
+
+          <div className="space-y-6">
+            {dimensions.map((dim) => {
+              const colors = getVerdictColor(dim.verdict)
+              return (
+                <div
+                  key={dim.id}
+                  className="p-6 rounded-xl bg-zinc-900/50 border border-zinc-800/80"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-800/80 border border-zinc-700/50">
+                        <dim.icon className={`h-5 w-5 ${colors.text}`} />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-zinc-100">
+                          {dim.id}: {dim.label}
+                        </h3>
+                        <span className="text-xs text-zinc-500">
+                          Weight: {Math.round(dim.weight * 100)}%
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-zinc-100">{dim.score}</div>
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${colors.bg} border ${colors.border} ${colors.text}`}
+                      >
+                        {dim.verdict}
+                      </span>
+                    </div>
+                  </div>
+                  {/* Score bar */}
+                  <div className="w-full h-2 rounded-full bg-zinc-800 mb-4">
+                    <div
+                      className={`h-2 rounded-full ${dim.score >= 75 ? 'bg-emerald-500' : dim.score >= 60 ? 'bg-blue-500' : dim.score >= 45 ? 'bg-amber-500' : 'bg-red-500'}`}
+                      style={{ width: `${dim.score}%` }}
+                    />
+                  </div>
+                  <p className="text-sm text-zinc-400 leading-relaxed">{dim.analysis}</p>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== WHAT STRIPE NEEDS FOR GOLD ===== */}
+      <section className="pb-12 sm:pb-16 border-t border-zinc-800/50">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 pt-12">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4 flex items-center gap-2">
+            <TrophyIcon className="h-6 w-6 text-yellow-500" />
+            What Stripe Needs for Gold (75+)
+          </h2>
+          <p className="text-zinc-400 leading-relaxed mb-8">
+            Stripe is 7 points away from Gold tier. Here are the specific changes that would
+            close the gap — ordered by impact.
+          </p>
+
+          <div className="space-y-4">
+            {[
+              {
+                change: 'Publish agent-card.json and llms.txt',
+                impact: '+5-8 points on D1 (Discovery)',
+                difficulty: 'Easy',
+                diffColor: 'text-emerald-400',
+                detail:
+                  'A static JSON file at /.well-known/agent-card.json describing Stripe\'s capabilities, authentication requirements, and API endpoints. An llms.txt file explaining Stripe in agent-parseable format. No code changes needed — just static files.',
+              },
+              {
+                change: 'Add a programmatic pricing API',
+                impact: '+15-20 points on D4 (Pricing)',
+                difficulty: 'Medium',
+                diffColor: 'text-amber-400',
+                detail:
+                  'An endpoint like GET /v1/pricing that returns current fee structures, volume thresholds, and plan comparisons in JSON. Agents need to compare payment processors, and right now Stripe\'s pricing is locked in HTML.',
+              },
+              {
+                change: 'Enable programmatic signup for test accounts',
+                impact: '+10-15 points on D3 (Onboarding)',
+                difficulty: 'Medium',
+                diffColor: 'text-amber-400',
+                detail:
+                  'Even if production accounts require KYC, allowing agents to create test/sandbox accounts via API would dramatically improve agent onboarding. An agent evaluating payment processors needs to test before recommending.',
+              },
+              {
+                change: 'Add OAuth2 for agent delegation',
+                impact: '+5-8 points on D7 (Security)',
+                difficulty: 'Hard',
+                diffColor: 'text-red-400',
+                detail:
+                  'Current API key auth works but limits agent patterns. OAuth2 scoped tokens would let agents act on behalf of merchants with limited permissions — essential for the autonomous agent future.',
+              },
+            ].map((item, i) => (
+              <div
+                key={i}
+                className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700 transition-colors"
+              >
+                <div className="flex items-start justify-between gap-4 mb-3">
+                  <h3 className="font-bold text-zinc-100">{item.change}</h3>
+                  <span className={`shrink-0 text-xs font-medium ${item.diffColor}`}>
+                    {item.difficulty}
+                  </span>
+                </div>
+                <p className="text-sm text-emerald-400 font-medium mb-2">{item.impact}</p>
+                <p className="text-sm text-zinc-500 leading-relaxed">{item.detail}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-8 p-5 rounded-xl bg-yellow-500/5 border border-yellow-500/20">
+            <p className="text-sm text-zinc-300 leading-relaxed">
+              <strong className="text-yellow-400">The math:</strong> Stripe&apos;s current score of 68
+              means it needs +7 points to reach Gold (75). Publishing agent-card.json and llms.txt alone
+              could get it to 73-76. Adding a pricing API would push it well past 80. Stripe is one
+              strategic decision away from being Gold-tier agent-ready.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== ARL LEVEL ===== */}
+      <section className="pb-12 sm:pb-16 border-t border-zinc-800/50">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 pt-12">
+          <h2 className="text-2xl font-bold tracking-tight mb-4 flex items-center gap-2">
+            <Key className="h-5 w-5 text-purple-500" />
+            ARL-4: Transactable
+          </h2>
+          <div className="space-y-4 text-zinc-300 leading-relaxed">
+            <p>
+              Stripe sits at <strong className="text-purple-400">Agent Readiness Level 4 (Transactable)</strong>.
+              This means an authenticated agent can complete the full transaction cycle: create payment
+              intents, manage subscriptions, issue refunds, and track payment status. Stripe passes
+              all the requirements for ARL levels 0 through 4.
+            </p>
+            <p>
+              To reach ARL-5 (Autonomous), Stripe would need stronger self-serve lifecycle management —
+              agents should be able to programmatically modify account settings, manage disputes, and
+              optimize plans without human intervention. To reach ARL-6 (Interoperable), Stripe would
+              need to publish its own A2A agent card and expose capabilities via MCP tools.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== LESSONS ===== */}
+      <section className="pb-12 sm:pb-16 border-t border-zinc-800/50">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 pt-12">
+          <h2 className="text-2xl font-bold tracking-tight mb-6 flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-emerald-500" />
+            Lessons for Other SaaS Companies
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {[
+              {
+                title: 'Your API IS your agent readiness',
+                text: 'Stripe scores 68 primarily because of API quality. If your API returns clean JSON with proper error codes, you are already halfway to agent-ready.',
+              },
+              {
+                title: 'Auth walls hide quality, not absence',
+                text: 'Do not panic if your authenticated API shows low scores on naive scanners. A well-structured 401 is worth more than a sloppy 200.',
+              },
+              {
+                title: 'Discovery is cheap, impact is high',
+                text: 'Publishing agent-card.json and llms.txt costs nothing and can add 5-10 points. It is the highest-ROI agent readiness improvement any SaaS can make today.',
+              },
+              {
+                title: 'Pricing transparency is the blind spot',
+                text: 'Almost every SaaS hides pricing behind sales teams. Agents need structured pricing to comparison shop. The first SaaS in each vertical to publish a pricing API wins agent traffic.',
+              },
+              {
+                title: 'Agent readiness is not developer experience',
+                text: 'Stripe has arguably the best developer experience in the industry (D9: 90). But developer experience is only one dimension. Agent readiness requires discovery, onboarding, and pricing too.',
+              },
+              {
+                title: 'The 75-point threshold matters',
+                text: 'Gold tier (75+) is where agents start preferring your service over competitors. Silver is noticed. Gold is recommended. Platinum is the default choice.',
+              },
+            ].map((lesson, i) => (
+              <div
+                key={i}
+                className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/80"
+              >
+                <h3 className="font-bold text-zinc-100 mb-2 text-sm">{lesson.title}</h3>
+                <p className="text-sm text-zinc-500 leading-relaxed">{lesson.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== CTA ===== */}
+      <section className="pb-20 sm:pb-28 border-t border-zinc-800/50">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 pt-16 text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4">
+            How does your platform compare?
+          </h2>
+          <p className="text-zinc-400 mb-8 max-w-xl mx-auto">
+            Get your free Agent Readiness Score and see how you stack up against Stripe
+            across all 9 dimensions.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <Link
+              href="/audit"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors"
+            >
+              Score My Business
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              href="/score/stripe.com"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-semibold transition-colors border border-zinc-700"
+            >
+              View Stripe&apos;s Full Score
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+    </div>
+  )
+}
+
