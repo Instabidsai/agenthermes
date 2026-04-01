@@ -1778,6 +1778,25 @@ const openApiSpec = {
               },
             },
           },
+          arl: {
+            type: 'object',
+            description: 'Agent Readiness Level (0-6)',
+            properties: {
+              level: { type: 'integer', minimum: 0, maximum: 6, description: 'ARL level number' },
+              name: { type: 'string', description: 'Level name (Dark, Discoverable, Readable, Bookable, Transactable, Autonomous, Interoperable)' },
+              description: { type: 'string', description: 'One-line description of what this level means' },
+              nextLevel: {
+                type: 'object',
+                nullable: true,
+                properties: {
+                  level: { type: 'integer' },
+                  name: { type: 'string' },
+                  requirements: { type: 'array', items: { type: 'string' }, description: 'Specific actions to reach the next level' },
+                },
+              },
+              verticalContext: { type: 'string', nullable: true, description: 'What this level means for the specific vertical' },
+            },
+          },
           business_id: { type: 'string', format: 'uuid' },
         },
       },

@@ -5,6 +5,7 @@ import { getServiceClient } from '@/lib/supabase'
 import ScoreGauge from '@/components/ScoreGauge'
 import TierBadge from '@/components/TierBadge'
 import AgentJourneyScore from '@/components/AgentJourneyScore'
+import type { ARLData } from '@/components/AgentJourneyScore'
 import TechnicalDetailsSection from '@/components/TechnicalDetailsSection'
 import {
   ExternalLink,
@@ -14,6 +15,7 @@ import {
   Search,
   Clock,
   UserCheck,
+  Shield,
 } from 'lucide-react'
 import { clsx } from 'clsx'
 
@@ -39,6 +41,8 @@ interface ScoreData {
     score: number
     weight: number
   }[]
+  arl: ARLData | null
+  vertical: string | null
 }
 
 // -- Tier helpers ------------------------------------------------------------
@@ -110,6 +114,8 @@ async function getScoreData(domain: string): Promise<ScoreData | null> {
       lastAudited: null,
       categories: [],
       dimensions: [],
+      arl: null,
+      vertical: null,
     }
   }
 
@@ -145,16 +151,17 @@ async function getScoreData(domain: string): Promise<ScoreData | null> {
     maxScore: r.max_score,
   }))
 
-  // Fetch scan_results for the 9-dimension breakdown
+  // Fetch scan_results for the 9-dimension breakdown and ARL
   const { data: scanResultsRaw } = await supabase
     .from('scan_results')
-    .select('dimensions, scanned_at')
+    .select('dimensions, scanned_at, arl')
     .eq('domain', domain)
     .order('scanned_at', { ascending: false })
     .limit(1)
     .single()
 
   let dimensions: ScoreData['dimensions'] = []
+  let arl: ARLData | null = null
 
   if (scanResultsRaw) {
     const scanResult = scanResultsRaw as Record<string, any>
@@ -169,6 +176,27 @@ async function getScoreData(domain: string): Promise<ScoreData | null> {
         score: d.score,
         weight: d.weight,
       }))
+    }
+
+    // ARL from persisted scan result
+    if (scanResult.arl && typeof scanResult.arl === 'object') {
+      arl = scanResult.arl as ARLData
+    }
+
+    // If no persisted ARL but we have dimensions, compute it on the fly
+    if (!arl && dimensions.length > 0) {
+      const { computeARL } = await import('@/lib/scanner/arl')
+      arl = computeARL(
+        dimensions.map(d => ({
+          dimension: d.dimension,
+          label: d.label,
+          score: d.score,
+          weight: d.weight,
+          checks: [],
+          recommendations: [],
+        })),
+        (business as Record<string, any>).vertical ?? undefined,
+      )
     }
   }
 
@@ -190,6 +218,8 @@ async function getScoreData(domain: string): Promise<ScoreData | null> {
     lastAudited,
     categories,
     dimensions,
+    arl,
+    vertical: (business as Record<string, any>).vertical ?? null,
   }
 }
 
@@ -431,8 +461,20 @@ export default async function ScorePage({
           {displayName}
         </h1>
 
-        <div className="flex items-center gap-3 mb-3">
+        <div className="flex items-center gap-3 mb-3 flex-wrap justify-center">
           <TierBadge tier={data.tier} size="md" />
+          {data.arl && (
+            <span className={clsx(
+              'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold border',
+              data.arl.level >= 5 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' :
+              data.arl.level >= 3 ? 'text-amber-400 bg-amber-500/10 border-amber-500/30' :
+              data.arl.level >= 1 ? 'text-blue-400 bg-blue-500/10 border-blue-500/30' :
+              'text-zinc-400 bg-zinc-500/10 border-zinc-500/30',
+            )}>
+              <Shield className="h-3.5 w-3.5" />
+              ARL-{data.arl.level} {data.arl.name}
+            </span>
+          )}
           <a
             href={`https://${decodedDomain}`}
             target="_blank"
@@ -447,6 +489,12 @@ export default async function ScorePage({
         <p className="max-w-lg text-sm text-zinc-500 leading-relaxed">
           {TIER_DESCRIPTIONS[data.tier] || TIER_DESCRIPTIONS.unaudited}
         </p>
+
+        {data.arl?.verticalContext && (
+          <p className="mt-2 max-w-lg text-sm text-zinc-400 leading-relaxed italic">
+            {data.arl.verticalContext}
+          </p>
+        )}
 
         {data.lastAudited && (
           <p className="mt-3 flex items-center gap-1.5 text-xs text-zinc-600">
@@ -470,6 +518,7 @@ export default async function ScorePage({
                 dimension: d.dimension,
                 score: d.score,
               }))}
+              arl={data.arl ?? undefined}
             />
           </div>
         </section>

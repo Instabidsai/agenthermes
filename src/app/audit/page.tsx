@@ -51,6 +51,18 @@ interface DimensionResult {
   weight?: number
 }
 
+interface ARLData {
+  level: number
+  name: string
+  description: string
+  nextLevel: {
+    level: number
+    name: string
+    requirements: string[]
+  } | null
+  verticalContext?: string
+}
+
 interface AuditScorecard {
   business_name: string
   domain: string
@@ -58,6 +70,7 @@ interface AuditScorecard {
   tier: AuditTier
   categories: CategoryResult[]
   dimensions?: DimensionResult[]
+  arl?: ARLData
   audited_at: string
   next_steps: string[]
   business_id?: string
@@ -71,6 +84,7 @@ interface AuditState {
   tier: AuditTier
   categories: CategoryResult[]
   dimensions: DimensionResult[]
+  arl?: ARLData
   nextSteps: string[]
   errorMessage: string
   businessId?: string
@@ -214,6 +228,7 @@ function AuditPageContent() {
       tier: 'unaudited',
       categories: [],
       dimensions: [],
+      arl: undefined,
       nextSteps: [],
       errorMessage: '',
     })
@@ -239,6 +254,7 @@ function AuditPageContent() {
         tier: scorecard.tier as AuditTier,
         categories: scorecard.categories,
         dimensions: scorecard.dimensions || [],
+        arl: scorecard.arl,
         nextSteps: scorecard.next_steps || [],
         errorMessage: '',
         businessId: scorecard.business_id,
@@ -565,6 +581,7 @@ function AuditPageContent() {
                   dimension: d.dimension,
                   score: d.score,
                 }))}
+                arl={audit.arl}
               />
             </div>
           )}

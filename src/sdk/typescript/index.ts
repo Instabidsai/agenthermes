@@ -76,6 +76,19 @@ export interface ScoreResult {
   message?: string
 }
 
+/** Agent Readiness Level result. */
+export interface ARLResult {
+  level: number
+  name: string
+  description: string
+  nextLevel: {
+    level: number
+    name: string
+    requirements: string[]
+  } | null
+  verticalContext?: string
+}
+
 /** Response from the scan endpoint. */
 export interface ScanResult {
   hermes_id: string
@@ -86,6 +99,7 @@ export interface ScanResult {
   caps_applied: CapApplied[]
   scanned_at: string
   next_steps: string[]
+  arl: ARLResult
   business_id?: string
   _db_error?: string
 }

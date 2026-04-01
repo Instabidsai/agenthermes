@@ -30,6 +30,19 @@ export interface CapApplied {
   capped_to: number
 }
 
+/** Agent Readiness Level result */
+export interface ARLResult {
+  level: number         // 0-6
+  name: string          // "Dark", "Discoverable", etc.
+  description: string   // one-line summary
+  nextLevel: {
+    level: number
+    name: string
+    requirements: string[]
+  } | null
+  verticalContext?: string  // what this level means for their vertical
+}
+
 export interface ScanResult {
   hermes_id: string
   domain: string
@@ -41,6 +54,8 @@ export interface ScanResult {
   next_steps: string[]
   /** If vertical-specific scoring was applied, which vertical was used */
   vertical_applied?: string | null
+  /** Agent Readiness Level (0-6) computed from dimension scores */
+  arl: ARLResult
 }
 
 // ---------------------------------------------------------------------------

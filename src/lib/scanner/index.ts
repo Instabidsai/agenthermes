@@ -47,12 +47,14 @@ import { scanSecurity, hasNoTls } from './d7-security'
 import { scanReliability } from './d8-reliability'
 import { scanAgentExperience } from './d9-agent-experience'
 import { getVerticalWeights, applyVerticalWeights } from './vertical-weights'
+import { computeARL } from './arl'
 
 // Re-export types
-export type { ScanResult, DimensionResult, CapApplied } from './types'
+export type { ScanResult, DimensionResult, CapApplied, ARLResult } from './types'
 export type { Check, Recommendation } from './types'
 export { getVerticalWeights, listVerticals } from './vertical-weights'
 export type { VerticalWeights } from './vertical-weights'
+export { computeARL } from './arl'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -329,6 +331,9 @@ export async function runScan(rawUrl: string, options?: { vertical?: string | nu
     const { score: totalScore, caps } = applyCaps(dimensions, combinedRaw)
     const tier = tierFromScore(totalScore)
 
+    // Compute Agent Readiness Level (ARL)
+    const arl = computeARL(dimensions, verticalApplied ?? undefined)
+
     // Extract domain for display
     const domain = base.replace(/^https?:\/\//, '').replace(/^www\./, '')
 
@@ -353,6 +358,7 @@ export async function runScan(rawUrl: string, options?: { vertical?: string | nu
       scanned_at: new Date().toISOString(),
       next_steps: nextSteps,
       vertical_applied: verticalApplied,
+      arl,
     }
   } finally {
     clearTimeout(globalTimer)
