@@ -7,6 +7,23 @@ export const metadata: Metadata = {
   title: 'Agent Readiness Leaderboard | AgentHermes',
   description:
     'Top agent-ready businesses ranked by Agent Readiness Score. See who leads in AI agent compatibility.',
+  openGraph: {
+    title: 'Agent Readiness Leaderboard | AgentHermes',
+    description:
+      'Top agent-ready businesses ranked by Agent Readiness Score. See who leads in AI agent compatibility.',
+    url: 'https://agenthermes.ai/leaderboard',
+    siteName: 'AgentHermes',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Agent Readiness Leaderboard | AgentHermes',
+    description:
+      'Top agent-ready businesses ranked by Agent Readiness Score. See who leads in AI agent compatibility.',
+  },
+  alternates: {
+    canonical: 'https://agenthermes.ai/leaderboard',
+  },
 }
 
 async function getTopBusinesses() {

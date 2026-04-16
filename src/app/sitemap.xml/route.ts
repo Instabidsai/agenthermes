@@ -57,6 +57,11 @@ export async function GET() {
     { loc: '/blog/why-stripe-scores-68', priority: '0.7', changefreq: 'monthly' },
     { loc: '/blog/mcp-gap', priority: '0.7', changefreq: 'monthly' },
     { loc: '/blog/arl-levels-explained', priority: '0.7', changefreq: 'monthly' },
+    { loc: '/blog/saas-agent-readiness', priority: '0.7', changefreq: 'monthly' },
+    { loc: '/blog/resend-only-gold', priority: '0.7', changefreq: 'monthly' },
+    { loc: '/blog/invisible-to-ai-agents', priority: '0.7', changefreq: 'monthly' },
+    { loc: '/blog/agent-ready-restaurants', priority: '0.7', changefreq: 'monthly' },
+    { loc: '/blog/what-is-agent-readiness', priority: '0.7', changefreq: 'monthly' },
   ]
 
   // All 50 vertical landing pages

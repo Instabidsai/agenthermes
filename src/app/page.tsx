@@ -196,6 +196,26 @@ export default async function HomePage() {
     },
   }
 
+  const organizationJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'AgentHermes',
+    url: 'https://agenthermes.ai',
+    logo: 'https://agenthermes.ai/og-image.png',
+    description:
+      'The Shopify of the Agent Economy. AgentHermes makes any business discoverable, usable, and payable by AI agents through scoring, remediation, and gateway services.',
+    email: 'support@agenthermes.ai',
+    sameAs: ['https://github.com/agenthermes'],
+    foundingDate: '2026',
+    knowsAbout: [
+      'AI Agent Readiness',
+      'Model Context Protocol (MCP)',
+      'Agent-to-Agent Protocol (A2A)',
+      'Agent Commerce',
+      'Business API Scoring',
+    ],
+  }
+
   const faqJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
@@ -252,6 +272,10 @@ export default async function HomePage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(speakableJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
       />
       <script
         type="application/ld+json"

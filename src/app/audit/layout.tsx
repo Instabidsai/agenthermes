@@ -4,6 +4,23 @@ export const metadata: Metadata = {
   title: 'Your Agent Readiness Score | AgentHermes',
   description:
     'Enter your domain to get scored across 9 dimensions of AI agent readiness. Free, takes 10-30 seconds.',
+  openGraph: {
+    title: 'Your Agent Readiness Score | AgentHermes',
+    description:
+      'Enter your domain to get scored across 9 dimensions of AI agent readiness. Free, takes 10-30 seconds.',
+    url: 'https://agenthermes.ai/audit',
+    siteName: 'AgentHermes',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Your Agent Readiness Score | AgentHermes',
+    description:
+      'Enter your domain to get scored across 9 dimensions of AI agent readiness. Free, takes 10-30 seconds.',
+  },
+  alternates: {
+    canonical: 'https://agenthermes.ai/audit',
+  },
 }
 
 const howToJsonLd = {
