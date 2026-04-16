@@ -12,6 +12,7 @@ import {
   Code,
   Code2,
   Crown,
+  Database,
   DollarSign,
   Eye,
   FileCode,
@@ -33,6 +34,7 @@ import {
   Shield,
   ShoppingCart,
   TrendingUp,
+  UserPlus,
   UtensilsCrossed,
   Wrench,
   Zap,
@@ -70,6 +72,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Data Quality and Agent Readiness: Why Structured Responses Win (D6 = 10%)',
+    excerpt:
+      'D6 Data Quality carries 10% of your Agent Readiness Score. Most businesses return HTML errors to agents. Structured JSON envelopes, consistent error codes, and JSON-LD schema markup separate Silver-tier companies from the invisible majority. Here is what agents need and how to deliver it.',
+    date: '2026-04-15',
+    readTime: '11 min read',
+    href: '/blog/data-quality-agent-readiness',
+    tag: 'Dimensions Deep Dive',
+    tagColor: 'blue',
+    icon: Database,
+  },
+  {
+    title: 'Agent Onboarding: Why D3 Is the Weakest Dimension Across 500 Businesses',
+    excerpt:
+      'D3 Onboarding is universally the weakest dimension in the Agent Readiness Score. Can an AI agent sign up, get credentials, and start calling your API without a human? For 95% of businesses, no. "Contact sales" is a dead end. Here is why D3 matters and how to fix it without removing security.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/onboarding-agent-readiness',
+    tag: 'Dimensions Deep Dive',
+    tagColor: 'blue',
+    icon: UserPlus,
+  },
+  {
+    title: 'Schema.org Markup for Agent Readiness: The SEO Trick That Helps AI Agents Too',
+    excerpt:
+      'Schema.org structured data is not just for Google rich results. AI agents read JSON-LD markup to extract business identity, pricing, hours, and services. 8 key schema types bridge SEO and agent readiness — with copy-paste templates you can ship today.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/schema-markup-agent-readiness',
+    tag: 'Standards Guide',
+    tagColor: 'emerald',
+    icon: Code2,
+  },
   {
     title: 'The A2A Protocol: How AI Agents Talk to Each Other (And Your Business)',
     excerpt:
