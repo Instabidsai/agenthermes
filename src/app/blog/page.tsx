@@ -9,12 +9,15 @@ import {
   Clock,
   Code2,
   Crown,
+  DollarSign,
   Eye,
+  FileJson,
   FileText,
   Globe,
   Heart,
   Layers,
   Lightbulb,
+  Megaphone,
   Network,
   Server,
   ShoppingCart,
@@ -56,6 +59,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'What Is agent-card.json? The Missing File on 500 Business Websites',
+    excerpt:
+      'agent-card.json is the A2A protocol discovery file that lets AI agents find your capabilities. We scanned 500 businesses. Exactly zero have one. Here is what goes inside, a minimal valid example, and how to auto-generate one in 60 seconds.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/agent-card-json-guide',
+    tag: 'Standards Deep Dive',
+    tagColor: 'emerald',
+    icon: FileJson,
+  },
+  {
+    title: 'Why Marketing Agencies Score the Lowest on Agent Readiness (Avg 14-19)',
+    excerpt:
+      'Marketing agencies average 19/100. Advertising averages 14/100. The worst-performing verticals we scan. The agencies selling discoverability cannot be discovered themselves — here is why, and the fix that turns it into a first-mover edge.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/marketing-agencies-agent-readiness',
+    tag: 'Industry Analysis',
+    tagColor: 'amber',
+    icon: Megaphone,
+  },
+  {
+    title: 'Why 30% of Businesses Fail Agent Readiness Over Pricing Transparency',
+    excerpt:
+      '148 of 500 businesses we scanned have no visible pricing at all. D4 Pricing is weighted lowest (0.05) but has the highest universal failure rate. Here is what agent-ready pricing looks like — with drop-in JSON-LD Offer markup you can ship today.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/pricing-transparency-agent-readiness',
+    tag: 'Research',
+    tagColor: 'emerald',
+    icon: DollarSign,
+  },
   {
     title: 'The Agent Readiness Leaderboard: Who Is Winning and Who Is Invisible',
     excerpt:
