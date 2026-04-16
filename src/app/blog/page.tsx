@@ -15,9 +15,11 @@ import {
   DollarSign,
   Eye,
   FileCode,
+  FileCode2,
   FileJson,
   FileText,
   Globe,
+  Globe2,
   Heart,
   Layers,
   Lightbulb,
@@ -27,6 +29,7 @@ import {
   Network,
   Search,
   Server,
+  Share2,
   Shield,
   ShoppingCart,
   TrendingUp,
@@ -67,6 +70,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'The A2A Protocol: How AI Agents Talk to Each Other (And Your Business)',
+    excerpt:
+      'A2A (Agent-to-Agent) protocol v0.3 is how AI agents delegate tasks to other agents — different from MCP (agent-to-tool). Discovery via /.well-known/agent-card.json. 5 skills: describe, negotiate, execute, stream, handle errors. 0 of 500 businesses scanned publish an A2A agent card.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/a2a-protocol-explained',
+    tag: 'Protocols',
+    tagColor: 'emerald',
+    icon: Share2,
+  },
+  {
+    title: 'AGENTS.md: The README File That AI Agents Actually Read',
+    excerpt:
+      'AGENTS.md is the README.md equivalent for AI agents. Structured for LLM consumption, placed at repo or domain root, it tells an agent what the project is, how to run it, what tools exist, and what workflows are supported. Detected by AgentHermes — lifts D6 Data Quality and D9 Agent Experience (20% of the score).',
+    date: '2026-04-15',
+    readTime: '11 min read',
+    href: '/blog/agents-md-file-guide',
+    tag: 'Standards Guide',
+    tagColor: 'emerald',
+    icon: FileCode2,
+  },
+  {
+    title: 'WordPress Agent Readiness: Why 43% of the Internet Fails',
+    excerpt:
+      'WordPress powers 43% of all websites (W3Techs). In our scans, WordPress-detected sites without WooCommerce average below 30 — below Bronze. WooCommerce, Yoast/Rank Math, unblocked wp-json, and three discovery files flip the stack. Here is the agent-ready WordPress checklist.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/wordpress-agent-readiness',
+    tag: 'Platform Analysis',
+    tagColor: 'amber',
+    icon: Globe2,
+  },
   {
     title: 'Agent Readiness vs SEO: Why Your Google Ranking Does Not Help AI Agents',
     excerpt:
