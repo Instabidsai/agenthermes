@@ -13,26 +13,41 @@ Disallow: /api/v1/wallet
 Disallow: /api/v1/analytics
 Disallow: /api/webhooks/
 
-# --- AI search bots (ALLOW) ---
-User-agent: Googlebot
+# --- AI crawlers — ALLOW for GEO (AI citation optimization) ---
+User-agent: GPTBot
+Allow: /
+Disallow: /dashboard
+Disallow: /analytics
+Disallow: /api/v1/wallet
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /dashboard
+Disallow: /analytics
+
+User-agent: anthropic-ai
+Allow: /
+Disallow: /dashboard
+Disallow: /analytics
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /dashboard
+Disallow: /analytics
+
+User-agent: ChatGPT-User
 Allow: /
 
-User-agent: Bingbot
+User-agent: PerplexityBot
 Allow: /
 
 User-agent: OAI-SearchBot
 Allow: /
 
-User-agent: ChatGPT-User
-Allow: /
-
-User-agent: ClaudeBot
-Allow: /
-
 User-agent: claude-web
 Allow: /
 
-User-agent: PerplexityBot
+User-agent: YouBot
 Allow: /
 
 User-agent: Applebot
@@ -41,29 +56,20 @@ Allow: /
 User-agent: Amazonbot
 Allow: /
 
-User-agent: YouBot
+User-agent: DuckAssistBot
 Allow: /
 
-User-agent: DuckAssistBot
+User-agent: Bingbot
 Allow: /
 
 User-agent: MistralAI-User
 Allow: /
 
-# --- AI training crawlers (BLOCK) ---
-User-agent: GPTBot
-Disallow: /
-
-User-agent: Google-Extended
-Disallow: /
-
-User-agent: anthropic-ai
-Disallow: /
-
-User-agent: CCBot
-Disallow: /
-
 User-agent: Bytespider
+Allow: /
+
+# --- Pure scraping bots (BLOCK) ---
+User-agent: CCBot
 Disallow: /
 
 User-agent: Diffbot
