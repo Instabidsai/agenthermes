@@ -3,14 +3,17 @@ import Link from 'next/link'
 import {
   ArrowRight,
   Award,
+  Banknote,
   BarChart3,
   BookOpen,
   Calendar,
   Clock,
+  Code,
   Code2,
   Crown,
   DollarSign,
   Eye,
+  FileCode,
   FileJson,
   FileText,
   Globe,
@@ -59,6 +62,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'OpenAPI Specs Are the Single Biggest Factor in Agent Readiness (D2 = 15%)',
+    excerpt:
+      'D2 API Quality is weighted 0.15 — the highest of any Agent Readiness dimension. Companies with published OpenAPI specs consistently score 60+. Companies without hit a ceiling around 45. Here is why OpenAPI is the single biggest factor and how to ship one in 2 hours.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/openapi-agent-readiness',
+    tag: 'Standards Deep Dive',
+    tagColor: 'emerald',
+    icon: FileCode,
+  },
+  {
+    title: 'Fintech Agent Readiness: Why Stripe Scores 68 While Cash App Scores 12',
+    excerpt:
+      'Fintech is the most polarized vertical on agent readiness. Stripe 68, Robinhood 66, Allstate 66 — all Silver. Cash App 12, Square 8 — invisible. The split comes down to one decision: did you build for developers or for consumers?',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/fintech-agent-readiness',
+    tag: 'Industry Analysis',
+    tagColor: 'amber',
+    icon: Banknote,
+  },
+  {
+    title: 'Why Developer Tools Dominate Agent Readiness (And What Everyone Else Can Learn)',
+    excerpt:
+      'After scanning 500 businesses, 22 of the top 30 Silver-tier companies are developer tools. Vercel 70, Supabase 69, Stripe 68, GitHub 67. One pattern explains all of them — and it is fully portable to any business that wants to stop being invisible to agents.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/developer-tools-agent-readiness',
+    tag: 'Research',
+    tagColor: 'emerald',
+    icon: Code,
+  },
   {
     title: 'What Is agent-card.json? The Missing File on 500 Business Websites',
     excerpt:
