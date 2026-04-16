@@ -8,13 +8,16 @@ import {
   Calendar,
   Clock,
   Code2,
+  Crown,
   Eye,
   FileText,
   Globe,
+  Heart,
   Layers,
   Lightbulb,
   TrendingUp,
   UtensilsCrossed,
+  Wrench,
   Zap,
 } from 'lucide-react'
 
@@ -50,6 +53,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'The Agent Readiness Leaderboard: Who Is Winning and Who Is Invisible',
+    excerpt:
+      'The definitive 2026 ranking of 500 businesses by Agent Readiness Score. Only 1 Gold. Zero Platinum. 198 completely invisible. Data-driven analysis of who leads, who lags, and what the 60-point cliff between Silver and Bronze really means.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/agent-readiness-leaderboard',
+    tag: 'Data Analysis',
+    tagColor: 'emerald',
+    icon: Crown,
+  },
+  {
+    title: 'Agent Readiness in Healthcare: Why the Average Score Is 33',
+    excerpt:
+      'Healthcare averages 33/100 on the Agent Readiness Score — the lowest of any major vertical. We break down why HIPAA, PDF forms, and phone-only booking make healthcare invisible to AI agents, and what agent-ready healthcare actually looks like.',
+    date: '2026-04-15',
+    readTime: '15 min read',
+    href: '/blog/healthcare-agent-readiness',
+    tag: 'Industry Analysis',
+    tagColor: 'amber',
+    icon: Heart,
+  },
+  {
+    title: 'How to Improve Your Agent Readiness Score: A Step-by-Step Guide',
+    excerpt:
+      'The 10-step playbook to improve your Agent Readiness Score. Real examples from 500 businesses, estimated effort for each step, and the exact changes that moved companies from Bronze to Silver. Phase 1 takes an afternoon.',
+    date: '2026-04-15',
+    readTime: '16 min read',
+    href: '/blog/improve-agent-readiness-score',
+    tag: 'How-To Guide',
+    tagColor: 'green',
+    icon: Wrench,
+  },
   {
     title: 'Is Your Business Invisible to AI Agents?',
     excerpt:
