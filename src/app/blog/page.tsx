@@ -10,11 +10,13 @@ import {
   Briefcase,
   Building2,
   Calendar,
+  CheckSquare,
   Clock,
   Code,
   Code2,
   Coins,
   Compass,
+  Cpu,
   CreditCard,
   Crown,
   Database,
@@ -24,6 +26,7 @@ import {
   FileCode2,
   FileJson,
   FileText,
+  GitBranch,
   Globe,
   Globe2,
   Heart,
@@ -81,6 +84,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'How to Build an MCP Server for Your Business: A 30-Minute Tutorial',
+    excerpt:
+      'Of 500 businesses scanned, only 2 ship an MCP server. Complete tutorial: install @modelcontextprotocol/sdk, define tools (list_products, get_pricing, create_order), add resources and prompts, deploy to Vercel or Cloudflare Workers, register via agent-card.json. Copy-paste ready, 30 minutes end-to-end.',
+    date: '2026-04-15',
+    readTime: '11 min read',
+    href: '/blog/build-mcp-server-tutorial',
+    tag: 'Tutorial',
+    tagColor: 'emerald',
+    icon: Cpu,
+  },
+  {
+    title: 'Why GitHub Scores 67 for Agent Readiness (And What It Gets Wrong)',
+    excerpt:
+      'GitHub scored 67 Silver in our 500-business scan. Near-perfect on D2 API (REST + GraphQL + OpenAPI) and D7 Security (OAuth + fine-grained PATs + SAML). Loses points on D5 Payment (no self-service billing API), D4 Pricing (enterprise is quote-only), and D9 Agent Experience (no agent-card.json linking the official MCP server).',
+    date: '2026-04-15',
+    readTime: '11 min read',
+    href: '/blog/github-agent-readiness-breakdown',
+    tag: 'Case Study',
+    tagColor: 'blue',
+    icon: GitBranch,
+  },
+  {
+    title: 'The Agent Readiness Checklist: 30 Signals Every Business Should Have',
+    excerpt:
+      'The definitive printable checklist, grouped by the 9 dimensions AgentHermes scans. HTTPS, robots.txt GPTBot, sitemap, agent-card.json, llms.txt, OpenAPI, OAuth, idempotency keys, status page, AGENTS.md, x402, MCP. Includes the six-item priority shortlist that lifts Bronze to Silver in 14 days.',
+    date: '2026-04-15',
+    readTime: '10 min read',
+    href: '/blog/checklist-agent-ready-business',
+    tag: 'Checklist',
+    tagColor: 'emerald',
+    icon: CheckSquare,
+  },
   {
     title: 'Payment Processing and Agent Readiness: The D5 Dimension (8% Weight)',
     excerpt:
