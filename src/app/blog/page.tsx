@@ -2,10 +2,13 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import {
   ArrowRight,
+  Award,
   BarChart3,
   BookOpen,
   Calendar,
   Clock,
+  Code2,
+  Eye,
   FileText,
   Globe,
   Layers,
@@ -18,11 +21,11 @@ import {
 export const metadata: Metadata = {
   title: 'Agent Economy Insights | AgentHermes Blog',
   description:
-    'Research, data, and analysis from scanning 132+ businesses. Insights on agent readiness, MCP adoption, ecommerce platforms, and the $6.2B gap in local business AI infrastructure.',
+    'Research, data, and analysis from scanning 500+ businesses. Insights on agent readiness scores, MCP adoption, ecommerce platforms, and the $6.2B gap in local business AI infrastructure.',
   openGraph: {
     title: 'Agent Economy Insights | AgentHermes Blog',
     description:
-      'Research, data, and analysis from scanning 132+ businesses for agent readiness.',
+      'Research, data, and analysis from scanning 500+ businesses for agent readiness.',
     url: 'https://agenthermes.ai/blog',
     siteName: 'AgentHermes',
     type: 'website',
@@ -31,7 +34,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Agent Economy Insights | AgentHermes Blog',
     description:
-      'Research, data, and analysis from scanning 132+ businesses for agent readiness.',
+      'Research, data, and analysis from scanning 500+ businesses for agent readiness.',
   },
 }
 
@@ -47,6 +50,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Is Your Business Invisible to AI Agents?',
+    excerpt:
+      'We scanned 500 businesses. 40% are completely invisible to AI agents. Find out where you stand with a free 60-second Agent Readiness Score — and what it takes to go from dark to discoverable.',
+    date: '2026-04-16',
+    readTime: '12 min read',
+    href: '/blog/invisible-to-ai-agents',
+    tag: 'Getting Started',
+    tagColor: 'green',
+    icon: Eye,
+  },
+  {
+    title: 'Resend Is the Only Gold — What 499 Businesses Can Learn',
+    excerpt:
+      'Out of 500 businesses scanned, only Resend scored Gold (75). Here is exactly what they do right across all 9 dimensions — and why the next closest companies are 3 points away.',
+    date: '2026-04-16',
+    readTime: '14 min read',
+    href: '/blog/resend-only-gold',
+    tag: 'Case Study',
+    tagColor: 'amber',
+    icon: Award,
+  },
+  {
+    title: 'Why Most SaaS Companies Score Bronze for Agent Readiness',
+    excerpt:
+      'We scanned 500 businesses. 50% scored Bronze. Here is why SaaS companies with great APIs still fail at agent readiness — and what the top 10% do differently across all 9 dimensions.',
+    date: '2026-04-16',
+    readTime: '15 min read',
+    href: '/blog/saas-agent-readiness',
+    tag: 'Research',
+    tagColor: 'emerald',
+    icon: Code2,
+  },
   {
     title: 'What Is Agent Readiness? The Complete Guide',
     excerpt:
@@ -245,7 +281,7 @@ export default function BlogPage() {
             </h1>
 
             <p className="text-lg sm:text-xl text-zinc-300 leading-relaxed tracking-tight max-w-3xl mx-auto mb-4">
-              Research, data, and analysis from scanning 132+ businesses.
+              Research, data, and analysis from scanning 500+ businesses.
             </p>
 
             <p className="text-base text-zinc-500 leading-relaxed max-w-2xl mx-auto">
