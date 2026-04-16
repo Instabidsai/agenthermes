@@ -21,10 +21,13 @@ import {
   Heart,
   Layers,
   Lightbulb,
+  Lock,
   MapPin,
   Megaphone,
   Network,
+  Search,
   Server,
+  Shield,
   ShoppingCart,
   TrendingUp,
   UtensilsCrossed,
@@ -64,6 +67,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Agent Readiness vs SEO: Why Your Google Ranking Does Not Help AI Agents',
+    excerpt:
+      'SEO ranks content for humans. Agent Readiness measures whether AI agents can actually use your business. After scanning 500 businesses, we found sites ranking #1 on Google that score 5/100 for agent readiness. Here is what is different, why both matter, and how to measure each.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/agent-readiness-vs-seo',
+    tag: 'Framework',
+    tagColor: 'purple',
+    icon: Search,
+  },
+  {
+    title: 'Why Scoring Caps at 39: The HTTPS and Endpoint Requirements That Kill Agent Readiness',
+    excerpt:
+      'Two hard caps in the Agent Readiness scoring model. No TLS means the score cannot exceed 39. No callable endpoints caps it at 29. Here is why both caps exist, how many of the 199 below-Bronze businesses are cap-driven, and the cheapest way to remove both.',
+    date: '2026-04-15',
+    readTime: '11 min read',
+    href: '/blog/scoring-caps-explained',
+    tag: 'Methodology',
+    tagColor: 'amber',
+    icon: Lock,
+  },
+  {
+    title: 'Security and Agent Readiness: Why Bearer Tokens Beat API Keys (D7 = 12%)',
+    excerpt:
+      'D7 Security carries a 0.12 weight — tied for third-highest of the 9 dimensions. Agents need predictable auth they can handle programmatically. Here is what AgentHermes scans for, why Bearer beats API keys, why OAuth 2.0 is the gold standard, and why 401+JSON scores 87% of 200.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/security-agent-readiness',
+    tag: 'Dimensions Deep Dive',
+    tagColor: 'blue',
+    icon: Shield,
+  },
   {
     title: 'llms.txt: The Single File 95% of Businesses Are Missing',
     excerpt:
