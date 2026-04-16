@@ -26,6 +26,7 @@ import {
   FileCode2,
   FileJson,
   FileText,
+  Gauge,
   GitBranch,
   Globe,
   Globe2,
@@ -38,11 +39,13 @@ import {
   Megaphone,
   Network,
   Plane,
+  Radio,
   Search,
   Server,
   Share2,
   Shield,
   ShieldCheck,
+  ShoppingBag,
   ShoppingCart,
   Sparkles,
   TrendingUp,
@@ -84,6 +87,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Shopify vs WooCommerce for Agent Readiness: The E-Commerce Platform Showdown',
+    excerpt:
+      'Dimension-by-dimension comparison of the two biggest e-commerce platforms for agent readiness. Shopify wins D1 Discoverability with public /products.json. WooCommerce wins API depth with the Store API. Neither ships agent-native out of the box — here is what both still need.',
+    date: '2026-04-16',
+    readTime: '14 min read',
+    href: '/blog/shopify-vs-woocommerce-agents',
+    tag: 'Platform Comparison',
+    tagColor: 'cyan',
+    icon: ShoppingBag,
+  },
+  {
+    title: 'Rate Limiting for AI Agents: Why X-RateLimit-Remaining Is the Most Important Header',
+    excerpt:
+      'Rate limiting for agents is different than for humans. Humans retry manually; agents need machine-readable guidance. The four headers every agent-ready API must return, plus why Stripe scores 68 partly because of perfect 429 responses.',
+    date: '2026-04-16',
+    readTime: '12 min read',
+    href: '/blog/rate-limiting-for-agents',
+    tag: 'Technical Deep Dive',
+    tagColor: 'purple',
+    icon: Gauge,
+  },
+  {
+    title: 'Webhooks and Agent Readiness: Why Real-Time Beats Polling for AI Agents',
+    excerpt:
+      'Agents cannot poll endlessly — it burns budget and misses events. Webhooks are how agent-ready businesses broadcast state changes. Top scorers all have them: Stripe, GitHub, Slack, Resend. Event catalog, HMAC signing, retry logic — the full playbook.',
+    date: '2026-04-16',
+    readTime: '13 min read',
+    href: '/blog/webhooks-agent-readiness',
+    tag: 'Technical Deep Dive',
+    tagColor: 'emerald',
+    icon: Radio,
+  },
   {
     title: 'How to Build an MCP Server for Your Business: A 30-Minute Tutorial',
     excerpt:
