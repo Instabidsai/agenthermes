@@ -12,6 +12,8 @@ import {
   Clock,
   Code,
   Code2,
+  Coins,
+  Compass,
   Crown,
   Database,
   DollarSign,
@@ -35,6 +37,7 @@ import {
   Server,
   Share2,
   Shield,
+  ShieldCheck,
   ShoppingCart,
   TrendingUp,
   UserPlus,
@@ -75,6 +78,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'x402: The Micropayment Protocol That Lets AI Agents Pay for Services',
+    excerpt:
+      'HTTP 402 Payment Required was reserved for 30 years and never used. x402 finally unlocks it — agents pay per-call, not per-subscription. Sub-second settlement on USDC, no signup, no card. Here is how x402 works and why it is the missing piece that unlocks ARL-4 Automated.',
+    date: '2026-04-15',
+    readTime: '11 min read',
+    href: '/blog/x402-payment-protocol',
+    tag: 'Protocols',
+    tagColor: 'emerald',
+    icon: Coins,
+  },
+  {
+    title: 'Discoverability and Agent Readiness: Why 40% of Businesses Fail D1 (12% Weight)',
+    excerpt:
+      'D1 Discoverability carries a 0.12 weight. If agents cannot find you, nothing else matters. 199 of 500 businesses scanned fail D1 so hard they never escape Unaudited. Here is exactly what D1 measures — DNS, robots.txt, sitemap, agent-card, llms.txt, OG tags — and the one-afternoon fix.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/discoverability-agent-readiness',
+    tag: 'Dimensions Deep Dive',
+    tagColor: 'blue',
+    icon: Compass,
+  },
+  {
+    title: 'Insurance Agent Readiness: Why Allstate Scores 66 While Most Insurers Are Invisible',
+    excerpt:
+      'Allstate scored 66 Silver. Most insurance carriers sit below 30. Structured quote API, digital claims, documented auth flow separate the winners. Regulation is not the excuse — Allstate proves compliant plus agent-ready works. Here is the full build order for carriers.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/insurance-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: ShieldCheck,
+  },
   {
     title: 'Real Estate Agent Readiness: Why Property Listings Are Invisible to AI Agents',
     excerpt:
