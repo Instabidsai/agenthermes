@@ -8,12 +8,14 @@ import {
   BarChart3,
   BookOpen,
   Briefcase,
+  Building2,
   Calendar,
   Clock,
   Code,
   Code2,
   Coins,
   Compass,
+  CreditCard,
   Crown,
   Database,
   DollarSign,
@@ -39,6 +41,7 @@ import {
   Shield,
   ShieldCheck,
   ShoppingCart,
+  Sparkles,
   TrendingUp,
   UserPlus,
   UtensilsCrossed,
@@ -78,6 +81,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Payment Processing and Agent Readiness: The D5 Dimension (8% Weight)',
+    excerpt:
+      'D5 Payment Processing carries an 8% weight in the Agent Readiness Score. Can an AI agent complete a purchase end-to-end? Most businesses fail on hosted checkout redirects. Here is what agent-ready payments look like — Payment Element, structured webhooks, refund endpoints, and x402.',
+    date: '2026-04-15',
+    readTime: '11 min read',
+    href: '/blog/payment-processing-agent-readiness',
+    tag: 'Dimensions Deep Dive',
+    tagColor: 'blue',
+    icon: CreditCard,
+  },
+  {
+    title: 'Agent Experience (D9): The Dimension That Actually Measures Agent Usability (10% Weight)',
+    excerpt:
+      'D9 Agent Experience = 10% of the score. Seven signals — request IDs, structured errors, response envelopes, rate-limit headers, cursor pagination, idempotency keys, OpenAPI examples — separate agent-pleasant APIs from stack-trace landmines. The middleware fix lifts D9 by 4-5 points in one commit.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/agent-experience-dimension',
+    tag: 'Dimensions Deep Dive',
+    tagColor: 'blue',
+    icon: Sparkles,
+  },
+  {
+    title: 'Why Fortune 500 Companies Score Lower Than Startups on Agent Readiness',
+    excerpt:
+      'The Fortune 500 averages 37 — below Bronze. Startups like Resend (75), Vercel (70), Supabase (69), and Stripe (68) dominate the top. Allstate is the one enterprise breaking into Silver. Budget is not the bottleneck. Architecture is. The gap is widening every quarter.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/enterprise-vs-startup-agent-readiness',
+    tag: 'Research',
+    tagColor: 'emerald',
+    icon: Building2,
+  },
   {
     title: 'x402: The Micropayment Protocol That Lets AI Agents Pay for Services',
     excerpt:
