@@ -7,6 +7,7 @@ import {
   Banknote,
   BarChart3,
   BookOpen,
+  Briefcase,
   Calendar,
   Clock,
   Code,
@@ -22,12 +23,14 @@ import {
   Globe,
   Globe2,
   Heart,
+  Home,
   Layers,
   Lightbulb,
   Lock,
   MapPin,
   Megaphone,
   Network,
+  Plane,
   Search,
   Server,
   Share2,
@@ -72,6 +75,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Real Estate Agent Readiness: Why Property Listings Are Invisible to AI Agents',
+    excerpt:
+      'Real estate sits at the bottom of our 500-business scan. Listings trapped in PDF flyers. MLS gatekeeping. Phone-only showings. Zero brokerages publish an agent card. $1.9T annual market waiting for the first agent-ready brokerage per metro.',
+    date: '2026-04-15',
+    readTime: '11 min read',
+    href: '/blog/real-estate-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Home,
+  },
+  {
+    title: 'Travel and Hospitality Agent Readiness: Hotels, Airlines, and the Booking API Gap',
+    excerpt:
+      'Travel has been machine-first since 1960. So why do independent hotels average 28/100? OTAs captured the agent-accessible surface and charge 15-25% commission for it. Direct-booking MCP servers are how hotels, airlines, and restaurants reclaim the margin.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/travel-hospitality-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Plane,
+  },
+  {
+    title: 'Professional Services Agent Readiness: Why Law Firms, Accountants, and Consultants Score Under 20',
+    excerpt:
+      'The lowest-scoring segment in the 500-business scan. 68 of 74 firms scored below 40. Charge $300-500/hr but cannot tell an AI agent what they offer. Five failure patterns repeat across every firm. Here is the fix, by firm type.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/professional-services-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Briefcase,
+  },
   {
     title: 'Data Quality and Agent Readiness: Why Structured Responses Win (D6 = 10%)',
     excerpt:
