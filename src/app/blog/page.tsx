@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import {
+  Activity,
   ArrowRight,
   Award,
   Banknote,
@@ -20,6 +21,7 @@ import {
   Heart,
   Layers,
   Lightbulb,
+  MapPin,
   Megaphone,
   Network,
   Server,
@@ -62,6 +64,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'llms.txt: The Single File 95% of Businesses Are Missing',
+    excerpt:
+      'Of the 500 businesses AgentHermes has scanned, fewer than 5% serve an llms.txt file at their root. That single markdown file is the fastest, cheapest way to become AI-readable and boost D1 Discovery and D9 Agent Experience. Here is the standard, a copy-paste template, and the exact score impact.',
+    date: '2026-04-15',
+    readTime: '11 min read',
+    href: '/blog/llms-txt-standard-guide',
+    tag: 'Standards Guide',
+    tagColor: 'emerald',
+    icon: FileText,
+  },
+  {
+    title: 'Local Business Agent Readiness: The $6.2B Opportunity Nobody Is Chasing',
+    excerpt:
+      '33 million US small businesses. Zero have MCP servers. 90% of local scans score below Bronze. The first plumber, dentist, and salon in each zip code to go agent-ready captures every agent-driven lead for the next 12 to 18 months. Here is the playbook.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/local-business-agent-readiness',
+    tag: 'Market Analysis',
+    tagColor: 'amber',
+    icon: MapPin,
+  },
+  {
+    title: 'Reliability and Agent Readiness: Why Status Pages Score 13% (D8)',
+    excerpt:
+      'D8 Reliability carries a 0.13 weight — second-highest of the 9 dimensions, behind only API quality. Agents automate repeat actions, so unreliable endpoints kill adoption. Here is why dev infra dominates (Statuspage 70, Vercel 70, Supabase 69), what we check, and how to score higher.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/reliability-agent-readiness',
+    tag: 'Dimensions Deep Dive',
+    tagColor: 'blue',
+    icon: Activity,
+  },
   {
     title: 'OpenAPI Specs Are the Single Biggest Factor in Agent Readiness (D2 = 15%)',
     excerpt:
