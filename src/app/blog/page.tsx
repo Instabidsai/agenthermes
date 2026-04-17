@@ -96,6 +96,8 @@ import {
   Receipt,
   ShieldHalf,
   TestTube,
+  Pill,
+  Ticket,
   Zap,
 } from 'lucide-react'
 
@@ -131,6 +133,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Event Ticketing Agent Readiness: Why Ticketmaster and Eventbrite Lock Out AI Booking Agents',
+    excerpt:
+      'The $94B live events market is mostly locked out of the agent economy. Eventbrite has a public API (score ~50). Ticketmaster: locked API, dynamic pricing, CAPTCHA walls. StubHub/SeatGeek: reseller APIs exist but restricted. Individual venues/promoters: zero API. AI event concierge agents need structured event catalogs, real-time availability, automated ticket purchase, and seat selection endpoints.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/event-ticketing-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Ticket,
+  },
+  {
+    title: 'JSON-LD vs Microdata: Which Structured Data Format AI Agents Prefer',
+    excerpt:
+      'JSON-LD wins for agents: separate from HTML, easy to parse, no DOM traversal needed. Microdata is embedded in HTML — harder for agents. Google recommends JSON-LD. AI agents strongly prefer it because they can extract structured data without rendering the page. AgentHermes checks for JSON-LD in D6 Data Quality (0.10 weight). Migration guide: microdata to JSON-LD in 20 minutes.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/json-ld-vs-microdata-agents',
+    tag: 'Technical Deep Dive',
+    tagColor: 'purple',
+    icon: Code2,
+  },
+  {
+    title: 'Pharmacy Agent Readiness: Why Prescription Services Are the Next Agent Frontier',
+    excerpt:
+      'The $635B pharmacy market requires phone calls for prescription transfers, manual insurance verification, and locked proprietary drug interaction systems. GoodRx has price comparison data (~42). CVS/Walgreens have some digital services but no public agent API. Regulatory barriers (DEA, state boards, HIPAA) exist but do not prevent structured data exposure. Independent pharmacies average 6/100.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/pharmacy-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Pill,
+  },
   {
     title: 'Accounting Agent Readiness: Why QuickBooks Beats Your Accountant\'s Website',
     excerpt:
