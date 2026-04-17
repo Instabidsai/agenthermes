@@ -53,6 +53,9 @@ import {
   Megaphone,
   MessageSquare,
   Network,
+  Phone,
+  FileSearch,
+  PieChart,
   Cog,
   Plane,
   Radio,
@@ -116,6 +119,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Telecom Agent Readiness: Why Carriers Are the Most Frustrating APIs for AI Agents',
+    excerpt:
+      'The $1.8T telecom industry is invisible to AI agents. Traditional carriers (AT&T 18, Verizon 16) use SOAP/XML, require enterprise NDAs, and expose zero structured plan data. Twilio is the exception at 58 — developer-first, REST/JSON, sandbox mode. The carrier that builds a plan comparison API and eSIM provisioning endpoint first captures the entire agent-driven mobile management market.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/telecom-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Phone,
+  },
+  {
+    title: 'robots.txt for AI Crawlers: How to Let GPTBot, ClaudeBot, and PerplexityBot In',
+    excerpt:
+      '38% of businesses accidentally block AI crawlers via robots.txt. GPTBot (OpenAI), ClaudeBot (Anthropic), Google-Extended (Google), and PerplexityBot all respect robots.txt. Blocking them = invisible to AI models = zero GEO. Copy-paste robots.txt template that allows AI crawlers while blocking scrapers like CCBot and Diffbot. AgentHermes checks this in D1 Discoverability (0.12 weight).',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/robots-txt-ai-crawlers',
+    tag: 'Standards Guide',
+    tagColor: 'emerald',
+    icon: FileSearch,
+  },
+  {
+    title: "The CMO's Guide to Agent Readiness: Why Your Marketing Website Fails and What to Fix",
+    excerpt:
+      'Marketing websites are designed for humans — hero images, animations, testimonial carousels, gated PDFs. AI agents cannot use any of it. Average marketing site scores 28/100. Five changes within marketing\'s control: Schema.org Product/Service markup, structured pricing page, lead intake API, llms.txt, HTML over PDF. Agent-driven leads cost $0 CAC. Companion to the CTO guide.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/cmo-guide-agent-readiness',
+    tag: 'Executive Guide',
+    tagColor: 'emerald',
+    icon: PieChart,
+  },
   {
     title: 'Construction Agent Readiness: Why Contractors and Builders Score Zero',
     excerpt:
