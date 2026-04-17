@@ -37,6 +37,7 @@ import {
   GraduationCap,
   KeyRound,
   Dumbbell,
+  Film,
   FlaskConical,
   Heart,
   HeartHandshake,
@@ -59,10 +60,12 @@ import {
   Shield,
   ShieldCheck,
   ShoppingBag,
+  Signal,
   ShoppingCart,
   Telescope,
   Timer,
   Trophy,
+  Wand2,
   Sparkles,
   TrendingUp,
   UserPlus,
@@ -105,6 +108,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Auto-Generated SDKs: How OpenAPI Specs Let AI Agents Write Their Own Client Libraries',
+    excerpt:
+      'When a business publishes an OpenAPI spec, AI agents can auto-generate typed client SDKs in any language. No reading docs, no guessing endpoints — the spec IS the documentation. Tools like openapi-generator, Speakeasy, and Stainless (Stripe uses it) make this possible. This directly boosts D2 API Quality (0.15). Businesses without OpenAPI force agents to screen-scrape HTML docs.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/sdk-generation-agent-readiness',
+    tag: 'Technical Deep Dive',
+    tagColor: 'purple',
+    icon: Wand2,
+  },
+  {
+    title: 'Media and Entertainment Agent Readiness: Why Content Platforms Score Higher Than Studios',
+    excerpt:
+      'Content platforms (Spotify 54, TikTok 69) vs traditional media (studios, agencies, publishers score under 20). Platforms win because they have public APIs for content discovery. Traditional media: gated content, DRM walls, licensing complexity, no structured catalog API. The $2.3T global media market is split in two by agent readiness.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/media-entertainment-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Film,
+  },
+  {
+    title: 'Your Status Page Is an Agent Readiness Signal: Why status.yoursite.com Adds Points',
+    excerpt:
+      'D8 Reliability (0.13) directly rewards status pages. AgentHermes checks: /status, status.domain.com, /health endpoint, incident history, SLA documentation. Why agents care: before delegating work to your API, agents check if you are operational. No status page = no confidence. The 3-tier approach takes 15 minutes to start and impacts 13% of your score.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/status-page-agent-readiness',
+    tag: 'Dimensions Deep Dive',
+    tagColor: 'blue',
+    icon: Signal,
+  },
   {
     title: 'Sandbox Environments: Why AI Agents Need a Safe Place to Learn Your API',
     excerpt:
