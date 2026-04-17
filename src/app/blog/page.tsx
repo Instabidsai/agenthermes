@@ -116,6 +116,9 @@ import {
   Gamepad2,
   Languages,
   Building,
+  LineChart,
+  Music,
+  Router,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -150,6 +153,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'API Gateways and Agent Readiness: How Kong, Apigee, and AWS API Gateway Affect Your Score',
+    excerpt:
+      'API gateways add layers between agents and your API. 67% of gateway-protected APIs block AI agents by default. Good: rate limiting, auth, caching, analytics. Bad: blocked User-Agents, added latency, mangled headers. We tested Kong, Apigee, and AWS API Gateway. Agent-ready gateway config: allow AI User-Agents, expose rate-limit headers, pass Content-Type negotiation, log agent traffic separately. Top platforms (Stripe, GitHub) use custom gateways. Configuration is the differentiator, not the gateway product.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/api-gateway-agent-readiness',
+    tag: 'Technical Deep Dive',
+    tagColor: 'purple',
+    icon: Router,
+  },
+  {
+    title: 'Music Streaming Agent Readiness: Why Spotify Scores 54 and What It Means for the Industry',
+    excerpt:
+      'Spotify scores 54 (Bronze, near Silver). Strong: public Web API with 80+ endpoints, OAuth, good docs, structured catalog data. Weak: no agent-card.json, rate limits undocumented, no MCP, playback requires human OAuth consent. The music streaming challenge: rights management prevents fully automated agent access. Apple Music 31, YouTube Music 38, Tidal 27. What pushes Spotify to Silver: agent-card + documented rate limits + llms.txt. Industry average: 37.5/100.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/music-streaming-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Music,
+  },
+  {
+    title: 'The Investor\'s Guide to Agent Readiness: How to Evaluate a Company\'s AI Infrastructure',
+    excerpt:
+      'VCs and PEs should add agent readiness to due diligence. Companies scoring Silver+ capture AI-driven revenue. Companies at Bronze get disintermediated. Metrics to check: Agent Readiness Score, MCP presence, API-first architecture, developer docs quality. The scoring model maps to defensibility: high D2+D7+D8 = sustainable moat. Portfolio screening: scan companies, rank by score, identify gaps. Average across 500 scans: 43/100. Only 14% reach Silver.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/investor-guide-agent-readiness',
+    tag: 'Investment Research',
+    tagColor: 'blue',
+    icon: LineChart,
+  },
   {
     title: 'Gaming Agent Readiness: Why Game Studios Have APIs But Players Can\'t Use AI Agents to Buy',
     excerpt:
