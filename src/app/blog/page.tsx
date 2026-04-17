@@ -121,6 +121,9 @@ import {
   LineChart,
   Music,
   Router,
+  Bug,
+  Hexagon,
+  Wine,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -155,6 +158,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Pest Control Agent Readiness: Why Exterminators Can\'t Be Dispatched by AI Agents',
+    excerpt:
+      '$22B pest control market runs entirely on phone calls. "Call for a free inspection." No availability API, no structured pricing by pest type, no inspection booking endpoint. Agent-ready pest control needs 5 endpoints: service type catalog, availability windows API, estimated pricing by pest type, inspection booking, recurring treatment scheduling. First pest control company with an MCP server captures every AI home management agent referral in its market. Average score: 5/100.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/pest-control-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Bug,
+  },
+  {
+    title: 'Building Agent-Ready APIs with Express and Fastify: A Node.js Developer\'s Guide',
+    excerpt:
+      'Third framework tutorial (after Next.js and Django/Flask). 8 Express patterns: swagger-jsdoc for OpenAPI, structured error middleware, /health route, static agent-card.json, route annotations, helmet for security headers, express-rate-limit with X-RateLimit headers, passport-http-bearer auth. 4 Fastify equivalents: @fastify/swagger, custom error handler, @fastify/under-pressure health check, schema-first validation. Takes a typical Node.js API from 10-20/100 to Silver (60+) or Gold (75+).',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/express-fastify-agent-readiness-tutorial',
+    tag: 'Developer Tutorial',
+    tagColor: 'purple',
+    icon: Hexagon,
+  },
+  {
+    title: 'Food and Beverage Agent Readiness: Why Breweries, Wineries, and Coffee Roasters Score Under 10',
+    excerpt:
+      '$190B craft beverage industry: 9,700 breweries, 11,500 wineries, 2,700 distilleries, 3,800 coffee roasters. Product catalogs on Instagram, tasting room reservations by phone, no structured inventory API. Agent-ready producers need: product catalog with tasting notes JSON, availability by location, tasting reservation API, subscription/club management endpoint, wholesale ordering API. AI sommelier and food discovery agents need structured product data to match taste preferences. Average score: 7/100.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/food-beverage-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Wine,
+  },
   {
     title: 'Churches and Religious Organizations Agent Readiness: Why Faith-Based Services Are Dark to AI',
     excerpt:
