@@ -151,6 +151,9 @@ import {
   Camera,
   FileCheck,
   Video,
+  Brain,
+  ShieldQuestion,
+  Flower2,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -185,6 +188,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Why Roboflow Scores 66: The Computer Vision Platform That\'s Almost Gold',
+    excerpt:
+      'Roboflow scored 66 Silver — an AI/ML platform scoring well. Strong REST API for model deployment, D2 API Quality at 85, D3 Onboarding strong (free tier, API key in 30 seconds). Where it loses: D4 Pricing (usage-based but not fully structured), D9 at 18 (no agent-card.json, no MCP). What pushes AI/ML platforms to Gold: MCP tools for model inference, structured pricing API, agent-card. 9 points from Gold.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/roboflow-agent-readiness-breakdown',
+    tag: 'Case Study',
+    tagColor: 'blue',
+    icon: Brain,
+  },
+  {
+    title: 'AI Agent Trust: Why Businesses Need to Score the Agents Calling Their APIs (Not Just the Other Way Around)',
+    excerpt:
+      'AgentHermes scores businesses. But businesses also need to score agents: Know Your Agent (KYA). Which agents are trustworthy? Which are malicious scrapers pretending to be agents? Agent identity signals: OAuth client registration, User-Agent declaration, rate-limit compliance, payment capability. The trust is bidirectional — businesses need agent readiness, and agents need business trust.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/ai-agent-trust-scoring',
+    tag: 'Thought Leadership',
+    tagColor: 'purple',
+    icon: ShieldQuestion,
+  },
+  {
+    title: 'Funeral Services Agent Readiness: The Most Sensitive Industry AI Agents Will Eventually Serve',
+    excerpt:
+      '$23B US funeral market. The most sensitive vertical: families in grief need information but are emotionally overwhelmed. Phone-only booking, pricing opaque despite FTC Funeral Rule requiring disclosure. Agent-ready: structured service catalog with FTC-compliant pricing, availability calendar, pre-planning API. AI estate planning agents will need funeral service data. Average score: under 8.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/funeral-services-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Flower2,
+  },
   {
     title: 'Photography and Videography Agent Readiness: Why Creative Professionals Can\'t Be Booked by AI',
     excerpt:
