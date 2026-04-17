@@ -10,7 +10,9 @@ import {
   BookOpen,
   Briefcase,
   Building2,
+  Calculator,
   Calendar,
+  Car,
   CheckSquare,
   Clock,
   Code,
@@ -40,6 +42,7 @@ import {
   Landmark,
   Layers,
   Lightbulb,
+  List,
   Lock,
   MapPin,
   Megaphone,
@@ -99,6 +102,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Pagination for AI Agents: Why Cursor-Based Beats Offset-Based Every Time',
+    excerpt:
+      'Agents iterate through datasets automatically. Offset-based pagination (page=2&limit=20) breaks when data changes between pages. Cursor-based (after=abc123) is stable, performant, and agent-safe. AgentHermes D9 checks for cursor support. 88% of APIs have no pagination at all. The 3 patterns agents encounter and which one they trust.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/pagination-agent-readiness',
+    tag: 'Technical Deep Dive',
+    tagColor: 'purple',
+    icon: List,
+  },
+  {
+    title: 'Automotive Agent Readiness: Why Car Dealerships and Auto Services Score Under 15',
+    excerpt:
+      'The $1.2T US automotive market is invisible to AI agents. Inventory on third-party platforms (AutoTrader, Cars.com), pricing hidden behind "call for quote," service booking phone-only. Dealership websites are marketing brochures, not agent-callable APIs. The first direct-to-agent dealer wins every agent-driven buyer in their metro.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/automotive-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Car,
+  },
+  {
+    title: 'The Agent Readiness ROI: What Happens When AI Agents Can Actually Use Your Business',
+    excerpt:
+      'Bottom-line piece for executives. Agent-ready businesses capture zero-CAC revenue: automated lead gen, 24/7 availability, compound discovery. If 1% of customers come via agents in 2026, that is 5-8% by 2028. Businesses at ARL-3+ capture it. Businesses at ARL-0 get zero. Every agent query that bounces off "contact us" goes to your competitor with an API.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/agent-readiness-roi-calculator',
+    tag: 'Business Strategy',
+    tagColor: 'emerald',
+    icon: Calculator,
+  },
   {
     title: 'Idempotency Keys: Why AI Agents Need Safe Retries (And Your API Probably Doesn\'t Support Them)',
     excerpt:
