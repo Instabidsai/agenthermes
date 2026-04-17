@@ -90,6 +90,8 @@ import {
   Wrench,
   Cloud,
   Users,
+  Scissors,
+  Gavel,
   Zap,
 } from 'lucide-react'
 
@@ -125,6 +127,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Beauty and Salon Agent Readiness: Why Booking Apps Own Your Business and AI Agents Can\'t Find You',
+    excerpt:
+      'Hair salons, nail salons, barbershops, beauty spas: all booking-dependent, all locked behind Booksy/Vagaro/Square Appointments. No direct API. Agent-ready salon: appointment availability JSON, service menu with prices, stylist profiles with specialties, automated booking + cancellation. First salon with MCP server = booked by every AI personal assistant. Average score: 11/100.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/beauty-salon-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Scissors,
+  },
+  {
+    title: 'Monitoring and Observability for Agent Readiness: How to Know If AI Agents Are Using Your API',
+    excerpt:
+      'Once you are agent-ready, how do you know agents are actually calling your API? Agent traffic monitoring: User-Agent detection (Claude, GPT, agent frameworks), request pattern analysis (agents paginate systematically), billing attribution (which agents generate revenue). Tools: DataDog, Grafana, custom middleware. The 20-line middleware that makes agent traffic visible.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/monitoring-observability-agent-readiness',
+    tag: 'Technical Guide',
+    tagColor: 'purple',
+    icon: BarChart3,
+  },
+  {
+    title: 'Legal and Compliance Considerations for Agent Readiness: GDPR, HIPAA, and Terms of Service',
+    excerpt:
+      'Businesses worry about liability when AI agents access their services. GDPR implications of agent-processed personal data, HIPAA requirements for healthcare agents, PCI DSS for payment processing by agents. The legal answer: structured APIs with proper auth are MORE compliant than uncontrolled web scraping. Having an agent-card.json with explicit capability declarations = legal clarity.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/legal-compliance-agent-readiness',
+    tag: 'Legal Guide',
+    tagColor: 'purple',
+    icon: Gavel,
+  },
   {
     title: 'HR and Recruiting Agent Readiness: Why ATS Platforms Lock Out AI Hiring Agents',
     excerpt:
