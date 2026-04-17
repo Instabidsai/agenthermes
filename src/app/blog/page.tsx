@@ -32,6 +32,7 @@ import {
   Gauge,
   GitBranch,
   GitCompare,
+  GitMerge,
   Globe,
   Globe2,
   GraduationCap,
@@ -56,6 +57,7 @@ import {
   Repeat,
   Search,
   Server,
+  Settings,
   Share2,
   Shield,
   ShieldCheck,
@@ -108,6 +110,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: "The CTO's Guide to Agent Readiness: Technical Decisions That Impact Your Score",
+    excerpt:
+      '10 architectural decisions that directly impact your Agent Readiness Score. API-first vs website-first, OpenAPI vs ad-hoc docs, Bearer auth vs session cookies, JSON errors vs HTML, cursor pagination, webhooks, sandbox mode, status page, versioned APIs, MCP server. Each maps to a specific dimension and point value. A CTO who reads this can estimate their score before scanning.',
+    date: '2026-04-15',
+    readTime: '15 min read',
+    href: '/blog/cto-guide-agent-readiness',
+    tag: 'Technical Guide',
+    tagColor: 'emerald',
+    icon: Settings,
+  },
+  {
+    title: 'GraphQL vs REST for Agent Readiness: Which API Style Agents Prefer',
+    excerpt:
+      'AI agents interact differently with GraphQL and REST APIs. REST is easier to discover via OpenAPI specs (wins D1, D3, D7). GraphQL is more powerful to query via introspection (wins D2, D6). GitHub offers both and scores 67 Silver. Best practice: REST with OpenAPI for discovery, GraphQL for advanced agent use. MCP supersedes both but needs a backend.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/graphql-vs-rest-agent-readiness',
+    tag: 'Technical Deep Dive',
+    tagColor: 'purple',
+    icon: GitMerge,
+  },
+  {
+    title: 'Energy and Utilities Agent Readiness: Why Power Companies Are Dark to AI Agents',
+    excerpt:
+      'The $1.5T energy sector is invisible to AI agents. Billing portals are customer-login-only, usage data trapped in proprietary smart meters, outage reporting phone-first, no public API for rate plans. Smart grid data exists but is not agent-accessible. The first utility with an MCP server for rate comparison wins every AI-powered energy broker.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/energy-utilities-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Zap,
+  },
   {
     title: 'Auto-Generated SDKs: How OpenAPI Specs Let AI Agents Write Their Own Client Libraries',
     excerpt:
