@@ -83,6 +83,9 @@ import {
   Wheat,
   BookText,
   BookA,
+  Stethoscope,
+  FileType,
+  Scale,
   Wrench,
   Zap,
 } from 'lucide-react'
@@ -119,6 +122,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Dental and Veterinary Agent Readiness: Why Appointment-Based Businesses Are Missing the Agent Wave',
+    excerpt:
+      'Over 200,000 dental practices and 32,000 vet clinics in the US — nearly all invisible to AI agents. Phone-only booking, no pricing APIs, manual insurance verification, patient intake on clipboards. OpenDental and Dentrix have internal APIs but zero agent-facing exposure. The first dental practice with an MCP server gets booked by every AI personal assistant managing family schedules.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/dental-veterinary-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Stethoscope,
+  },
+  {
+    title: 'Content Negotiation: Why Accept Headers Determine If AI Agents Get JSON or HTML',
+    excerpt:
+      'AI agents send Accept: application/json. Most websites ignore this header and return HTML anyway. Content negotiation is a 5-minute middleware fix that directly impacts D6 Data Quality (0.10 weight). Sites that return JSON for JSON requests and HTML for HTML requests score higher. Anti-pattern: ignoring Accept header entirely and always returning HTML.',
+    date: '2026-04-15',
+    readTime: '11 min read',
+    href: '/blog/content-negotiation-agent-readiness',
+    tag: 'Technical Deep Dive',
+    tagColor: 'purple',
+    icon: FileType,
+  },
+  {
+    title: 'AgentHermes vs IsAgentReady: How the Two Agent Readiness Scanners Compare',
+    excerpt:
+      'Transparent comparison of the two leading agent readiness scanners. AgentHermes: 9 weighted dimensions, 500+ businesses scanned, hosted MCP servers, vertical-specific profiles. IsAgentReady: 5 letter-grade categories, auto-fix agent skills, installable MCP packages. Both are new — the market is wide open. Use both for maximum coverage.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/competitor-comparison-isagentready',
+    tag: 'Comparison',
+    tagColor: 'cyan',
+    icon: Scale,
+  },
   {
     title: 'Telecom Agent Readiness: Why Carriers Are the Most Frustrating APIs for AI Agents',
     excerpt:
