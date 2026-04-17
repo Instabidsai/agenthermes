@@ -32,6 +32,7 @@ import {
   Globe,
   Globe2,
   GraduationCap,
+  KeyRound,
   Heart,
   Home,
   Layers,
@@ -40,6 +41,7 @@ import {
   MapPin,
   Megaphone,
   Network,
+  Cog,
   Plane,
   Radio,
   Search,
@@ -90,6 +92,28 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Manufacturing Agent Readiness: Why Factory Floors Are the Last Frontier for AI Agents',
+    excerpt:
+      'Manufacturing has massive value but zero digital agent infrastructure. ERPs locked behind VPNs, IoT data unexposed, supply chain stuck in EDI. The first agent-ready factory wins procurement from every AI purchasing agent.',
+    date: '2026-04-16',
+    readTime: '13 min read',
+    href: '/blog/manufacturing-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Cog,
+  },
+  {
+    title: 'OAuth 2.0 for AI Agents: The Client Credentials Flow Every API Needs',
+    excerpt:
+      'OAuth client_credentials grant is the gold standard for machine-to-machine auth. Most OAuth flows assume a human with a browser. Agents need: POST /oauth/token, get access_token, use Bearer header. No redirect, no consent screen.',
+    date: '2026-04-16',
+    readTime: '14 min read',
+    href: '/blog/oauth-for-agents-guide',
+    tag: 'Technical Deep Dive',
+    tagColor: 'purple',
+    icon: KeyRound,
+  },
   {
     title: 'Education Agent Readiness: Why Schools and Universities Are Missing the Agent Economy',
     excerpt:
