@@ -28,8 +28,10 @@ import {
   FileText,
   Gauge,
   GitBranch,
+  GitCompare,
   Globe,
   Globe2,
+  GraduationCap,
   Heart,
   Home,
   Layers,
@@ -47,6 +49,7 @@ import {
   ShieldCheck,
   ShoppingBag,
   ShoppingCart,
+  Timer,
   Sparkles,
   TrendingUp,
   UserPlus,
@@ -87,6 +90,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Education Agent Readiness: Why Schools and Universities Are Missing the Agent Economy',
+    excerpt:
+      'Education averages 29/100 on the Agent Readiness Score. LMS systems like Canvas and Blackboard have APIs — but locked behind institutional SSO. Course catalogs exist as PDFs. Admissions terminate at "call us." Community colleges score 12, EdTech SaaS hits 52. The $1.7T education market is invisible to AI agents.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/education-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: GraduationCap,
+  },
+  {
+    title: 'API Versioning and Agent Readiness: Why Breaking Changes Kill AI Agent Trust',
+    excerpt:
+      'Agents hardcode API patterns. Unversioned APIs that break = agents crash = no retry. What AgentHermes checks: /v1/ prefix, Accept-Version header, deprecation notices in headers, changelog endpoint. Stripe is the gold standard — explicit versions in every request, 2-year backward compat. The five anti-patterns that permanently lose agent traffic.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/api-versioning-agent-readiness',
+    tag: 'Technical Deep Dive',
+    tagColor: 'purple',
+    icon: GitCompare,
+  },
+  {
+    title: 'From Bronze to Silver in 30 Days: The Agent Readiness Sprint',
+    excerpt:
+      'The actionable 30-day plan for businesses stuck at 40-59 (Bronze). Week 1: HTTPS + OpenAPI + sitemap. Week 2: Bearer auth + structured errors + /health. Week 3: agent-card.json + llms.txt + Schema.org. Week 4: self-service API keys + pricing + webhooks. Real examples from scan data: what moved companies from 45 to 62.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/bronze-to-silver-guide',
+    tag: 'How-To Guide',
+    tagColor: 'green',
+    icon: Timer,
+  },
   {
     title: 'Shopify vs WooCommerce for Agent Readiness: The E-Commerce Platform Showdown',
     excerpt:
