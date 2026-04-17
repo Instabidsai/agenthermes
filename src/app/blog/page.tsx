@@ -58,6 +58,8 @@ import {
   TrendingUp,
   UserPlus,
   UtensilsCrossed,
+  Bot,
+  Truck,
   Wrench,
   Zap,
 } from 'lucide-react'
@@ -94,6 +96,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'CORS and Agent Readiness: Why Cross-Origin Headers Determine If AI Agents Can Use Your API',
+    excerpt:
+      'CORS blocks agents by default. Most browser-built APIs return Access-Control-Allow-Origin for specific domains, preventing agents from different origins. Agent-ready CORS: allow credentialed cross-origin requests, expose rate-limit headers, handle OPTIONS preflight. Top scorers (Stripe, Resend) handle it correctly. Anti-pattern: allowing * but blocking Authorization header.',
+    date: '2026-04-16',
+    readTime: '13 min read',
+    href: '/blog/cors-headers-agent-readiness',
+    tag: 'Technical Deep Dive',
+    tagColor: 'purple',
+    icon: Globe2,
+  },
+  {
+    title: 'Logistics Agent Readiness: Why Shipping and Delivery Companies Score Below 30',
+    excerpt:
+      'Logistics tracking APIs exist (FedEx, UPS, USPS) but are rate-limited, XML-first, and require complex auth. Most 3PLs have no public API at all. EasyPost leads at 48 (Bronze). The first logistics company with an MCP server wins every AI-powered e-commerce integration.',
+    date: '2026-04-16',
+    readTime: '14 min read',
+    href: '/blog/logistics-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Truck,
+  },
+  {
+    title: 'AI Agents vs Chatbots: Why Agent Readiness Is Not About Adding a Chat Widget',
+    excerpt:
+      'Businesses think "AI ready" means adding a chatbot. Wrong. A chatbot sits on YOUR site for humans. An agent calls your API from THEIR system. Stripe (no chatbot) scores 68. Chatbot-only businesses average 18. The distinction changes everything about how you prepare for the agent economy.',
+    date: '2026-04-16',
+    readTime: '12 min read',
+    href: '/blog/ai-agents-vs-chatbots',
+    tag: 'Education',
+    tagColor: 'emerald',
+    icon: Bot,
+  },
   {
     title: 'Why Vercel and Supabase Both Score 69-70: The Infrastructure Platform Pattern',
     excerpt:
