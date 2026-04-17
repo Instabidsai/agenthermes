@@ -127,6 +127,9 @@ import {
   BookOpenCheck,
   CloudCog,
   Store,
+  ParkingCircle,
+  Clock3,
+  Armchair,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -161,6 +164,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Parking and Transportation Agent Readiness: Why Uber Has an API But Your Parking Garage Doesn\'t',
+    excerpt:
+      'Ride-hailing (Uber, Lyft) scores 45-55 on agent readiness thanks to public APIs. Parking garages score zero — no real-time availability, no dynamic pricing endpoint, no reservation system. Public transit has GTFS feeds (structured!) but most agencies only share real-time data through Google Maps. EV charging networks have OCPI but adoption is fragmented. Agent-ready parking needs 5 endpoints: real-time space availability, dynamic pricing, reservation system, EV charging status, facility info. AI travel agents need parking data to complete trip planning. The $131B US parking industry is invisible to agents.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/parking-transportation-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: ParkingCircle,
+  },
+  {
+    title: 'API Deprecation and Agent Readiness: How to Sunset Endpoints Without Breaking AI Agent Trust',
+    excerpt:
+      'When you deprecate an API endpoint, agents that depend on it break silently. They do not file support tickets — they just leave. Agent-ready deprecation: Sunset header (RFC 8594), Deprecation header, migration guide in changelog, llms.txt update, 410 Gone with migration JSON. Anti-patterns: silent removal, returning HTML on JSON endpoints, version bumps without overlap. AgentHermes D8 Reliability rewards documented deprecation practices. 90-day minimum deprecation window. Stripe\'s 2-year version lifecycle is the gold standard.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/api-deprecation-agent-readiness',
+    tag: 'Technical Deep Dive',
+    tagColor: 'purple',
+    icon: Clock3,
+  },
+  {
+    title: 'Coworking Space Agent Readiness: Why WeWork Has an App But Independent Spaces Score Zero',
+    excerpt:
+      '$18B US flexible workspace market with 6,200+ coworking spaces. WeWork and Regus have apps but no public API — booking locked behind member authentication. Independent spaces (thousands in US): website + phone number. No desk availability API, no meeting room booking endpoint, no pricing JSON. Agent-ready coworking needs 5 endpoints: desk/office availability, meeting room booking, membership pricing JSON, tour scheduling, day pass purchase. AI executive assistants need to book workspace — currently impossible without calling. Average score: 3/100.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/coworking-space-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Armchair,
+  },
   {
     title: 'Tutoring Agent Readiness: Why Private Tutors and Learning Centers Can\'t Be Matched by AI',
     excerpt:
