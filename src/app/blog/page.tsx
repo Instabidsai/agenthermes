@@ -157,6 +157,9 @@ import {
   Gem,
   Binary,
   Kanban,
+  Trash2,
+  Cable,
+  AreaChart,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -191,6 +194,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Waste Management and Recycling Agent Readiness: Why Trash Collection Can\'t Be Scheduled by AI',
+    excerpt:
+      '$100B US waste management. Pickup schedules fixed by municipality, no API for schedule changes, recycling rules vary by zip code and are not structured. Agent-ready: pickup schedule API, service change endpoint, recycling rules by material/location, bulk pickup request, billing management. Republic Services and Waste Management have apps but no public API. AI home management agents are completely blocked.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/waste-recycling-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Trash2,
+  },
+  {
+    title: 'gRPC and Agent Readiness: Why Protocol Buffers Score Differently Than REST',
+    excerpt:
+      'Technical comparison. gRPC: binary protocol, proto files define schema (like OpenAPI but compiled), streaming, faster than REST. But harder for agents to discover — no /openapi.json equivalent that agents auto-detect, binary means no curl testing, requires code generation. REST with OpenAPI wins on D1 Discoverability. gRPC wins on D8 Reliability and D2 API Quality. Best practice: REST for discovery + gRPC for performance-critical paths.',
+    date: '2026-04-15',
+    readTime: '11 min read',
+    href: '/blog/grpc-agent-readiness',
+    tag: 'Technical Deep Dive',
+    tagColor: 'cyan',
+    icon: Cable,
+  },
+  {
+    title: 'Why Amplitude and Power BI Both Score 66: The Analytics Platform Pattern',
+    excerpt:
+      'Dual case study: Amplitude 66, Power BI 66 — identical Silver scores but different products. Amplitude: product analytics API, cohort endpoints, event tracking. Power BI: visualization API, dataset management, embed endpoints. Both win on D2 API Quality and D7 Security. Both lose on D4 Pricing (enterprise-gated) and D9 Agent Experience (zero agent-native infrastructure). The analytics platform pattern: data-rich but agent-poor.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/amplitude-powerbi-agent-readiness',
+    tag: 'Case Study',
+    tagColor: 'blue',
+    icon: AreaChart,
+  },
   {
     title: 'Jewelry and Luxury Goods Agent Readiness: Why High-End Retailers Are Dark to AI Shopping Agents',
     excerpt:
