@@ -34,6 +34,7 @@ import {
   Globe2,
   GraduationCap,
   KeyRound,
+  Dumbbell,
   Heart,
   Home,
   Landmark,
@@ -46,6 +47,7 @@ import {
   Cog,
   Plane,
   Radio,
+  Repeat,
   Search,
   Server,
   Share2,
@@ -54,6 +56,7 @@ import {
   ShoppingBag,
   ShoppingCart,
   Timer,
+  Trophy,
   Sparkles,
   TrendingUp,
   UserPlus,
@@ -96,6 +99,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Idempotency Keys: Why AI Agents Need Safe Retries (And Your API Probably Doesn\'t Support Them)',
+    excerpt:
+      'Agents retry on failure. Without idempotency, retries cause duplicate charges and orders. Stripe\'s Idempotency-Key header is the gold standard. 92% of APIs lack any idempotency support. What AgentHermes checks in D9: Idempotency-Key header support, duplicate request detection, 409 Conflict for duplicates. The 3 patterns: key-based (Stripe), natural (GET/PUT/DELETE), conditional (ETag/If-Match).',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/idempotency-agent-readiness',
+    tag: 'Technical Deep Dive',
+    tagColor: 'purple',
+    icon: Repeat,
+  },
+  {
+    title: 'Fitness and Wellness Agent Readiness: Why Gyms, Spas, and Studios Are Invisible to AI',
+    excerpt:
+      'Fitness and wellness average under 25 on the Agent Readiness Score. Class schedules in PDFs, booking via phone only, no public API for availability, pricing gated behind membership tiers. The $96B US fitness market has zero MCP servers. The first CrossFit gym with an MCP server gets booked by every AI personal assistant.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/fitness-wellness-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Dumbbell,
+  },
+  {
+    title: 'From Silver to Gold: What the Final 15 Points of Agent Readiness Actually Require',
+    excerpt:
+      'Companion to the Bronze-to-Silver guide. Silver (60-74) to Gold (75+) is the hardest jump — only 1 of 500 businesses (Resend) made it. The final 15 points require: agent-card.json (~3pts), llms.txt (~2pts), MCP server (~5pts), x402 payment support (~2pts), fully structured errors (~2pts), sub-100ms p95 latency (~1pt). Why Resend scores 75 and Vercel scores 70.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/silver-to-gold-guide',
+    tag: 'How-To Guide',
+    tagColor: 'green',
+    icon: Trophy,
+  },
   {
     title: 'CORS and Agent Readiness: Why Cross-Origin Headers Determine If AI Agents Can Use Your API',
     excerpt:
