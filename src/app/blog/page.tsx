@@ -40,6 +40,7 @@ import {
   Dumbbell,
   Film,
   FlaskConical,
+  HardHat,
   Heart,
   HeartHandshake,
   Home,
@@ -50,6 +51,7 @@ import {
   Lock,
   MapPin,
   Megaphone,
+  MessageSquare,
   Network,
   Cog,
   Plane,
@@ -60,6 +62,7 @@ import {
   Settings,
   Share2,
   Shield,
+  ShieldAlert,
   ShieldCheck,
   ShoppingBag,
   Signal,
@@ -113,6 +116,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Construction Agent Readiness: Why Contractors and Builders Score Zero',
+    excerpt:
+      'The $2T US construction industry is invisible to AI agents. Estimates via phone, project timelines in spreadsheets, material quotes by email, subcontractor discovery by word of mouth. No structured data whatsoever. The average score is 8/100 — the lowest of any major vertical. BuilderTrend and Procore have internal APIs but not agent-facing. The first contractor with an MCP server gets every AI-powered project manager\'s business.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/construction-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: HardHat,
+  },
+  {
+    title: 'security.txt: The 2-Minute File That Tells AI Agents Your API Is Safe',
+    excerpt:
+      'RFC 9116 defines /.well-known/security.txt. AgentHermes checks for it in D7 Security (0.12 weight). 100% of Silver-tier businesses have one. Over 95% below Bronze do not. Contents: Contact, Expires, Preferred-Languages, Canonical, Policy, Hiring. Takes 2 minutes to create, adds points to D7, and signals maturity to AI agents evaluating API trustworthiness.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/security-txt-agent-readiness',
+    tag: 'Standards Guide',
+    tagColor: 'emerald',
+    icon: ShieldAlert,
+  },
+  {
+    title: 'Why Slack Scores 68 for Agent Readiness (And What Keeps It From Gold)',
+    excerpt:
+      'Dimension-by-dimension breakdown of Slack\'s 68 Silver. D2 API Quality: 85 (Web API, Events API, Block Kit). D7 Security: 82 (OAuth, 700+ scopes, audit logs). D8 Reliability: 80 (status.slack.com). Where Slack loses: D4 Pricing (enterprise "contact sales"), D5 Payment (no self-service enterprise billing API), D9 Agent Experience (no agent-card.json, no llms.txt, no MCP). Three files and self-service enterprise pricing push Slack to Gold.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/slack-agent-readiness-breakdown',
+    tag: 'Case Study',
+    tagColor: 'blue',
+    icon: MessageSquare,
+  },
   {
     title: 'Agriculture Agent Readiness: Why Farm Tech Has APIs But Farmers Don\'t',
     excerpt:
