@@ -136,6 +136,9 @@ import {
   Box,
   Beaker,
   UserSearch,
+  Trees,
+  LayoutTemplate,
+  BadgeCheck,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -170,6 +173,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Landscaping Agent Readiness: Why Lawn Care and Garden Services Can\'t Be Scheduled by AI',
+    excerpt:
+      '$130B US landscaping market. Scheduling via phone/text, estimates require site visit, pricing varies by property size. No structured API for service catalog, seasonal scheduling, or recurring service management. Agent-ready landscaping needs property-size-based pricing API, service catalog JSON, scheduling endpoint, photo-based estimate submission, and recurring service management. AI home management agents will handle landscaping alongside cleaning and pest control. Average score: 8/100.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/landscaping-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Trees,
+  },
+  {
+    title: 'API-First vs Web-First: The Architectural Decision That Determines Your Agent Readiness Score',
+    excerpt:
+      'The single most impactful architectural decision for agent readiness. API-first companies (Stripe, Twilio, Resend) average 60+ scores. Web-first companies (marketing sites, portfolios, brochure sites) average 15-20. API-first means structured data IS the product. Web-first means HTML is the product and data is an afterthought. The migration path: web-first companies can add API-first layers without rebuilding, jumping from 15 to 50+ in a week. Data from 500 business scans.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/api-first-vs-web-first',
+    tag: 'Architecture Analysis',
+    tagColor: 'blue',
+    icon: LayoutTemplate,
+  },
+  {
+    title: 'Why Drata and Secureframe Both Score 65-66: The Compliance SaaS Pattern',
+    excerpt:
+      'Dual case study: Drata 66, Secureframe 65 — nearly identical Silver scores. The compliance SaaS pattern: both API-first, both OAuth, both structured docs, both integrate with dozens of tools. Where they score well: D2 API (80+), D7 Security (90+, they ARE security companies), D3 Onboarding (72+). Where they lose: D4 Pricing (enterprise-gated), D9 Agent Experience (no MCP, no agent-card). What pushes compliance platforms from Silver to Gold.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/drata-secureframe-agent-readiness',
+    tag: 'Case Study',
+    tagColor: 'purple',
+    icon: BadgeCheck,
+  },
   {
     title: 'Moving and Storage Agent Readiness: Why Movers Can\'t Be Hired by AI Relocation Agents',
     excerpt:
