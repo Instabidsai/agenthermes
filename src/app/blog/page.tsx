@@ -154,6 +154,9 @@ import {
   Brain,
   ShieldQuestion,
   Flower2,
+  Gem,
+  Binary,
+  Kanban,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -188,6 +191,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Jewelry and Luxury Goods Agent Readiness: Why High-End Retailers Are Dark to AI Shopping Agents',
+    excerpt:
+      '$350B global luxury market. Intentionally opaque: "price on request," appointment-only showrooms, no public inventory. The luxury paradox: exclusivity = anti-agent by design. But AI personal shoppers serving HNW clients need structured data. Agent-ready luxury: authenticated product catalog API, appointment scheduling, price-qualified viewing, provenance JSON. The first luxury brand with an MCP for VIP agents captures the concierge market.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/jewelry-luxury-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Gem,
+  },
+  {
+    title: 'Building Agent-Ready APIs with Go and Rust: A Systems Developer\'s Guide',
+    excerpt:
+      'Fourth framework tutorial. Go: net/http + chi, swaggo for OpenAPI, structured error middleware, /healthz convention. Rust: Axum, utoipa for OpenAPI, custom error types, Tower middleware. Both excel at low latency (D8 boost) and memory safety (D7 boost). Copy-paste code for each: error handler, health endpoint, OpenAPI, CORS, auth middleware, agent-card.json serving.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/go-rust-agent-readiness-tutorial',
+    tag: 'Tutorial',
+    tagColor: 'cyan',
+    icon: Binary,
+  },
+  {
+    title: 'Why Monday and Jira Both Score 65-66: The Project Management Platform Pattern',
+    excerpt:
+      'Dual case study: Monday 65, Jira 66 — project management platforms built for team productivity. Strong: REST/GraphQL APIs, OAuth, webhooks, marketplace integrations. Weak: enterprise pricing gated, no agent-card.json, complex permission models that confuse agents. The pattern: tools built for human collaboration score Silver because they already have APIs — but human-centric UX assumptions hold them back from Gold.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/monday-jira-agent-readiness',
+    tag: 'Case Study',
+    tagColor: 'blue',
+    icon: Kanban,
+  },
   {
     title: 'Why Roboflow Scores 66: The Computer Vision Platform That\'s Almost Gold',
     excerpt:
