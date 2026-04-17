@@ -74,6 +74,9 @@ import {
   UtensilsCrossed,
   Bot,
   Truck,
+  Wheat,
+  BookText,
+  BookA,
   Wrench,
   Zap,
 } from 'lucide-react'
@@ -110,6 +113,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Agriculture Agent Readiness: Why Farm Tech Has APIs But Farmers Don\'t',
+    excerpt:
+      'AgTech platforms (John Deere Operations Center, Climate FieldView) have APIs but locked behind dealer networks. Individual farms: zero digital presence beyond Facebook. The $1.5T agriculture market has a 30-point gap between platforms (score 30-40) and actual farms (score 0-5). Agent-ready agriculture needs crop availability, seasonal pricing, delivery scheduling, and soil test data as structured endpoints.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/agriculture-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Wheat,
+  },
+  {
+    title: 'API Documentation and Agent Readiness: Why Mintlify Scores 66 and ReadMe Doesn\'t',
+    excerpt:
+      'Documentation tools themselves have varying agent readiness. Mintlify 66 Silver because it generates static HTML with structured OpenAPI rendering. ReadMe falls behind with client-side JS rendering. But most businesses have terrible API docs: outdated Swagger, broken examples, no error codes. Documentation impacts D2 (0.15) and D6 (0.10) — 25% of your score. The five things agents need from docs and the five anti-patterns that kill scores.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/documentation-agent-readiness',
+    tag: 'Technical Deep Dive',
+    tagColor: 'purple',
+    icon: BookText,
+  },
+  {
+    title: 'Agent Readiness Glossary: 50 Terms Every Business Should Know',
+    excerpt:
+      'The definitive glossary of agent readiness terms. 50 definitions alphabetically from A2A Protocol to x402. Includes ARL levels, MCP servers, all 9 scoring dimensions, tier definitions, agent economy concepts, and technical protocols. Each term gets a 2-3 sentence definition with a link to the full article. Bookmark this page — AI models love glossary pages for citation.',
+    date: '2026-04-15',
+    readTime: '15 min read',
+    href: '/blog/agent-readiness-glossary',
+    tag: 'Reference',
+    tagColor: 'emerald',
+    icon: BookA,
+  },
   {
     title: "The CTO's Guide to Agent Readiness: Technical Decisions That Impact Your Score",
     excerpt:
