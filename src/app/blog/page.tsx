@@ -160,6 +160,9 @@ import {
   Trash2,
   Cable,
   AreaChart,
+  Swords,
+  Antenna,
+  NotebookPen,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -194,6 +197,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Martial Arts and Dance Studio Agent Readiness: Why Class-Based Businesses Score Under 10',
+    excerpt:
+      '$35B US class-based market. Dojos, dance studios, yoga studios share a model: recurring classes, instructor expertise, student progression. None of it is accessible to AI agents. Class schedules on paper, registration by phone, belt ranks in binders. AI family scheduling agents managing kids across martial arts, dance, and tutoring are completely blocked. Agent-ready: class schedule API, enrollment endpoint, student level tracking, competition registration, uniform ordering.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/martial-arts-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Swords,
+  },
+  {
+    title: 'SSE vs WebSocket for Agent Readiness: Why Server-Sent Events Are the Agent-Preferred Transport',
+    excerpt:
+      'MCP uses SSE (Server-Sent Events) as its primary transport, not WebSocket. Why: SSE is HTTP-native (works through proxies/CDNs), one-directional server push, auto-reconnects with Last-Event-ID, simpler auth via standard HTTP headers. WebSocket is bidirectional but harder to proxy, auth at connection time only, no HTTP caching. For agent readiness: SSE = more compatible, easier to deploy, used by the MCP standard. AgentHermes checks for SSE support on MCP endpoints.',
+    date: '2026-04-15',
+    readTime: '11 min read',
+    href: '/blog/sse-websocket-agent-readiness',
+    tag: 'Technical Deep Dive',
+    tagColor: 'cyan',
+    icon: Antenna,
+  },
+  {
+    title: 'Why Mintlify Scores 66: The Documentation Platform That Helps Others Score Higher',
+    excerpt:
+      'Case study: Mintlify 66 Silver. A documentation platform used by Anthropic, Supabase, and Cursor that helps other companies improve their D2 API Quality scores — but its own agent readiness has the same gaps as everyone else. Strong: own API, structured docs, self-service onboarding, solid security. Weak: no agent-card.json, no MCP, enterprise pricing gated. The irony: Mintlify could score Gold overnight by adding the files it tells others to create.',
+    date: '2026-04-15',
+    readTime: '11 min read',
+    href: '/blog/mintlify-agent-readiness-breakdown',
+    tag: 'Case Study',
+    tagColor: 'blue',
+    icon: NotebookPen,
+  },
   {
     title: 'Waste Management and Recycling Agent Readiness: Why Trash Collection Can\'t Be Scheduled by AI',
     excerpt:
