@@ -98,6 +98,8 @@ import {
   TestTube,
   Pill,
   Ticket,
+  Wifi,
+  Handshake,
   Workflow,
   ScrollText,
   SprayCan,
@@ -136,6 +138,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'EdTech Agent Readiness: Why Coursera and Khan Academy Score Higher Than Traditional Schools',
+    excerpt:
+      'The $400B EdTech market is split: Coursera (52), Khan Academy (47), Udemy (49) have course APIs, structured catalogs, self-service enrollment. Traditional schools average 12. The LMS lock-in problem: Canvas, Blackboard, Moodle all have APIs but scoped per-institution — no universal student API. What makes EdTech agent-ready: course catalog API, enrollment endpoint, progress tracking, certificate verification. First university with MCP server wins every AI-mediated student inquiry.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/edtech-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: GraduationCap,
+  },
+  {
+    title: 'HTTP/2 and HTTP/3: Why Protocol Version Matters for Agent Readiness Scoring',
+    excerpt:
+      'AgentHermes D8 Reliability (0.13 weight) detects HTTP/2 and HTTP/3. HTTP/2 multiplexing lets agents make 5+ parallel API calls on one connection. HTTP/3 QUIC adds 0-RTT reconnection and connection migration. Most CDNs auto-enable both (Cloudflare, Vercel). Sites still on HTTP/1.1 score lower on D8. The fix is usually free — your CDN supports it, verify with curl --http2 or DevTools Protocol column.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/http2-http3-agent-readiness',
+    tag: 'Technical Deep Dive',
+    tagColor: 'purple',
+    icon: Wifi,
+  },
+  {
+    title: 'Building an Agent Readiness Consulting Practice: The New Service Vertical',
+    excerpt:
+      'AgentHermes data: 90% of businesses below Silver. That is a consulting goldmine. Services: agent readiness audit ($500-$1.5K), OpenAPI spec writing ($1.5-3K), MCP server implementation ($3-5K), agent-card.json setup ($300-800), recurring monitoring ($500-1.5K/mo). The Bronze to Silver sprint is a packaged 30-day engagement. Revenue model: $234K/year realistic for year-2 solo consultant. Zero competition in most markets. Use AgentHermes as the scoring platform.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/agency-building-agent-readiness',
+    tag: 'Business Strategy',
+    tagColor: 'emerald',
+    icon: Handshake,
+  },
   {
     title: 'Cleaning Services Agent Readiness: Why Maids, Janitors, and Cleaners Can\'t Be Found by AI',
     excerpt:
