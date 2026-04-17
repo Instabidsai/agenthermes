@@ -15,6 +15,7 @@ import {
   Calendar,
   Car,
   CheckSquare,
+  Church,
   Clock,
   Code,
   Code2,
@@ -76,6 +77,7 @@ import {
   Timer,
   Trophy,
   Wand2,
+  Sparkle,
   Sparkles,
   TrendingUp,
   UserPlus,
@@ -153,6 +155,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Churches and Religious Organizations Agent Readiness: Why Faith-Based Services Are Dark to AI',
+    excerpt:
+      '$140B in US religious giving flows through channels invisible to AI agents. Churches post service times on Facebook, collect donations via Tithe.ly or the plate, and handle event registration by email. Zero structured APIs for service schedules, giving, small groups, or facility booking. Agent-ready churches need 5 endpoints: service times, donation, event registration, group directory, facility availability. Planning Center scores highest at 18/100 but its API is internal-only. The first church platform to add agent-facing endpoints instantly makes 70K+ churches discoverable.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/church-religious-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Church,
+  },
+  {
+    title: 'Building Agent-Ready APIs with Django and Flask: A Python Developer\'s Guide',
+    excerpt:
+      'The Python companion to our Next.js tutorial. 8 copy-paste code blocks for Django REST Framework and Flask: structured JSON errors (DRF exception handler + Flask error handlers), OpenAPI via drf-spectacular and flask-smorest, /health endpoint, agent-card.json as a route, llms.txt, CORS with django-cors-headers and flask-cors, and Bearer auth with DRF TokenAuthentication. Covers 80% of scoring weight. Takes a typical Python API from 10-20/100 to Silver (60+) or Gold (75+).',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/django-flask-agent-readiness-tutorial',
+    tag: 'Developer Tutorial',
+    tagColor: 'purple',
+    icon: FlaskConical,
+  },
+  {
+    title: 'Cold Start Problem: Why New Businesses Score Zero and How to Launch Agent-Ready',
+    excerpt:
+      'Every new business starts at agent readiness score 0: no API, no docs, no track record. Unlike SEO (3-6 months to rank, dependent on backlinks), agent readiness can be bootstrapped in a weekend because it depends on files you deploy yourself. The minimum viable agent-ready stack: HTTPS + one JSON endpoint + agent-card.json + llms.txt + /health = immediately scannable. Bronze tier in 85 minutes. First-mover advantage is massive — most verticals have zero agent-ready businesses.',
+    date: '2026-04-15',
+    readTime: '11 min read',
+    href: '/blog/cold-start-agent-readiness',
+    tag: 'Strategy',
+    tagColor: 'emerald',
+    icon: Sparkle,
+  },
   {
     title: 'API Gateways and Agent Readiness: How Kong, Apigee, and AWS API Gateway Affect Your Score',
     excerpt:
