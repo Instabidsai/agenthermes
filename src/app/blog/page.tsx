@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import {
   Activity,
+  AlertTriangle,
   ArrowRight,
   Award,
   Banknote,
@@ -35,6 +36,7 @@ import {
   KeyRound,
   Heart,
   Home,
+  Landmark,
   Layers,
   Lightbulb,
   Lock,
@@ -92,6 +94,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Why Vercel and Supabase Both Score 69-70: The Infrastructure Platform Pattern',
+    excerpt:
+      'Vercel 70 Silver, Supabase 69 Silver. Nearly identical but different strengths. Vercel: deployment API, CLI docs, status page, structured errors. Supabase: REST/GraphQL/Realtime, self-service keys, OpenAPI spec, transparent pricing. Both miss Gold: no agent-card.json, no llms.txt, no MCP server. Three files and 30 minutes would push both past 75.',
+    date: '2026-04-16',
+    readTime: '13 min read',
+    href: '/blog/vercel-supabase-agent-readiness',
+    tag: 'Case Study',
+    tagColor: 'blue',
+    icon: Server,
+  },
+  {
+    title: 'Government Agent Readiness: Why Public Services Are the Most Invisible to AI Agents',
+    excerpt:
+      'Government websites are designed for compliance, not for agents. PDF forms, no APIs, legacy CMS, CAPTCHA walls. IRS, DMV, city portals all score under 15. Exceptions: data.gov (48), USASpending (52). Government mandates WCAG accessibility but blocks AI accessibility entirely.',
+    date: '2026-04-16',
+    readTime: '14 min read',
+    href: '/blog/government-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Landmark,
+  },
+  {
+    title: 'Error Handling for AI Agents: Why Your 500 Page Matters More Than Your Homepage',
+    excerpt:
+      'When agents hit errors, they need structured JSON guidance — not a pretty HTML 500 page. Error handling impacts D6 Data Quality (10%) and D9 Agent Experience (10%) = 20% of the score. Stripe returns perfect error JSON (68 score). Cash App returns HTML (12 score). The 5 error patterns every agent-ready API needs.',
+    date: '2026-04-16',
+    readTime: '12 min read',
+    href: '/blog/error-handling-agent-readiness',
+    tag: 'Technical Deep Dive',
+    tagColor: 'purple',
+    icon: AlertTriangle,
+  },
   {
     title: 'Manufacturing Agent Readiness: Why Factory Floors Are the Last Frontier for AI Agents',
     excerpt:
