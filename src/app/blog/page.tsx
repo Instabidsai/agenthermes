@@ -113,6 +113,9 @@ import {
   FileWarning,
   KeySquare,
   Zap,
+  Gamepad2,
+  Languages,
+  Building,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -147,6 +150,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Gaming Agent Readiness: Why Game Studios Have APIs But Players Can\'t Use AI Agents to Buy',
+    excerpt:
+      '$200B gaming industry has sophisticated internal APIs but zero agent-accessible purchase endpoints. Steam\'s Web API reads player stats but can\'t buy a game. Epic\'s GraphQL queries catalogs but can\'t add to cart. PlayStation and Nintendo have no public API at all. Agent-ready gaming needs: game catalog API, purchase/gifting endpoint, price comparison, wishlist management, release calendar. The $50B in-game economy (skins, V-Bucks, battle passes) has zero agent access. Average score: 11/100.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/gaming-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Gamepad2,
+  },
+  {
+    title: 'Multi-Language APIs and Agent Readiness: Why Accept-Language Headers Matter for Global Agents',
+    excerpt:
+      '87% of APIs ignore the Accept-Language header and return English-only responses. Global AI agents serve users in 100+ languages and need localized content, error messages, multi-currency pricing, and timezone-aware scheduling. Stripe handles this well (35+ languages, 135+ currencies). Most local businesses: English-only, USD-only. Full API localization adds up to 26 points on agent readiness. D6 Data Quality (0.10 weight) penalizes monolingual APIs.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/multi-language-agent-readiness',
+    tag: 'Technical Deep Dive',
+    tagColor: 'purple',
+    icon: Languages,
+  },
+  {
+    title: 'PropTech Agent Readiness: Why Property Management Platforms Score Higher Than Individual Landlords',
+    excerpt:
+      '$500B US rental market split in two: platforms (AppFolio 42, Buildium 38, Yardi 30) vs individual landlords (score 0-5). 48% of US rental units owned by individual landlords are invisible to AI agents. Platforms have tenant portals but few public APIs. Agent-ready property management needs: unit availability API, rental application endpoint, maintenance request system, lease terms JSON. AI renter agents will search, apply, and manage leases — but only if properties have APIs.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/proptech-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Building,
+  },
   {
     title: 'Sports and Recreation Agent Readiness: Why Gyms, Leagues, and Sports Venues Can\'t Be Booked by AI',
     excerpt:
