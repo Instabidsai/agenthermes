@@ -98,6 +98,9 @@ import {
   TestTube,
   Pill,
   Ticket,
+  Workflow,
+  ScrollText,
+  SprayCan,
   Zap,
 } from 'lucide-react'
 
@@ -133,6 +136,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Cleaning Services Agent Readiness: Why Maids, Janitors, and Cleaners Can\'t Be Found by AI',
+    excerpt:
+      '$90B US cleaning industry. 1.2M+ cleaning businesses. Zero MCP servers. Residential + commercial. Booking via phone/Yelp/Thumbtack. No public API for availability, pricing varies by sq ft (not published), no structured service catalog. Agent-ready: room-size pricing calculator API, availability slots, booking endpoint, recurring schedule management. First cleaning company with MCP = booked by every AI home assistant.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/cleaning-services-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: SprayCan,
+  },
+  {
+    title: 'Changelogs for AI Agents: Why /changelog Matters for D8 Reliability',
+    excerpt:
+      'AgentHermes D8 checks for /changelog or release notes. Agents need to know when your API changes, what broke, what is new. Stripe, GitHub, Vercel all have public changelogs — all Silver+. Without a changelog, agents cannot tell if a 500 error is a bug or a breaking change. Agent-ready: structured /changelog endpoint (JSON, not just HTML), semantic versioning, deprecation dates, migration guides.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/changelog-agent-readiness',
+    tag: 'Technical Guide',
+    tagColor: 'purple',
+    icon: ScrollText,
+  },
+  {
+    title: 'Why Make.com Scores 67 for Agent Readiness: The Automation Platform Pattern',
+    excerpt:
+      'Case study: Make.com (formerly Integromat) scored 67 Silver. The automation platform pattern: built to connect APIs = naturally agent-friendly. D2 high (REST API, webhooks, thousands of integrations). D3 strong (self-service, API key in minutes). Where they lose: D4 (enterprise pricing gated), D9 (no agent-card, no MCP). What pushes automation platforms toward Gold: be the thing agents call, not just the thing humans configure.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/make-agent-readiness-breakdown',
+    tag: 'Case Study',
+    tagColor: 'blue',
+    icon: Workflow,
+  },
   {
     title: 'Event Ticketing Agent Readiness: Why Ticketmaster and Eventbrite Lock Out AI Booking Agents',
     excerpt:
