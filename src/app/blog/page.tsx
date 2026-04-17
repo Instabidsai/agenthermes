@@ -148,6 +148,9 @@ import {
   Hammer,
   GitPullRequest,
   HandCoins,
+  Camera,
+  FileCheck,
+  Video,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -182,6 +185,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Photography and Videography Agent Readiness: Why Creative Professionals Can\'t Be Booked by AI',
+    excerpt:
+      '$40B creative services market runs on Instagram portfolios, DM booking, and "starts at" pricing. No structured portfolio catalog, no availability API, no package builder endpoint. AI event planning agents will book photographers — the first one with an MCP server captures the wedding and corporate market. Average score: under 10.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/photography-videography-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Camera,
+  },
+  {
+    title: 'SLAs and Uptime Guarantees: Why 99.9% Isn\'t Enough for Agent Readiness',
+    excerpt:
+      'D8 Reliability (0.13 weight) rewards documented SLAs. But agents need more than "99.9% uptime" on a marketing page. Agent-ready SLA: machine-readable SLA document (JSON), real-time uptime percentage endpoint, incident history API, planned maintenance calendar, compensation terms for downtime. AgentHermes checks for SLA documentation, not just uptime claims. The difference between "we\'re reliable" and proving it.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/sla-uptime-agent-readiness',
+    tag: 'Technical Analysis',
+    tagColor: 'blue',
+    icon: FileCheck,
+  },
+  {
+    title: 'Why TikTok Scores 69 for Agent Readiness: The Social Platform That Outperforms Most SaaS',
+    excerpt:
+      'TikTok scored 69 Silver — #5 in our 500-business scan. Surprising because it\'s a social/entertainment platform, not developer infrastructure. Why: robust developer API (TikTok for Developers), OAuth 2.0, structured content endpoints, analytics API, ad management API. Where it loses: D4 Pricing (ad spend not transparent), D5 Payment (no x402). What keeps it from Gold: no agent-card.json, no MCP, no llms.txt.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/tiktok-agent-readiness-breakdown',
+    tag: 'Case Study',
+    tagColor: 'blue',
+    icon: Video,
+  },
   {
     title: 'Auto Repair Agent Readiness: Why Mechanics and Body Shops Can\'t Be Booked by AI Service Agents',
     excerpt:
