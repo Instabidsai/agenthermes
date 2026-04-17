@@ -111,6 +111,7 @@ import {
   ScrollText,
   SprayCan,
   FileWarning,
+  KeySquare,
   Zap,
 } from 'lucide-react'
 
@@ -146,6 +147,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Sports and Recreation Agent Readiness: Why Gyms, Leagues, and Sports Venues Can\'t Be Booked by AI',
+    excerpt:
+      '$120B US sports and recreation industry runs on phone calls and front desks. Golf courses use proprietary tee-time systems. Bowling alleys take reservations by phone. Rec leagues distribute paper forms. Agent-ready venues need: court/lane availability API, league registration endpoint, membership pricing JSON, equipment rental checker. AI sports concierge agents will manage fitness schedules — but only if venues have APIs. Average score: 9/100.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/sports-recreation-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Trophy,
+  },
+  {
+    title: 'Environment Variables and Agent Readiness: Why Your API Keys Shouldn\'t Be in Your Agent Card',
+    excerpt:
+      'Security best practice: agent-card.json declares capabilities but should NEVER contain secrets. 8% of businesses we scan have API keys in public files. Where secrets go: environment variables, vault services (AWS Secrets Manager, Doppler), OAuth client credentials flow. What goes in agent-card.json: endpoint URLs, supported methods, auth TYPE (not credentials). AgentHermes D7 Security (0.12 weight) penalizes exposed secrets -15 points.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/environment-variables-agent-readiness',
+    tag: 'Security',
+    tagColor: 'red',
+    icon: KeySquare,
+  },
+  {
+    title: 'Nonprofit vs For-Profit Agent Readiness: Why Mission-Driven Organizations Score 3x Lower',
+    excerpt:
+      'Data comparison from 500 scans: for-profit businesses average 43/100. Nonprofits average 14/100 — 3x lower. Nonprofits optimize for donor emotion (hero images, impact stories) not agent interaction (APIs, structured data). The paradox: nonprofits with the most to gain from AI-driven donations invest the least in agent readiness. AI giving agents will allocate billions — but only to nonprofits they can programmatically evaluate.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/nonprofit-vs-forprofit-agent-readiness',
+    tag: 'Data Analysis',
+    tagColor: 'cyan',
+    icon: BarChart3,
+  },
   {
     title: 'Banking Agent Readiness: Why Open Banking APIs Exist But Most Banks Still Score Under 30',
     excerpt:
