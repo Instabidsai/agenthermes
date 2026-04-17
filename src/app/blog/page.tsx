@@ -87,6 +87,8 @@ import {
   FileType,
   Scale,
   Wrench,
+  Cloud,
+  Users,
   Zap,
 } from 'lucide-react'
 
@@ -122,6 +124,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Food Delivery Agent Readiness: Why DoorDash and UberEats Have APIs But Restaurants Don\'t',
+    excerpt:
+      'Food delivery platforms (DoorDash, UberEats, Grubhub) have merchant APIs but the restaurants themselves have zero. The middleman is agent-ready, the actual business is not. Agent-ready restaurants need their own ordering API, not just a DoorDash listing. This is the disintermediation play: restaurants with MCP servers bypass delivery platform fees. 30% commission vs 0% direct agent ordering.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/food-delivery-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: UtensilsCrossed,
+  },
+  {
+    title: 'CDN and Caching for Agent Readiness: Why Response Time Matters for D8 Reliability',
+    excerpt:
+      'D8 Reliability (0.13) checks response times. CDN-backed APIs respond in <100ms. Origin-only APIs hit 500ms+. AgentHermes detects CDN headers (CF-Cache-Status, X-Cache, Age). HTTP/2 detection adds points. Top scorers (Vercel 70, Supabase 69) all use edge CDNs. Most local businesses serve from single origin servers. Fix: Cloudflare free tier + proper cache headers = instant D8 improvement.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/caching-cdn-agent-readiness',
+    tag: 'Technical Deep Dive',
+    tagColor: 'purple',
+    icon: Cloud,
+  },
+  {
+    title: 'CRM Agent Readiness: Why Salesforce Scores Higher Than HubSpot (And Both Miss Gold)',
+    excerpt:
+      'CRM platforms are natural agent targets (agents managing leads, updating contacts, automating follow-ups). Salesforce: REST API, SOQL, OAuth, extensive docs (~60 Silver). HubSpot: REST API, good docs, but more restricted free tier (~55 Bronze). Both miss Gold: no agent-card.json, no MCP server, enterprise pricing gated. What would push CRMs to Gold: MCP tools for lead management, structured pricing API, agent-card.json.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/crm-agent-readiness',
+    tag: 'Platform Comparison',
+    tagColor: 'cyan',
+    icon: Users,
+  },
   {
     title: 'Dental and Veterinary Agent Readiness: Why Appointment-Based Businesses Are Missing the Agent Wave',
     excerpt:
