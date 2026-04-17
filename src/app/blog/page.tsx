@@ -139,6 +139,9 @@ import {
   Trees,
   LayoutTemplate,
   BadgeCheck,
+  Shirt,
+  Puzzle,
+  Glasses,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -173,6 +176,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Dry Cleaning and Laundry Agent Readiness: Why Your Cleaner Can\'t Be Scheduled by AI',
+    excerpt:
+      '$10B US dry cleaning market. Phone/walk-in only, no pickup scheduling API, no garment pricing by type, no order tracking. Agent-ready dry cleaning needs garment pricing catalog API, pickup/delivery scheduling endpoint, order status tracking, and recurring service management. AI personal assistants managing wardrobe care need structured data. The first cleaner with an MCP server captures every AI concierge\'s recurring business. Average score: 7/100.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/dry-cleaning-laundry-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Shirt,
+  },
+  {
+    title: 'Microservices vs Monolith: Which Architecture Scores Higher for Agent Readiness',
+    excerpt:
+      'Architectural comparison through the agent readiness lens. Monolith with OpenAPI: 55-70 score range, single discovery surface, consistent errors. Microservices with API gateway: 50-65, same score potential but harder setup. Microservices without gateway: 25-40, fragmented discovery kills the score. Neither architecture is inherently better — API surface design determines agent readiness. Data from 500 business scans reveals the gateway is the equalizer.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/microservices-monolith-agent-readiness',
+    tag: 'Architecture Analysis',
+    tagColor: 'blue',
+    icon: Puzzle,
+  },
+  {
+    title: 'Optometry and Eye Care Agent Readiness: Why Vision Providers Are Invisible to AI Health Agents',
+    excerpt:
+      '$45B US eye care market. Exam scheduling by phone, insurance verification manual, frame/lens catalogs in-store only, prescription records in siloed portals. Agent-ready optometry needs exam availability API, insurance eligibility endpoint, frame catalog with virtual try-on data, and prescription order tracking. AI health management agents will schedule eye exams alongside dental and medical — but only if providers have APIs. Average score: 11/100.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/optometry-eye-care-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Glasses,
+  },
   {
     title: 'Landscaping Agent Readiness: Why Lawn Care and Garden Services Can\'t Be Scheduled by AI',
     excerpt:
