@@ -133,6 +133,9 @@ import {
   HardDrive,
   Accessibility,
   Printer,
+  Box,
+  Beaker,
+  UserSearch,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -167,6 +170,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Moving and Storage Agent Readiness: Why Movers Can\'t Be Hired by AI Relocation Agents',
+    excerpt:
+      '$20B US moving industry. Estimates require in-home or virtual survey. No structured API for pricing by cubic feet, availability by date, insurance options. Storage facilities: unit availability sometimes online but no API. Agent-ready moving needs instant quote calculator API (based on home size and distance), availability calendar, booking endpoint, insurance selection, and tracking webhook. AI relocation agents will manage entire moves — quoting, booking, storage, utilities, address changes — but need structured data from every service in the chain. Average score: 6/100.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/moving-storage-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Box,
+  },
+  {
+    title: 'API Testing Tools and Agent Readiness: How Postman, Insomnia, and curl Verify Your Score',
+    excerpt:
+      'Practical guide to testing your agent readiness with existing tools. Postman: import OpenAPI spec, test each endpoint, verify JSON responses. curl: 10 commands that predict your score. Insomnia: environment variables for test vs prod. The 5-step testing workflow: (1) check /health, (2) test auth, (3) verify error responses, (4) check rate-limit headers, (5) validate OpenAPI spec. Then scan with AgentHermes to compare your manual findings with the automated 9-dimension score. Covers the exact sequence AI agents run when evaluating your API.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/api-testing-agent-readiness',
+    tag: 'Practical Guide',
+    tagColor: 'blue',
+    icon: Beaker,
+  },
+  {
+    title: 'Staffing and Temp Agency Agent Readiness: Why Workforce Platforms Lock Out AI Hiring Agents',
+    excerpt:
+      '$200B US staffing market. Temp agencies: job availability by phone or portal, worker matching manual, timesheet submission varies. Platforms like Upwork and Fiverr have APIs but heavily gate access. Agent-ready staffing needs open position catalog API, worker availability endpoint, match scoring, automated offer creation, and timesheet submission. AI procurement agents will staff entire projects — the first staffing firm with an MCP server wins every AI-driven hiring request in its metro market. Average score: 11/100.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/staffing-temp-agency-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: UserSearch,
+  },
   {
     title: 'Cloud Storage and Backup Agent Readiness: Why Dropbox and Google Drive Score Differently',
     excerpt:
