@@ -79,6 +79,7 @@ import {
   UserPlus,
   UtensilsCrossed,
   Bot,
+  Terminal,
   Truck,
   Wheat,
   BookText,
@@ -124,6 +125,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'HR and Recruiting Agent Readiness: Why ATS Platforms Lock Out AI Hiring Agents',
+    excerpt:
+      'ATS platforms (Greenhouse, Lever, Workday) have APIs but gate them behind enterprise contracts. Job boards (Indeed, LinkedIn) own the candidate data. Recruiter AI agents cannot access candidate pipelines, schedule interviews, or extend offers without human middleware. The average HR agent readiness score is 22/100. Agent-ready HR needs: structured job posting API, candidate pipeline endpoint, interview scheduling, offer letter generation.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/hr-recruiting-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Briefcase,
+  },
+  {
+    title: 'The Definitive Guide to Structured Error Responses for AI Agents',
+    excerpt:
+      'The canonical error shape: {error, code, message, request_id, retry_after, details[]}. 5 HTTP status codes with production-ready JSON examples. Framework-specific middleware for Express, Next.js, Django, and Rails. The 10-line middleware that fixes 20% of your Agent Readiness Score. The pillar page for agent error handling.',
+    date: '2026-04-15',
+    readTime: '15 min read',
+    href: '/blog/structured-errors-guide',
+    tag: 'Technical Guide',
+    tagColor: 'purple',
+    icon: Terminal,
+  },
+  {
+    title: 'We Published 91 Articles About Agent Readiness — Here Is What We Learned',
+    excerpt:
+      '91 articles, 500+ business scans, 50 verticals. The 5 patterns that show up everywhere: no API, no pricing, phone-only, PDF-heavy, no structured data. Developer tools win because they build for machines by default. The gap between knowing and doing is massive. We wrote the guide — now scan your business.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/hundred-articles-agent-readiness',
+    tag: 'Milestone',
+    tagColor: 'emerald',
+    icon: Trophy,
+  },
   {
     title: 'Food Delivery Agent Readiness: Why DoorDash and UberEats Have APIs But Restaurants Don\'t',
     excerpt:
