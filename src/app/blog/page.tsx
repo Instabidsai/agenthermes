@@ -124,6 +124,9 @@ import {
   Bug,
   Hexagon,
   Wine,
+  BookOpenCheck,
+  CloudCog,
+  Store,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -158,6 +161,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Tutoring Agent Readiness: Why Private Tutors and Learning Centers Can\'t Be Matched by AI',
+    excerpt:
+      '$12B US tutoring market. Tutors on Wyzant/Tutor.com but no public availability API. Scheduling via text, pricing varies by subject, no structured credential data. Agent-ready tutoring needs 5 endpoints: subject expertise catalog, availability calendar API, session booking endpoint, credential/qualification JSON, progress tracking. AI education agents will match students to tutors — but only if tutors expose structured data. First tutoring platform with an MCP server makes 65K+ tutors agent-accessible. Average score: 9/100.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/tutoring-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: BookOpenCheck,
+  },
+  {
+    title: 'Serverless and Edge Functions: Why Vercel, Cloudflare Workers, and AWS Lambda Are Agent-Ready by Design',
+    excerpt:
+      'Serverless platforms score higher than traditional hosting because: sub-100ms cold starts, automatic HTTPS, built-in CDN, global distribution, structured error responses. Vercel Edge Functions + Cloudflare Workers + AWS Lambda@Edge = naturally fast, secure, globally available. This maps to D7 (TLS), D8 (reliability/latency), D1 (CDN detection). The infrastructure choice IS the agent readiness choice. Traditional shared hosting = score penalty. Fresh serverless deployment scores 30-40 before writing API code.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/serverless-edge-agent-readiness',
+    tag: 'Technical Deep Dive',
+    tagColor: 'purple',
+    icon: CloudCog,
+  },
+  {
+    title: 'Franchise Agent Readiness: Why McDonald\'s Has an App But Individual Franchisees Score Zero',
+    excerpt:
+      'Franchise paradox: corporate has tech (McDonald\'s app, Subway ordering API) but 780K individual franchisees have no independent agent infrastructure. The franchisor controls the tech stack. Agent-ready franchise: location-specific inventory API, wait time estimator, local menu variations, staff availability for services franchises. The opportunity: franchise tech providers (Toast, Square for Restaurants) adding agent readiness to their platform lifts all franchisees at once. Average franchisee score: 3/100.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/franchise-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Store,
+  },
   {
     title: 'Pest Control Agent Readiness: Why Exterminators Can\'t Be Dispatched by AI Agents',
     excerpt:
