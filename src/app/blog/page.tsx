@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   ArrowRight,
   Award,
+  Baby,
   Banknote,
   BarChart3,
   BookOpen,
@@ -53,6 +54,7 @@ import {
   Megaphone,
   MessageSquare,
   Network,
+  Package,
   Phone,
   FileSearch,
   PieChart,
@@ -142,6 +144,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Childcare Agent Readiness: Why Daycares, Preschools, and Nannies Can\'t Be Found by AI Agents',
+    excerpt:
+      '$60B US childcare market. Waitlists managed by paper/email, no availability API, pricing varies by age/schedule (not structured), licensing info in government PDFs. Agent-ready childcare: availability checker API, age-group pricing JSON, tour scheduling endpoint, enrollment application API. AI family assistants will manage childcare alongside doctor appointments and school enrollment — but only if providers have APIs. Average score: 5/100.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/childcare-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Baby,
+  },
+  {
+    title: 'API Latency Benchmarks for Agent Readiness: What p95 Response Times Score Silver',
+    excerpt:
+      'D8 Reliability (0.13) rewards fast APIs. Our scan data shows: p95 < 200ms = top tier. 200-500ms = acceptable. 500ms-2s = penalty. >2s = significant scoring hit. Top scorers all respond sub-200ms (CDN-backed). Most local businesses: 1-3 second response times from shared hosting. The fix: Cloudflare free tier drops p95 by 60-80%. AgentHermes measures time-to-first-byte on every scan.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/latency-benchmarks-agent-readiness',
+    tag: 'Technical Deep Dive',
+    tagColor: 'purple',
+    icon: Timer,
+  },
+  {
+    title: 'Supply Chain Agent Readiness: Why Procurement AI Agents Can\'t Find Your Inventory',
+    excerpt:
+      'Supply chain: $25T global market. EDI (Electronic Data Interchange) is the dominant protocol — designed in the 1970s. Inventory systems (SAP, Oracle) locked behind VPNs. No public API for product availability, pricing, or lead times. Agent-ready supply chain: product catalog API, real-time inventory endpoint, automated RFQ submission, delivery timeline webhook. The first supplier with an MCP server gets every AI procurement agent\'s PO. Average score: 3/100.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/supply-chain-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Package,
+  },
   {
     title: 'The Startup Agent Readiness Playbook: How to Score Silver Before You Launch',
     excerpt:
