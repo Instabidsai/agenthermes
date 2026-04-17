@@ -163,6 +163,9 @@ import {
   Swords,
   Antenna,
   NotebookPen,
+  Sun,
+  SquareStack,
+  Pen,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -197,6 +200,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Solar and Renewable Energy Agent Readiness: Why Clean Energy Installers Cannot Be Hired by AI',
+    excerpt:
+      '$50B US solar market. Estimates require site assessment (roof angle, shade, panel count), pricing varies by kW, incentive calculations complex (ITC, state rebates, net metering). No structured API for any of it. Agent-ready: instant estimate API (address-based solar potential), incentive calculator endpoint, installation scheduling, monitoring dashboard API. AI home improvement agents will compare solar quotes — first installer with MCP wins.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/solar-energy-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Sun,
+  },
+  {
+    title: 'Batch APIs and Agent Readiness: Why Bulk Operations Score Higher Than One-at-a-Time Endpoints',
+    excerpt:
+      'Agents process thousands of items. One-at-a-time endpoints = 1000 API calls. Batch endpoints = 1 call with 1000 items. This matters for D8 Reliability (less chance of partial failure), D9 Agent Experience (faster workflows), and D2 API Quality (batch support = mature API). Stripe has batch operations. Most APIs do not. Agent-ready: /batch endpoint accepting arrays, bulk status checks, aggregate responses, partial failure handling.',
+    date: '2026-04-15',
+    readTime: '11 min read',
+    href: '/blog/batch-api-agent-readiness',
+    tag: 'Technical Deep Dive',
+    tagColor: 'cyan',
+    icon: SquareStack,
+  },
+  {
+    title: 'Why Craft.do Scores 68: The Note-Taking App That Outscores Most Enterprise SaaS',
+    excerpt:
+      'Case study: Craft.do scored 68 Silver — tied with Stripe and Slack. Surprising for a note-taking/document app. Strong: structured API for document management, clean auth, good docs, fast responses. The pattern: single-purpose apps with well-designed APIs consistently score Silver. What keeps it from Gold: same 3 missing files (agent-card.json, llms.txt, MCP) that every Silver business lacks.',
+    date: '2026-04-15',
+    readTime: '11 min read',
+    href: '/blog/craft-agent-readiness-breakdown',
+    tag: 'Case Study',
+    tagColor: 'blue',
+    icon: Pen,
+  },
   {
     title: 'Martial Arts and Dance Studio Agent Readiness: Why Class-Based Businesses Score Under 10',
     excerpt:
