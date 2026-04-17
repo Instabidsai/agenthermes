@@ -130,6 +130,9 @@ import {
   ParkingCircle,
   Clock3,
   Armchair,
+  HardDrive,
+  Accessibility,
+  Printer,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -164,6 +167,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Cloud Storage and Backup Agent Readiness: Why Dropbox and Google Drive Score Differently',
+    excerpt:
+      '$80B cloud storage market. Both Dropbox and Google Drive have REST APIs and OAuth. But Google Drive scores 15+ points higher for agent readiness. The difference: search depth (full query language vs filename-only), metadata richness (custom appProperties vs limited fields), auth granularity (per-file scopes vs full-account access), and push notifications vs polling. Agent-ready storage needs 5 capabilities: file search API, structured metadata, sharing automation, storage quota endpoint, and version history API. Zero storage platforms have MCP servers. Box is the most agent-forward enterprise option. iCloud scores zero (no public API). The first storage MCP server wins the AI file management market.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/storage-backup-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: HardDrive,
+  },
+  {
+    title: 'Web Accessibility vs Agent Readiness: Why WCAG Compliance Does Not Mean Agent Compliance',
+    excerpt:
+      'Provocative finding: a site can achieve WCAG AAA (highest accessibility rating) and still score 5/100 for agent readiness. WCAG makes sites accessible to humans with disabilities via HTML semantics, ARIA labels, and keyboard navigation. Agent readiness makes sites accessible to AI agents via structured data APIs, JSON endpoints, and machine-readable pricing. The overlap: both need structured data (Schema.org JSON-LD bridges both). The gap: WCAG requires no APIs, agent readiness requires no visual design. 97.4% of sites fail WCAG. Average agent readiness: 43/100. Zero combined standards exist. The smartest approach: content as structured data first, presentation as a rendering layer.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/accessibility-vs-agent-readiness',
+    tag: 'Standards Analysis',
+    tagColor: 'purple',
+    icon: Accessibility,
+  },
+  {
+    title: 'Printing Services Agent Readiness: Why Print Shops, Signs, and Copy Centers Can\'t Be Ordered From by AI',
+    excerpt:
+      '$100B US printing market. 27K+ print shops. Zero public APIs. Business cards, signage, banners, packaging — all require human phone calls, emailed PDF proofs, and manual approval. Custom printing involves complex constraint matrices (paper stock x size x finish x quantity x color mode) that are perfect for structured APIs but currently managed by phone. Agent-ready printing needs 5 endpoints: product spec builder, instant quote calculator, file upload with preflight, proof approval automation, and order tracking. First print shop with an MCP server captures every AI office manager\'s recurring orders. Average score: 5/100.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/printing-services-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Printer,
+  },
   {
     title: 'Parking and Transportation Agent Readiness: Why Uber Has an API But Your Parking Garage Doesn\'t',
     excerpt:
