@@ -145,6 +145,9 @@ import {
   Flag,
   Microscope,
   Target,
+  Hammer,
+  GitPullRequest,
+  HandCoins,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -179,6 +182,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Auto Repair Agent Readiness: Why Mechanics and Body Shops Can\'t Be Booked by AI Service Agents',
+    excerpt:
+      '$300B US auto repair market. Diagnosis requires physical inspection, pricing varies by vehicle/issue, parts availability uncertain. No structured API for service catalog, availability, or pricing. Agent-ready: service type catalog API, diagnostic code lookup, appointment scheduling endpoint, parts availability checker, estimate calculator by vehicle/service. AI vehicle management agents will schedule maintenance — first shop with MCP wins fleet management contracts. Average score: under 12.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/auto-repair-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Hammer,
+  },
+  {
+    title: 'CI/CD and Agent Readiness: How GitHub Actions, Vercel, and Netlify Score for Deployment Agents',
+    excerpt:
+      'CI/CD platforms are natural agent targets — deployment agents need to trigger builds, check status, roll back. GitHub Actions: structured API, webhook events, status checks, score 68. Vercel: deployment API, instant rollback, preview URLs, score 69. Netlify: build hooks, deploy notifications, score 62. All score 60+ because they are built for automation. The pattern: platforms built for machines score highest. What is missing: no MCP servers for any of them yet.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/ci-cd-agent-readiness',
+    tag: 'Platform Analysis',
+    tagColor: 'blue',
+    icon: GitPullRequest,
+  },
+  {
+    title: 'Charity Fundraising Agent Readiness: Why GoFundMe and Kickstarter Lock Out AI Giving Agents',
+    excerpt:
+      'Crowdfunding/fundraising platforms: GoFundMe (no public API, score 8), Kickstarter (limited API, score 18), Donorbox (basic API, score 32). Agent-ready fundraising: campaign catalog API, donation endpoint, impact reporting JSON, matching fund automation, recurring donation management. AI giving agents will allocate philanthropic budgets — platforms without APIs lose to those with structured donation interfaces. Every.org leads at 41 but still no MCP server.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/charity-fundraising-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: HandCoins,
+  },
   {
     title: 'SEM and PPC Agent Readiness: Why Google Ads Has APIs But Most Ad Agencies Score Zero',
     excerpt:
