@@ -80,6 +80,8 @@ import {
   UtensilsCrossed,
   Bot,
   Terminal,
+  Rocket,
+  MapPinned,
   Truck,
   Wheat,
   BookText,
@@ -140,6 +142,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'The Startup Agent Readiness Playbook: How to Score Silver Before You Launch',
+    excerpt:
+      'Pre-launch guide for startups. Build agent-ready from day 1 instead of retrofitting. 8-step checklist: API-first architecture, OpenAPI spec, Bearer auth, JSON errors, agent-card.json, llms.txt, /health endpoint, status page. Cost: $0 — these are architectural choices, not features. Startups that launch agent-ready capture agent traffic from day 1. Retrofitting later costs $11K-31K.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/startup-agent-readiness-playbook',
+    tag: 'Startup Guide',
+    tagColor: 'emerald',
+    icon: Rocket,
+  },
+  {
+    title: 'Venue and Event Space Agent Readiness: Why Conference Centers and Wedding Venues Can\'t Be Booked by AI',
+    excerpt:
+      'Conference centers, wedding venues, co-working spaces, community halls: all require human-mediated booking. No availability API, no structured pricing, no room/capacity data. Agent-ready venues need: room catalog API, availability calendar, automated quote engine, booking deposit endpoint. AI event planners need structured venue data to compare options. Average score: 8/100.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/venue-event-space-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: MapPinned,
+  },
+  {
+    title: 'Building Agent-Ready APIs with Next.js: A Developer\'s Guide',
+    excerpt:
+      'Framework-specific tutorial for Next.js (our own stack). How to add agent readiness to any Next.js app: API routes with JSON errors, OpenAPI spec generation, /health endpoint, agent-card.json in /public/.well-known/, llms.txt route handler, Schema.org JSON-LD, CORS middleware, Bearer auth middleware. 8 copy-paste code blocks, zero extra dependencies.',
+    date: '2026-04-15',
+    readTime: '15 min read',
+    href: '/blog/nextjs-agent-readiness-tutorial',
+    tag: 'Developer Tutorial',
+    tagColor: 'purple',
+    icon: Terminal,
+  },
   {
     title: 'Home Services Agent Readiness: Why Plumbers, Electricians, and HVAC Companies Score Zero',
     excerpt:
