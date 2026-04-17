@@ -3,6 +3,7 @@ import Link from 'next/link'
 import {
   Activity,
   AlertTriangle,
+  Anchor,
   ArrowRight,
   Award,
   Baby,
@@ -58,6 +59,7 @@ import {
   Package,
   Phone,
   FileSearch,
+  FileSpreadsheet,
   PieChart,
   Cog,
   Plane,
@@ -200,6 +202,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Marina and Boating Agent Readiness: Why Dock Slips and Charter Services Cannot Be Booked by AI',
+    excerpt:
+      '$50B US recreational boating. Marina slips booked by phone and VHF radio. Seasonal pricing varies by boat length with no availability API anywhere. Charter services: booking via phone/email, pricing opaque, weather-dependent availability unstructured. Agent-ready: slip availability API by boat size, charter catalog with pricing, weather-conditional booking, fuel dock pricing endpoint. AI trip planning agents need marina data.',
+    date: '2026-04-15',
+    readTime: '11 min read',
+    href: '/blog/marina-boating-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Anchor,
+  },
+  {
+    title: 'API Documentation Standards for Agent Readiness: OpenAPI vs AsyncAPI vs Smithy vs RAML',
+    excerpt:
+      'Head-to-head comparison of 4 API description standards through the agent readiness lens. OpenAPI scores 91 on agent readiness (most agents auto-discover it). AsyncAPI: 58 (essential for webhooks, complements OpenAPI). Smithy: 38 (powerful modeling, minimal agent tooling). RAML: 32 (declining adoption, convert to OpenAPI). For D1 Discovery and D9 Agent Experience, OpenAPI wins decisively.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/api-documentation-standards',
+    tag: 'Technical Deep Dive',
+    tagColor: 'cyan',
+    icon: FileSpreadsheet,
+  },
+  {
+    title: 'Why Robinhood and Allstate Both Score 66: The Regulated Industry Silver Pattern',
+    excerpt:
+      'Dual case study: Robinhood 66, Allstate 66 — identical scores from completely different industries (fintech vs insurance). The pattern: heavily regulated industries can still score Silver when they build developer-first digital experiences. Both have mobile-first architecture with APIs, OAuth, structured data. Both lack agent-card.json, MCP, full pricing transparency. Regulation is not the barrier — architecture is.',
+    date: '2026-04-15',
+    readTime: '11 min read',
+    href: '/blog/robinhood-allstate-agent-readiness',
+    tag: 'Case Study',
+    tagColor: 'blue',
+    icon: Scale,
+  },
   {
     title: 'Solar and Renewable Energy Agent Readiness: Why Clean Energy Installers Cannot Be Hired by AI',
     excerpt:
