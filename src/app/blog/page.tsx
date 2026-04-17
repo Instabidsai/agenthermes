@@ -93,6 +93,9 @@ import {
   Scissors,
   Gavel,
   PawPrint,
+  Receipt,
+  ShieldHalf,
+  TestTube,
   Zap,
 } from 'lucide-react'
 
@@ -128,6 +131,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Accounting Agent Readiness: Why QuickBooks Beats Your Accountant\'s Website',
+    excerpt:
+      'QuickBooks/Xero have OAuth APIs scoring ~55. Individual CPA firms: zero API, PDF tax returns, phone scheduling. Agent-ready accounting: client portal API, document submission endpoint, tax deadline calendar JSON, invoice status checker. AI tax agents are coming — first CPA with MCP server captures every AI-powered bookkeeping integration. Average CPA firm score: 8/100.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/accounting-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Receipt,
+  },
+  {
+    title: 'How to Test Your Agent Readiness Score Before Going Live',
+    excerpt:
+      'Practical testing guide. Before you scan with AgentHermes, self-check: curl your own API — does it return JSON? Check robots.txt — is GPTBot blocked? Hit /.well-known/agent-card.json — does it 404? Send Accept: application/json — do you get HTML? Try /health — does it exist? Check /openapi.json. 10 curl commands that predict your score. Compare to AgentHermes actual scan after.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/testing-your-agent-readiness',
+    tag: 'Technical Guide',
+    tagColor: 'purple',
+    icon: TestTube,
+  },
+  {
+    title: 'Cybersecurity Vendor Agent Readiness: Why Security Companies Should Score Highest (But Don\'t)',
+    excerpt:
+      'Ironic finding: cybersecurity companies should theoretically score highest (they understand APIs, auth, TLS). But many score average because they gate everything behind sales demos and NDAs. Drata 66, Secureframe 65 (compliance SaaS, Silver). Traditional vendors (Palo Alto, CrowdStrike): complex partner portals, no public API. Agent-ready security: threat intelligence API, compliance status endpoint, audit report generator.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/cybersecurity-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: ShieldHalf,
+  },
   {
     title: 'Pet Services Agent Readiness: Why Dog Walkers and Groomers Are Missing the AI Economy',
     excerpt:
