@@ -88,6 +88,8 @@ import {
   FileType,
   Scale,
   Wrench,
+  Blocks,
+  CalendarCheck,
   Cloud,
   Users,
   Scissors,
@@ -138,6 +140,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Home Services Agent Readiness: Why Plumbers, Electricians, and HVAC Companies Score Zero',
+    excerpt:
+      '$600B home services market. Plumbers, electricians, HVAC, handymen: entirely phone-based. Angi/HomeAdvisor own the lead gen. No API for availability, pricing varies by job. Agent-ready: service catalog with base pricing, availability windows API, automated quote request, job scheduling endpoint. First plumber with MCP = dispatched by every AI home assistant. Average score: 4/100.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/home-services-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Wrench,
+  },
+  {
+    title: 'AI Agent Frameworks and Agent Readiness: How LangChain, CrewAI, and AutoGen Discover Businesses',
+    excerpt:
+      'How the major agent frameworks actually find and interact with business APIs. LangChain: tool definitions, API chains. CrewAI: role-based agents with tool access. AutoGen: multi-agent conversations. All look for: OpenAPI specs, MCP servers, structured JSON, agent-card.json. Your agent readiness score predicts how easily any framework can use your API. The framework does not matter — the API structure does.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/ai-agent-frameworks-comparison',
+    tag: 'Technical Analysis',
+    tagColor: 'purple',
+    icon: Blocks,
+  },
+  {
+    title: 'Why Calendly and Agora Score 64-72: The Scheduling and Communication Platform Pattern',
+    excerpt:
+      'Dual case study. Calendly 64 Silver: scheduling API, OAuth, clear docs, but enterprise pricing gated. Agora 72 Silver (#2 after Resend): real-time communication API, strong docs, developer-first. The pattern: single-purpose APIs that do one thing well score higher than do-everything platforms. What both need for Gold: agent-card.json, llms.txt, MCP tools for their core workflow.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/calendly-agora-agent-readiness',
+    tag: 'Case Study',
+    tagColor: 'blue',
+    icon: CalendarCheck,
+  },
   {
     title: 'EdTech Agent Readiness: Why Coursera and Khan Academy Score Higher Than Traditional Schools',
     excerpt:
