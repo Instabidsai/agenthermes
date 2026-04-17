@@ -92,6 +92,7 @@ import {
   Users,
   Scissors,
   Gavel,
+  PawPrint,
   Zap,
 } from 'lucide-react'
 
@@ -127,6 +128,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Pet Services Agent Readiness: Why Dog Walkers and Groomers Are Missing the AI Economy',
+    excerpt:
+      '$150B pet industry. Rover and Wag own the marketplace. 250K+ independent dog walkers, groomers, boarders, and sitters have zero API. Agent-ready pet services: availability API, pricing JSON, booking endpoint, pet profile intake. AI assistants will book pet services alongside haircuts and dentist appointments — but only if you have an API. Average score: 6/100.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/pet-services-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: PawPrint,
+  },
+  {
+    title: 'Multi-Tenant SaaS and Agent Readiness: Why Per-Tenant API Keys Matter',
+    excerpt:
+      'SaaS platforms serve hundreds of businesses but most treat API access as platform-level. AI agents act on behalf of individual tenants — platform-level keys are a security nightmare. Stripe solved this with Connected Accounts. Agent-ready SaaS needs per-tenant OAuth, tenant-specific webhooks, isolated rate limits. The 25-point score gap between platform-level and per-tenant API access.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/multi-tenant-agent-readiness',
+    tag: 'Technical Guide',
+    tagColor: 'purple',
+    icon: Layers,
+  },
+  {
+    title: 'The Agent Economy Market Size: $12B in 2026, $100B by 2030',
+    excerpt:
+      'AI agent market $12.06B (44.9% CAGR). MCP: 10K+ servers, 97M SDK downloads. 72% of enterprises plan agent deployment. Only 52 out of 500 businesses (10.4%) score Silver+. The gap between agent demand and business readiness is the defining opportunity of this decade. Market sizing, growth drivers, and what it means for your business.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/agent-economy-market-size',
+    tag: 'Market Analysis',
+    tagColor: 'emerald',
+    icon: TrendingUp,
+  },
   {
     title: 'Beauty and Salon Agent Readiness: Why Booking Apps Own Your Business and AI Agents Can\'t Find You',
     excerpt:
