@@ -37,7 +37,9 @@ import {
   GraduationCap,
   KeyRound,
   Dumbbell,
+  FlaskConical,
   Heart,
+  HeartHandshake,
   Home,
   Landmark,
   Layers,
@@ -58,6 +60,7 @@ import {
   ShieldCheck,
   ShoppingBag,
   ShoppingCart,
+  Telescope,
   Timer,
   Trophy,
   Sparkles,
@@ -102,6 +105,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Sandbox Environments: Why AI Agents Need a Safe Place to Learn Your API',
+    excerpt:
+      'Agents cannot safely explore production APIs. They need sandboxes: test credentials, fake data, rate-limit-free practice calls. Stripe\'s test mode (sk_test_*) is the gold standard — same API, fake money. Most businesses do not offer this: either prod-only or no API at all. AgentHermes D3 Onboarding (0.08) checks for sandbox/test mode availability. Why it matters: agents will not risk real money learning your undocumented API.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/sandbox-environments-agent-readiness',
+    tag: 'Technical Deep Dive',
+    tagColor: 'purple',
+    icon: FlaskConical,
+  },
+  {
+    title: 'Nonprofit Agent Readiness: Why Donor Platforms and Charities Are Invisible to AI Giving Agents',
+    excerpt:
+      'Nonprofits average under 20 on the Agent Readiness Score. Donation pages are human-only (Donorbox, GoFundMe widgets), no structured impact data, annual reports in PDF, volunteer signups via email. AI giving agents are emerging — they will match donors to causes programmatically. The first nonprofit with an MCP server captures every AI-mediated donation.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/nonprofit-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: HeartHandshake,
+  },
+  {
+    title: 'Agent Readiness Predictions for 2026: What Changes After the First 1,000 Scans',
+    excerpt:
+      'Six data-driven predictions based on 500-scan trends. First Platinum scorer by Q3 2026. Average score rises from 43 to 55. 10+ companies adopt agent-card.json (currently 0/500). Healthcare and government stay below 30. The SaaS-to-local-business gap widens from 45 to 50+ points. At least one competitor copies the methodology. What businesses should do now to be ready.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/agent-readiness-2026-predictions',
+    tag: 'Research',
+    tagColor: 'emerald',
+    icon: Telescope,
+  },
   {
     title: 'Pagination for AI Agents: Why Cursor-Based Beats Offset-Based Every Time',
     excerpt:
