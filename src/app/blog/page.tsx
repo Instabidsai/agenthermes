@@ -142,6 +142,9 @@ import {
   Shirt,
   Puzzle,
   Glasses,
+  Flag,
+  Microscope,
+  Target,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -176,6 +179,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'SEM and PPC Agent Readiness: Why Google Ads Has APIs But Most Ad Agencies Score Zero',
+    excerpt:
+      'Google Ads has 200+ REST endpoints. Meta Ads has the Marketing API. Every major ad platform is fully programmable. But the 25,000+ agencies managing those platforms for clients? Average agent readiness score: 8/100. No structured reporting API, no campaign performance endpoint, no budget management for agents. Agent-ready ad agencies need campaign performance API, automated bid management, budget allocation endpoint, creative testing automation. AI marketing agents will manage ad spend directly — agencies without APIs lose control to platforms.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/sem-ppc-agent-readiness',
+    tag: 'Market Analysis',
+    tagColor: 'amber',
+    icon: Target,
+  },
+  {
+    title: 'How to Test Your MCP Server: Validation, Debugging, and Scoring Impact',
+    excerpt:
+      'Companion to the build tutorial. After building your MCP server, how do you validate it works? 5 methods: MCP Inspector for visual validation, Claude Desktop for real agent testing, curl for JSON-RPC 2.0 verification, automated Jest test suite, and AgentHermes scan for D2 scoring impact. Plus the 6 most common MCP server bugs (wrong method names, missing error handling, auth not forwarded, SSE keep-alive, missing required fields, vague descriptions) with exact fixes. A broken MCP server is worse than no MCP server.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/testing-mcp-server-guide',
+    tag: 'Technical Guide',
+    tagColor: 'purple',
+    icon: Microscope,
+  },
+  {
+    title: '154 Articles Later: The Content Strategy That Made AgentHermes the Agent Readiness Authority',
+    excerpt:
+      '50 content cycles. 154 articles. 30+ verticals. Zero manual distribution. What we learned: brain-driven content catches mistakes generic AI misses (caught a wrong stat before publish). Every article uses real scan data from 500+ businesses. Git push triggers the entire pipeline — deploy, indexing, community posting. Vertical coverage builds more authority than depth in a new category. Four content types (technical, vertical, case study, reference) create complete topical authority. What is next: getting indexed, getting cited, getting users.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/one-fifty-articles-lessons',
+    tag: 'Milestone',
+    tagColor: 'emerald',
+    icon: Flag,
+  },
   {
     title: 'Dry Cleaning and Laundry Agent Readiness: Why Your Cleaner Can\'t Be Scheduled by AI',
     excerpt:
