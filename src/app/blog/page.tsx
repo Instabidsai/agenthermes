@@ -106,9 +106,11 @@ import {
   Ticket,
   Wifi,
   Handshake,
+  Wallet,
   Workflow,
   ScrollText,
   SprayCan,
+  FileWarning,
   Zap,
 } from 'lucide-react'
 
@@ -144,6 +146,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Banking Agent Readiness: Why Open Banking APIs Exist But Most Banks Still Score Under 30',
+    excerpt:
+      'Open Banking (PSD2 in EU, FDX in US) mandated consumer data APIs. But open banking APIs are not agent readiness. Most bank APIs: read-only account data, no payment initiation for agents, complex partner agreements. Neobanks (Revolut 41, Wise 38) closer to agent-ready than traditional banks (Chase 14, BofA 11). Agent-ready banking needs: structured product comparison API, loan application endpoint, account opening automation, payment initiation. Average bank score: 22/100.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/banking-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Landmark,
+  },
+  {
+    title: 'The Complete HTTP Error Code Reference for Agent Readiness',
+    excerpt:
+      'The definitive reference page. Every HTTP status code an agent encounters, what it means, and what the agent-ready JSON response should look like. 2xx success with metadata, 3xx redirects agents must follow, 4xx client errors with field-level JSON details, 5xx server errors with retry guidance. 73% of businesses return HTML error pages. Fixing error responses alone lifts scores 8-15 points across D2, D8, and D9 dimensions.',
+    date: '2026-04-15',
+    readTime: '15 min read',
+    href: '/blog/error-codes-reference',
+    tag: 'Developer Reference',
+    tagColor: 'purple',
+    icon: FileWarning,
+  },
+  {
+    title: 'Wealth Management Agent Readiness: Why Financial Advisors Are Invisible to AI Portfolio Agents',
+    excerpt:
+      '$100T+ AUM globally. Individual advisors: zero API, phone-only consultations, performance reports in PDFs. Robo-advisors (Betterment, Wealthfront) score 45-55 Bronze. Traditional wirehouses (Merrill, Morgan Stanley) score 8-15. Independent RIAs score 3-8. Agent-ready wealth management needs: portfolio performance API, strategy comparison endpoint, risk assessment calculator, client onboarding automation, fee transparency endpoint. Average score: 12/100.',
+    date: '2026-04-15',
+    readTime: '14 min read',
+    href: '/blog/wealth-management-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Wallet,
+  },
   {
     title: 'Childcare Agent Readiness: Why Daycares, Preschools, and Nannies Can\'t Be Found by AI Agents',
     excerpt:
