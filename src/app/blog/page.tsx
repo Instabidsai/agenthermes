@@ -168,6 +168,9 @@ import {
   Sun,
   SquareStack,
   Pen,
+  Palette,
+  HardDriveDownload,
+  ArrowDownRight,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -202,6 +205,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Tattoo and Piercing Studio Agent Readiness: Why Body Art Businesses Score Under 5',
+    excerpt:
+      '$3.5B US tattoo industry. 21K+ studios booking via Instagram DMs, portfolios on social media, pricing "starts at" (varies by size/complexity/artist), consultations required. No structured data for anything. Agent-ready: artist portfolio API with style tags, appointment booking endpoint, pricing estimator by design parameters, aftercare information JSON. AI personal styling agents will recommend tattoo artists — but only if studios expose structured data.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/tattoo-piercing-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Palette,
+  },
+  {
+    title: 'Caching Strategies for Agent-Ready APIs: When to Cache, What to Invalidate',
+    excerpt:
+      'Agent-specific caching considerations. Agents call the same endpoints repeatedly — proper caching reduces their costs and your server load. Cache-Control headers: max-age, s-maxage, stale-while-revalidate. ETag/If-None-Match for conditional requests (304 Not Modified = agent saves tokens). CDN caching for static data (product catalogs, pricing). No-cache for real-time data (availability, inventory). AgentHermes D8 Reliability rewards proper cache headers.',
+    date: '2026-04-15',
+    readTime: '11 min read',
+    href: '/blog/caching-strategies-agent-readiness',
+    tag: 'Technical Deep Dive',
+    tagColor: 'cyan',
+    icon: HardDriveDownload,
+  },
+  {
+    title: 'Why Tally and Growthbook Both Score 64-65: The Developer Tool Silver Plateau',
+    excerpt:
+      'Dual case study: Tally 65, Growthbook 64. The "Silver Plateau" — where good developer tools get stuck. Both have: clean APIs, self-service onboarding, good docs. Both lack: agent-card.json, MCP, llms.txt. The 64-65 score is the natural ceiling for developer tools without agent-native features. What breaks through: the same 3 files that separate every Silver from Gold.',
+    date: '2026-04-15',
+    readTime: '11 min read',
+    href: '/blog/tally-growthbook-agent-readiness',
+    tag: 'Case Study',
+    tagColor: 'blue',
+    icon: ArrowDownRight,
+  },
   {
     title: 'Marina and Boating Agent Readiness: Why Dock Slips and Charter Services Cannot Be Booked by AI',
     excerpt:
