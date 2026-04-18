@@ -171,6 +171,9 @@ import {
   Palette,
   HardDriveDownload,
   ArrowDownRight,
+  Bell,
+  ChefHat,
+  CircleDollarSign,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -205,6 +208,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Catering Agent Readiness: Why Event Caterers Cannot Receive Orders From AI Event Planning Agents',
+    excerpt:
+      '$65B US catering market. Menu customization requires human consultation, pricing by headcount/menu (not structured), dietary requirements manual, delivery logistics phone-based. Agent-ready: menu catalog API with dietary filters, price calculator by headcount/menu, availability checker, order submission endpoint, deposit payment, delivery scheduling. AI event planning agents will manage catering alongside venues and entertainment.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/catering-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: ChefHat,
+  },
+  {
+    title: 'Token Counting and Agent Readiness: Why Response Size Matters for AI Agent Costs',
+    excerpt:
+      'Agents pay per token (input + output). Bloated API responses = expensive agent calls. Agent-ready APIs return minimal JSON (no HTML wrapper, no marketing copy in errors, no unnecessary fields). D6 Data Quality and D9 Agent Experience reward concise responses. Stripe returns ~200 tokens per typical response. Legacy APIs return 2000+ tokens of XML/HTML. The leaner your API, the cheaper agents can use it — which means more agent traffic.',
+    date: '2026-04-15',
+    readTime: '11 min read',
+    href: '/blog/token-counting-agent-readiness',
+    tag: 'Technical Deep Dive',
+    tagColor: 'cyan',
+    icon: CircleDollarSign,
+  },
+  {
+    title: 'Why OpsGenie Scores 67: The Incident Management Platform That Is Almost Gold',
+    excerpt:
+      'Case study: OpsGenie scored 67 Silver. Incident management platform — agents need to create alerts, acknowledge incidents, escalate, resolve. Strong: REST API, OAuth, webhooks, alert management, on-call schedule API. Where it loses: D4 (Atlassian enterprise pricing), D9 (no agent-card, no MCP despite being perfect for agent-driven incident response). What makes incident management platforms natural agent targets.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/opsgenie-agent-readiness-breakdown',
+    tag: 'Case Study',
+    tagColor: 'blue',
+    icon: Bell,
+  },
   {
     title: 'Tattoo and Piercing Studio Agent Readiness: Why Body Art Businesses Score Under 5',
     excerpt:
