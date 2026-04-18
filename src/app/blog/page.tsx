@@ -183,6 +183,9 @@ import {
   HeartPulse,
   Minimize2,
   GitFork,
+  Tent,
+  Orbit,
+  PartyPopper,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -217,6 +220,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: '200 Blog Articles on Agent Readiness: The Definitive Content Library Is Complete',
+    excerpt:
+      '200 articles. 40+ verticals. All 9 dimensions. 15+ case studies. 4 framework tutorials. 3 GEO pages. IsAgentReady has 0 articles. AgentSpeed has 1 blog post. We have 200. This IS the topical authority on agent readiness. No competitor has anything close to this library.',
+    date: '2026-04-15',
+    readTime: '11 min read',
+    href: '/blog/two-hundred-blog-articles',
+    tag: 'Milestone',
+    tagColor: 'amber',
+    icon: PartyPopper,
+  },
+  {
+    title: 'The AI Agent Marketplace: Why Agent Readiness Scores Will Become the New Google Reviews',
+    excerpt:
+      'Google Reviews became the trust signal for human consumers. Agent Readiness Scores will become the trust signal for AI agent consumers. Agents will check scores before calling APIs, prefer Silver+ businesses, avoid unscored ones. The marketplace shift: from human discovery (Google search) to agent discovery (registry + score). AgentHermes is building this — the registry, the score, the standard.',
+    date: '2026-04-15',
+    readTime: '13 min read',
+    href: '/blog/ai-agent-marketplace-future',
+    tag: 'Thought Leadership',
+    tagColor: 'purple',
+    icon: Orbit,
+  },
+  {
+    title: 'Camping and Outdoor Recreation Agent Readiness: Why National Parks and Campgrounds Can\'t Be Reserved by AI',
+    excerpt:
+      '$28B US outdoor recreation economy. Recreation.gov exists (semi-structured) but individual campgrounds, RV parks, glamping sites: phone booking only. No structured API for site availability, amenity listings, seasonal pricing. Agent-ready: campsite availability API, amenity catalog, weather-conditional booking, equipment rental, group reservation management. AI trip planning agents need campground data — and there is none.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/camping-outdoor-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Tent,
+  },
   {
     title: 'Therapy and Counseling Agent Readiness: Why Mental Health Providers Are Dark to AI Wellness Agents',
     excerpt:
