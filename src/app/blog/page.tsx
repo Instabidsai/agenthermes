@@ -186,6 +186,9 @@ import {
   Tent,
   Orbit,
   PartyPopper,
+  CarFront,
+  Braces,
+  DoorOpen,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -220,6 +223,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Taxi and Rideshare Agent Readiness: Why Traditional Cabs Score Zero While Uber Scores 55',
+    excerpt:
+      'The ride-hailing revolution already proved agent readiness matters. Uber and Lyft built APIs from day one — enabling third-party integrations, price estimation, and real-time tracking. Traditional taxis remained phone-dispatch-only. Uber ~55, Lyft ~50, traditional taxi companies ~0. Digital-native companies that build APIs first naturally score higher. Traditional industries that digitize later struggle.',
+    date: '2026-04-15',
+    readTime: '11 min read',
+    href: '/blog/taxi-rideshare-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: CarFront,
+  },
+  {
+    title: 'Open Source and Agent Readiness: Why GitHub Stars Don\'t Predict Agent Readiness Scores',
+    excerpt:
+      'Open source projects have public code but not necessarily agent-ready APIs. GitHub hosts the code, but most OSS projects have no hosted API, no structured docs beyond README, no auth system. Agent-ready OSS needs: hosted API endpoint, structured API docs, contributor onboarding API, release/changelog endpoint. The distinction: open source = visible code. Agent ready = usable by agents.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/open-source-agent-readiness',
+    tag: 'Technical Deep Dive',
+    tagColor: 'cyan',
+    icon: Braces,
+  },
+  {
+    title: 'Apartment Rental Agent Readiness: Why Zillow Has Listings But Individual Landlords Have Nothing',
+    excerpt:
+      'Apartment hunting: Zillow/Apartments.com have listings APIs but individual landlords/property managers have Craigslist posts and phone numbers. No structured data for unit availability, amenities, lease terms, application process. AI renter agents will compare apartments programmatically — first landlord with MCP wins.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/apartment-rental-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: DoorOpen,
+  },
   {
     title: '200 Blog Articles on Agent Readiness: The Definitive Content Library Is Complete',
     excerpt:
