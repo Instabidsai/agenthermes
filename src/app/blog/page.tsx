@@ -4,6 +4,7 @@ import {
   Activity,
   AlertTriangle,
   Anchor,
+  ArrowLeftRight,
   ArrowRight,
   Award,
   Baby,
@@ -73,6 +74,8 @@ import {
   ShieldAlert,
   ShieldCheck,
   ShoppingBag,
+  ShoppingBasket,
+  SlidersHorizontal,
   Signal,
   ShoppingCart,
   Telescope,
@@ -223,6 +226,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Calendly 64 vs Stripe 68: What 4 Points of Agent Readiness Actually Look Like',
+    excerpt:
+      '4 points separate Calendly (64) from Stripe (68). Both Silver, both have REST APIs, OAuth, good docs. The gap: Stripe has better D2 (legendary API quality), D6 (structured error envelopes), D4 (fully transparent pricing), D8 (status.stripe.com). Small improvements compound.',
+    date: '2026-04-18',
+    readTime: '13 min read',
+    href: '/blog/calendly-vs-stripe-agent-readiness',
+    tag: 'Case Study',
+    tagColor: 'blue',
+    icon: ArrowLeftRight,
+  },
+  {
+    title: 'Error Budgets and Agent Readiness: How SRE Principles Map to Scoring Dimensions',
+    excerpt:
+      'Your error budget (100% - SLO) directly maps to D8 Reliability scoring. 99.9% SLO = 8.76 hours/year downtime. AgentHermes measures actual uptime via repeated scans. Agent SLOs should be stricter — agents retry more aggressively and abandon unreliable APIs permanently.',
+    date: '2026-04-18',
+    readTime: '14 min read',
+    href: '/blog/error-budget-agent-readiness',
+    tag: 'Technical Deep Dive',
+    tagColor: 'purple',
+    icon: SlidersHorizontal,
+  },
+  {
+    title: 'Pet Food and Supplies Agent Readiness: Why Chewy Has an API But Your Local Pet Store Doesn\'t',
+    excerpt:
+      '$150B global pet supplies market. Chewy and PetSmart have some structured data online. Local pet stores: zero API, inventory unknown, pricing in-store-only. AI pet care agents will manage food subscriptions and supply orders — first store with MCP captures every AI assistant.',
+    date: '2026-04-18',
+    readTime: '12 min read',
+    href: '/blog/pet-food-supplies-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: ShoppingBasket,
+  },
   {
     title: 'Taxi and Rideshare Agent Readiness: Why Traditional Cabs Score Zero While Uber Scores 55',
     excerpt:
