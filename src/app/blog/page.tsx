@@ -177,6 +177,9 @@ import {
   Library,
   Fingerprint,
   Navigation,
+  Flower,
+  ToggleRight,
+  Diff,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -211,6 +214,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Florist and Garden Center Agent Readiness: Why Flower Delivery Can\'t Be Automated by AI Agents',
+    excerpt:
+      '$35B US floral market. Phone/walk-in ordering, seasonal inventory (what\'s blooming changes daily), delivery zones manual, custom arrangements require consultation. 1-800-Flowers has an API but individual florists: zero. Agent-ready: product catalog API with real-time availability, delivery zone checker, arrangement customization builder, occasion-based recommendations, recurring delivery scheduling. AI gift agents will send flowers — first florist with MCP gets every AI assistant birthday order.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/florist-garden-center-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Flower,
+  },
+  {
+    title: 'Feature Flags and Agent Readiness: Why Gradual Rollouts Affect AI Agent Behavior',
+    excerpt:
+      'Feature flags (LaunchDarkly, GrowthBook, Unleash) affect agent behavior. When you flag-gate an API feature: some agents see it, some don\'t. This creates inconsistent D2 API Quality scores. Agent-ready feature flag practices: flag state in response headers, API version pinning per agent client, gradual rollout that treats agent User-Agents as a segment. Don\'t surprise agents with different behavior than what your docs promise.',
+    date: '2026-04-15',
+    readTime: '11 min read',
+    href: '/blog/feature-flags-agent-readiness',
+    tag: 'Technical Deep Dive',
+    tagColor: 'cyan',
+    icon: ToggleRight,
+  },
+  {
+    title: 'AgentHermes vs AgentSpeed: Weighted Scoring vs Category-Based Agent Readiness Assessment',
+    excerpt:
+      'Second competitor comparison (after IsAgentReady). AgentSpeed: 0-100 weighted score across 10 checks, transparent methodology blog. AgentHermes: 9-dimension weighted scoring, 500+ businesses scanned, vertical-specific profiles, auto-generate agent infrastructure. Both use weighted scores. AgentSpeed is simpler (10 checks). AgentHermes is deeper (9 dimensions with sub-signals, vertical weights, auth-aware scoring). Both are new — market wide open. Use both for comprehensive assessment.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/agenthermes-vs-agentspeed',
+    tag: 'Comparison',
+    tagColor: 'cyan',
+    icon: Diff,
+  },
   {
     title: 'Library and Museum Agent Readiness: Why Cultural Institutions Are Missing the AI Discovery Wave',
     excerpt:
