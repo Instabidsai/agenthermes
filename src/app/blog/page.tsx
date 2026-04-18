@@ -180,6 +180,9 @@ import {
   Flower,
   ToggleRight,
   Diff,
+  HeartPulse,
+  Minimize2,
+  GitFork,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -214,6 +217,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Therapy and Counseling Agent Readiness: Why Mental Health Providers Are Dark to AI Wellness Agents',
+    excerpt:
+      '$280B US mental health market. Therapist directories (Psychology Today, BetterHelp) exist but individual practices: phone-only intake, no availability API, insurance verification manual. Privacy concerns (HIPAA) are real but don\'t prevent structured APIs. Agent-ready: availability checker (no PHI needed), specialization catalog, insurance acceptance endpoint, intake form submission. AI wellness agents will match patients to therapists — first practice with MCP captures every AI health assistant\'s referrals.',
+    date: '2026-04-15',
+    readTime: '12 min read',
+    href: '/blog/therapy-counseling-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: HeartPulse,
+  },
+  {
+    title: 'Response Compression and Agent Readiness: Why gzip and Brotli Save Agents Money',
+    excerpt:
+      'Agents pay per token. Compressed responses transfer faster and cost less. gzip: universally supported. Brotli: 15-20% smaller than gzip. AgentHermes D8 Reliability rewards fast response times — compression directly improves TTFB. Most CDNs auto-compress but many origin servers don\'t. Check: Accept-Encoding: gzip, br in request, Content-Encoding in response. The cheapest D8 improvement: enable compression (usually 1 config line).',
+    date: '2026-04-15',
+    readTime: '10 min read',
+    href: '/blog/compression-encoding-agent-readiness',
+    tag: 'Technical Deep Dive',
+    tagColor: 'cyan',
+    icon: Minimize2,
+  },
+  {
+    title: 'Why Pipedream and Airbyte Score 63: The Data Pipeline Platform Pattern',
+    excerpt:
+      'Dual case study: Pipedream 63, Airbyte 63 — identical Silver scores from data pipeline/integration platforms. The pattern: platforms that connect APIs to other APIs are naturally agent-friendly. Both have: REST APIs, self-service onboarding, hundreds of integrations. Both lack: agent-card.json, MCP, enterprise pricing transparency. The irony: they help OTHER businesses become more connected but haven\'t made themselves agent-discoverable.',
+    date: '2026-04-15',
+    readTime: '11 min read',
+    href: '/blog/pipedream-airbyte-agent-readiness',
+    tag: 'Case Study',
+    tagColor: 'blue',
+    icon: GitFork,
+  },
   {
     title: 'Florist and Garden Center Agent Readiness: Why Flower Delivery Can\'t Be Automated by AI Agents',
     excerpt:
