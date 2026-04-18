@@ -174,6 +174,9 @@ import {
   Bell,
   ChefHat,
   CircleDollarSign,
+  Library,
+  Fingerprint,
+  Navigation,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -208,6 +211,39 @@ interface Article {
 }
 
 const articles: Article[] = [
+  {
+    title: 'Library and Museum Agent Readiness: Why Cultural Institutions Are Missing the AI Discovery Wave',
+    excerpt:
+      '55,000+ US libraries and museums with rich digital catalogs (OPAC, collection databases) but almost no public APIs. Exceptions: Library of Congress, Smithsonian Open Access. Most local institutions: website + phone, avg score ~4. Agent-ready: collection search API, event calendar endpoint, ticket booking, educational program registration. AI cultural agents will recommend exhibits and reserve tickets — but only if institutions expose structured data.',
+    date: '2026-04-15',
+    readTime: '11 min read',
+    href: '/blog/library-museum-agent-readiness',
+    tag: 'Vertical Analysis',
+    tagColor: 'amber',
+    icon: Library,
+  },
+  {
+    title: 'Request Tracing and Agent Readiness: Why X-Request-ID Is the Header That Builds Agent Trust',
+    excerpt:
+      'X-Request-ID enables debugging across agent-API interactions. When an agent gets a 500, it needs a request ID to report the issue. Without it: "something broke" (useless). With it: "request abc123 failed" (actionable). AgentHermes D9 Agent Experience checks for X-Request-ID in response headers. Stripe includes it on every response. 87% of scanned APIs do not. Implementation: 1 line of middleware. Impact: immediate D9 score improvement.',
+    date: '2026-04-15',
+    readTime: '10 min read',
+    href: '/blog/request-tracing-agent-readiness',
+    tag: 'Technical Deep Dive',
+    tagColor: 'cyan',
+    icon: Fingerprint,
+  },
+  {
+    title: 'The Road to 200 Articles: What AgentHermes Learned Building the Largest Agent Readiness Content Library',
+    excerpt:
+      'Milestone piece approaching 200 articles. What we learned across 60+ cycles: (1) Verticals are infinite — every industry has unique agent readiness challenges. (2) The same 3 missing files (agent-card, llms.txt, MCP) block every Silver from Gold. (3) Case studies outperform generic guides. (4) The content itself proves the product — 200 data-driven articles means the scoring system works. (5) Next phase: getting Google to index them and AI models to cite them.',
+    date: '2026-04-15',
+    readTime: '10 min read',
+    href: '/blog/two-hundred-articles-roadmap',
+    tag: 'Milestone',
+    tagColor: 'emerald',
+    icon: Navigation,
+  },
   {
     title: 'Catering Agent Readiness: Why Event Caterers Cannot Receive Orders From AI Event Planning Agents',
     excerpt:
